@@ -1,0 +1,241 @@
+// Visual feedback and accessible live region announcements.
+//
+// Automatically sets data-flux-loading on active request sources and toggles global
+// indicators; sets data-flux-success / data-flux-error on completion; announces messages from
+// fx-success / fx-error via aria-live. Integrates with Alpine toast store if present.
+
+import type { ResolvedConfig } from './config.js';
+import { log } from './logger.js';
+import { safeQuerySelector } from './selectors.js';
+import { getRequestContext } from './events.js';
+import { setRequestState } from './request-state.js';
+
+const LIVE_REGION_ID = 'flux-live-region';
+const SUCCESS_ATTR = 'fx-success';
+const ERROR_ATTR = 'fx-error';
+
+let inFlight = 0;
+let liveRegion: HTMLElement | null = null;
+let teardown: (() => void) | null = null;
+const activeElements = new Map<Element, number>();
+const finishedContexts = new WeakSet<object>();
+
+/**
+ * Installs document-level event listeners for HTMX request lifecycle to provide visual
+ * feedback and accessible announcements. Returns a teardown function.
+ */
+export function installFeedback(getConfig?: () => ResolvedConfig | null): () => void {
+  if (typeof document === 'undefined') return () => {};
+
+  const offlineTeardown = installOfflineTracking();
+
+  const onStart = (evt: Event) => {
+    const ctx = getRequestContext(evt);
+    inFlight++;
+    updateGlobalIndicator(true, getConfig);
+
+    if (ctx.source) {
+      const count = activeElements.get(ctx.source) ?? 0;
+      activeElements.set(ctx.source, count + 1);
+      setRequestState(ctx.source, 'loading');
+    }
+  };
+
+  const onEnd = (evt: Event) => {
+    const ctx = getRequestContext(evt);
+    if (ctx.ctx) {
+      if (finishedContexts.has(ctx.ctx)) return;
+      finishedContexts.add(ctx.ctx);
+    }
+
+    inFlight = Math.max(0, inFlight - 1);
+    if (inFlight === 0) updateGlobalIndicator(false, getConfig);
+
+    if (ctx.source) {
+      const count = activeElements.get(ctx.source) ?? 1;
+      if (count <= 1) {
+        activeElements.delete(ctx.source);
+        ctx.source.removeAttribute('data-flux-loading');
+      } else {
+        activeElements.set(ctx.source, count - 1);
+      }
+    }
+  };
+
+  const onAfterRequest = (evt: Event) => {
+    announceAndMarkResult(evt);
+  };
+
+  const onErrorEvent = (evt: Event) => {
+    const ctx = getRequestContext(evt);
+    if (ctx.source) {
+      setRequestState(ctx.source, 'network-error');
+      const message = ctx.source.getAttribute(ERROR_ATTR) ?? 'Request failed';
+      announce(message);
+    }
+  };
+
+  const onTimeoutEvent = (evt: Event) => {
+    const ctx = getRequestContext(evt);
+    if (ctx.source) {
+      setRequestState(ctx.source, 'timeout');
+    }
+  };
+
+  const onAbortEvent = (evt: Event) => {
+    const ctx = getRequestContext(evt);
+    if (ctx.isCacheHit) return;
+    if (ctx.source) {
+      setRequestState(ctx.source, 'aborted');
+    }
+  };
+
+  const onFinallyRequest = (evt: Event) => {
+    onEnd(evt);
+  };
+
+  document.addEventListener('htmx:before:request', onStart);
+  document.addEventListener('htmx:after:request', onAfterRequest);
+  document.addEventListener('htmx:finally:request', onFinallyRequest);
+  document.addEventListener('htmx:error', onErrorEvent);
+  document.addEventListener('htmx:timeout', onTimeoutEvent);
+  document.addEventListener('htmx:abort', onAbortEvent);
+
+  teardown = () => {
+    offlineTeardown();
+    document.removeEventListener('htmx:before:request', onStart);
+    document.removeEventListener('htmx:after:request', onAfterRequest);
+    document.removeEventListener('htmx:finally:request', onFinallyRequest);
+    document.removeEventListener('htmx:error', onErrorEvent);
+    document.removeEventListener('htmx:timeout', onTimeoutEvent);
+    document.removeEventListener('htmx:abort', onAbortEvent);
+    inFlight = 0;
+    activeElements.clear();
+  };
+
+  return teardown;
+}
+
+/** Installs online/offline network status listeners. */
+function installOfflineTracking(): () => void {
+  if (typeof window === 'undefined') return () => {};
+
+  const onOffline = () => {
+    document.body?.setAttribute('data-flux-offline', '1');
+    announce('Network offline');
+  };
+
+  const onOnline = () => {
+    document.body?.removeAttribute('data-flux-offline');
+    announce('Network restored');
+  };
+
+  if (typeof navigator !== 'undefined' && !navigator.onLine && document.body) {
+    document.body.setAttribute('data-flux-offline', '1');
+  }
+
+  window.addEventListener('offline', onOffline);
+  window.addEventListener('online', onOnline);
+
+  return () => {
+    window.removeEventListener('offline', onOffline);
+    window.removeEventListener('online', onOnline);
+    document.body?.removeAttribute('data-flux-offline');
+  };
+}
+
+function announceAndMarkResult(evt: Event): void {
+  const ctx = getRequestContext(evt);
+  if (!ctx.source) return;
+
+  const isError = !ctx.successful;
+  if (isError) {
+    if (ctx.status === 0) {
+      setRequestState(ctx.source, 'network-error');
+    } else {
+      setRequestState(ctx.source, 'http-error', ctx.status);
+    }
+  } else if (ctx.status >= 200 && ctx.status < 300) {
+    setRequestState(ctx.source, 'success');
+  }
+
+  const message = isError
+    ? ctx.source.getAttribute(ERROR_ATTR)
+    : ctx.status >= 200 && ctx.status < 300
+      ? ctx.source.getAttribute(SUCCESS_ATTR)
+      : null;
+
+  if (message) {
+    announce(message);
+    const alpineStore = (window as any).Alpine?.store?.('fluxToast');
+    if (alpineStore) {
+      if (isError) alpineStore.error?.(message);
+      else alpineStore.success?.(message);
+    }
+  }
+}
+
+/** Toggles data-flux-active / .flux-active on global indicator element. */
+function updateGlobalIndicator(active: boolean, getConfig?: () => ResolvedConfig | null): void {
+  const selector = resolveIndicatorSelector(getConfig);
+  if (!selector) return;
+
+  const el = safeQuerySelector(selector);
+  if (el) {
+    el.toggleAttribute('data-flux-active', active);
+    el.classList.toggle('flux-active', active);
+  }
+}
+
+/** Resolves indicator selector from config then meta tag. */
+function resolveIndicatorSelector(getConfig?: () => ResolvedConfig | null): string | null {
+  const configIndicator = getConfig?.()?.feedback?.indicator;
+  if (configIndicator) return configIndicator;
+
+  const meta = document.querySelector('meta[name="flux-feedback"]');
+  const content = meta?.getAttribute('content');
+  if (!content) return null;
+
+  try {
+    const parsed = JSON.parse(content);
+    return parsed.indicator ?? null;
+  } catch (e) {
+    log.url('invalid flux-feedback meta', content);
+    return null;
+  }
+}
+
+/** Announces message to screen readers via aria-live region. */
+export function announce(message: string): void {
+  const region = getLiveRegion();
+  region.textContent = message;
+}
+
+function getLiveRegion(): HTMLElement {
+  if (!liveRegion || !document.body.contains(liveRegion)) {
+    liveRegion = document.getElementById(LIVE_REGION_ID) ?? createLiveRegion();
+  }
+  return liveRegion;
+}
+
+function createLiveRegion(): HTMLElement {
+  const el = document.createElement('div');
+  el.id = LIVE_REGION_ID;
+  el.setAttribute('role', 'status');
+  el.setAttribute('aria-live', 'polite');
+  el.setAttribute('aria-atomic', 'true');
+  el.style.cssText =
+    'position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0';
+  document.body.appendChild(el);
+  return el;
+}
+
+export function resetFeedbackForTests(): void {
+  inFlight = 0;
+  teardown?.();
+  teardown = null;
+  liveRegion?.remove();
+  liveRegion = null;
+  activeElements.clear();
+  document.body?.removeAttribute('data-flux-offline');
+}

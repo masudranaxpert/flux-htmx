@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>File Monitor — Flux</title>
+    <link rel="stylesheet" href="/flux.css" />
+    <script defer src="/flux.full.iife.js"></script>
+  </head>
+  <body style="padding: 2rem; font-family: system-ui">
+    <h1>File Monitor <span class="flux-muted">(Flux)</span></h1>
+
+    <h2>Stats</h2>
+    <section
+      fx-load="/fragment/stats"
+      fx-target="this"
+      fx-cache="60s"
+      fx-cache-key="stats"
+    ></section>
+
+    <h2>Exceptions</h2>
+    <section fx-load="/fragment/exceptions" fx-target="this" id="exceptions"></section>
+
+    <p class="flux-muted">
+      <a href="/raw">Compare with raw HTMX →</a>
+    </p>
+  </body>
+</html>

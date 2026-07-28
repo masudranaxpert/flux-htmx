@@ -1,0 +1,161 @@
+// Diagnostics module providing Flux.inspect(element) and Flux.doctor() APIs for developers.
+
+import { FLUX_VERSION } from '../core/version.js';
+import { getGeneratedAttributes } from '../core/generated-attributes.js';
+import { getPresetRegistry } from '../presets/index.js';
+
+export interface InspectionResult {
+  element: Element | null;
+  presets: string[];
+  generatedAttributes: Record<string, string>;
+  warnings: string[];
+}
+
+export function inspectElement(element: Element | null): InspectionResult {
+  if (!(element instanceof Element)) {
+    return {
+      element: null,
+      presets: [],
+      generatedAttributes: {},
+      warnings: ['A valid Element is required for inspection'],
+    };
+  }
+
+  const registeredPresets = getPresetRegistry();
+  const presets: string[] = [];
+  for (const attr of registeredPresets.keys()) {
+    if (element.hasAttribute(attr)) {
+      presets.push(attr);
+    }
+  }
+
+  const genMap = getGeneratedAttributes(element);
+  const genObj: Record<string, string> = {};
+  for (const [k, v] of genMap) genObj[k] = v;
+
+  const warnings: string[] = [];
+
+  // Check preset URLs
+  for (const p of presets) {
+    const val = element.getAttribute(p) ?? '';
+    if (!val.trim()) {
+      warnings.push(`empty or whitespace URL in preset "${p}"`);
+    }
+  }
+
+  if (element.hasAttribute('fx-get') && !element.getAttribute('fx-get')?.trim()) {
+    warnings.push('empty or whitespace fx-get attribute URL');
+  }
+
+  // Check preset conflicts
+  if (presets.length > 1) {
+    warnings.push(
+      `multiple conflicting presets on element [${presets.join(', ')}]; primary preset "${presets[0]}" will be enforced`,
+    );
+  }
+
+  // Check raw hx-* vs fx-* method conflicts
+  if (
+    element.hasAttribute('hx-get') &&
+    (element.hasAttribute('fx-post') || element.hasAttribute('fx-submit'))
+  ) {
+    warnings.push('conflicting raw hx-get attribute declared alongside fx-post/fx-submit');
+  }
+
+  // Check fx-cache validity
+  if (element.hasAttribute('fx-cache')) {
+    const rawCache = element.getAttribute('fx-cache') ?? '';
+    if (rawCache === 'false') {
+      warnings.push('fx-cache="false" explicitly disables caching for this request');
+    } else if (rawCache && rawCache !== 'true' && !/^(\d+)(ms|s|m)?$/.test(rawCache.trim())) {
+      warnings.push(`invalid fx-cache TTL expression "${rawCache}"`);
+    }
+  }
+
+  // Check arbitrary fx-on-<code> status attributes
+  for (const attr of Array.from(element.attributes)) {
+    if (attr.name.startsWith('fx-on-')) {
+      const codeStr = attr.name.slice('fx-on-'.length);
+      const selector = attr.value.trim();
+      if (!selector) {
+        warnings.push(`empty status target selector in ${attr.name}`);
+      } else {
+        try {
+          if (typeof document !== 'undefined') document.querySelector(selector);
+        } catch {
+          warnings.push(`invalid CSS selector "${selector}" in ${attr.name}`);
+        }
+      }
+    }
+  }
+
+  return {
+    element,
+    presets,
+    generatedAttributes: genObj,
+    warnings,
+  };
+}
+
+export interface DoctorReport {
+  fluxVersion: string;
+  htmxDetected: boolean;
+  htmxVersion: string;
+  elementsInspected: number;
+  warnings: string[];
+}
+
+export function doctor(root?: Element): DoctorReport {
+  const activeRoot = root ?? (typeof document !== 'undefined' ? document.body : null);
+  const htmx =
+    (typeof window !== 'undefined' ? (window as any).htmx : undefined) ??
+    (typeof globalThis !== 'undefined' ? (globalThis as any).htmx : undefined);
+  const htmxVersion = htmx?.version ?? htmx?.VERSION ?? 'missing';
+
+  const warnings: string[] = [];
+  if (!htmx) {
+    warnings.push('HTMX library is not loaded');
+  } else if (!htmxVersion.startsWith('4.')) {
+    warnings.push(`HTMX 4 is required; detected version ${htmxVersion}`);
+  }
+
+  let count = 0;
+  if (activeRoot) {
+    const registry = getPresetRegistry();
+    const presetSelectors = Array.from(registry.keys()).map((attr) => `[${attr}]`);
+    const verbSelectors = ['[fx-get]', '[fx-post]', '[fx-put]', '[fx-patch]', '[fx-delete]'];
+    const selector = [...presetSelectors, ...verbSelectors, '[fx-cache]'].join(',');
+
+    const elements: Element[] = [];
+    if (activeRoot.matches?.(selector)) elements.push(activeRoot);
+    elements.push(...Array.from(activeRoot.querySelectorAll(selector)));
+
+    // Scan any elements with fx-on-* attributes
+    const allDescendants = Array.from(activeRoot.querySelectorAll('*'));
+    for (const descendant of allDescendants) {
+      for (const attr of Array.from(descendant.attributes)) {
+        if (attr.name.startsWith('fx-on-')) {
+          elements.push(descendant);
+          break;
+        }
+      }
+    }
+
+    const seen = new Set<Element>();
+    for (const el of elements) {
+      if (seen.has(el)) continue;
+      seen.add(el);
+      count++;
+      const insp = inspectElement(el);
+      warnings.push(...insp.warnings);
+    }
+  }
+
+  return {
+    fluxVersion: FLUX_VERSION,
+    htmxDetected: Boolean(htmx),
+    htmxVersion,
+    elementsInspected: count,
+    warnings,
+  };
+}
