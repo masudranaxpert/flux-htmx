@@ -1,6 +1,7 @@
 // Connects the fragment cache to HTMX's request lifecycle. A GET whose source carries
 // fx-cache="60s" (or empty fx-cache) is served from cache when fresh and stored on fetch;
 // a mutation whose source carries fx-invalidate clears matching keys after a successful response.
+// Supports Stale-While-Revalidate (SWR) mode via fx-cache-mode="stale-while-revalidate".
 
 import type { FragmentCache } from './cache.js';
 import { isCacheableMethod } from './cache.js';
@@ -9,6 +10,7 @@ import { log } from '../core/logger.js';
 
 const CACHE_ATTR = 'fx-cache';
 const CACHE_KEY_ATTR = 'fx-cache-key';
+const CACHE_MODE_ATTR = 'fx-cache-mode';
 const INVALIDATE_ATTR = 'fx-invalidate';
 const VARY_ATTR = 'fx-cache-vary';
 
@@ -25,25 +27,29 @@ const SENSITIVE_FIELDS = new Set([
 export interface CachePolicy {
   enabled: boolean;
   ttl?: number;
+  swr: boolean;
 }
 
 export function getCachePolicy(element: Element): CachePolicy {
   if (!element.hasAttribute(CACHE_ATTR)) {
-    return { enabled: false };
+    return { enabled: false, swr: false };
   }
 
   const raw = element.getAttribute(CACHE_ATTR) ?? '';
   if (raw === 'false') {
-    return { enabled: false };
+    return { enabled: false, swr: false };
   }
+
+  const mode = element.getAttribute(CACHE_MODE_ATTR);
+  const swr = mode === 'stale-while-revalidate' || element.getAttribute('fx-cache-swr') === 'true';
 
   const ttl = parseTtl(raw);
   if (ttl === undefined) {
     log.warn(`invalid fx-cache TTL "${raw}" on element; disabling fragment cache`);
-    return { enabled: false };
+    return { enabled: false, swr: false };
   }
 
-  return { enabled: true, ttl };
+  return { enabled: true, ttl, swr };
 }
 
 function isSensitiveField(key: string, source?: Element): boolean {
@@ -88,7 +94,7 @@ export function installCacheIntegration(
 ): () => void {
   if (typeof document === 'undefined') return () => {};
 
-  // config:request: if a cached entry exists for this GET, swap it directly and abort the fetch.
+  // config:request: if a cached entry exists for this GET, swap it directly and abort the fetch unless in SWR mode.
   const onConfigRequest = (evt: Event) => {
     const ctx = getRequestContext(evt);
     const source = ctx.source;
@@ -121,11 +127,15 @@ export function installCacheIntegration(
     if (htmx?.swap && target) {
       const swap = source.getAttribute('hx-swap') ?? source.getAttribute('fx-swap') ?? 'innerHTML';
       htmx.swap({ target, text: cached, swap });
-      request.abort?.();
+
+      // In standard mode, abort network fetch. In SWR mode, let background revalidation fetch proceed.
+      if (!policy.swr) {
+        request.abort?.();
+      }
     }
   };
 
-  // after:request: store successful GET responses that opted into caching.
+  // after:request: store successful GET responses and update UI if SWR revalidation produced new content.
   const onAfterRequest = (evt: Event) => {
     const ctx = getRequestContext(evt);
     const source = ctx.source;
@@ -202,7 +212,21 @@ export function installCacheIntegration(
       !isPersonalizedVary &&
       !hasAuthHeader
     ) {
-      cache.set(cacheKey(source, request), text, policy.ttl);
+      const key = cacheKey(source, request);
+      const existingCached = cache.get(key);
+
+      // If SWR mode revalidated with updated content, update UI with new text
+      if (policy.swr && existingCached !== null && existingCached !== text) {
+        const htmx = htmxInstance ?? (window as unknown as { htmx?: HtmxInstance }).htmx;
+        const target = ctx.target;
+        if (htmx?.swap && target) {
+          const swap =
+            source.getAttribute('hx-swap') ?? source.getAttribute('fx-swap') ?? 'innerHTML';
+          htmx.swap({ target, text, swap });
+        }
+      }
+
+      cache.set(key, text, policy.ttl);
     }
 
     // Mutation invalidation (only on successful mutation)

@@ -8,6 +8,7 @@ import { applyInfinite } from './infinite.js';
 import { applySubmit } from './submit.js';
 import { applyDelete } from './delete.js';
 import { applyAutosave } from './autosave.js';
+import { applyPagination } from './pagination.js';
 
 export { applySearch } from './search.js';
 export { applyLoad } from './load.js';
@@ -16,6 +17,7 @@ export { applyInfinite } from './infinite.js';
 export { applySubmit } from './submit.js';
 export { applyDelete } from './delete.js';
 export { applyAutosave } from './autosave.js';
+export { applyPagination } from './pagination.js';
 
 export interface PresetContext {
   target?: string;
@@ -90,6 +92,18 @@ registerPreset({
       url: value,
       target: ctx('fx-target'),
       swap: ctx('fx-swap'),
+      indicator: ctx('fx-indicator'),
+    }),
+});
+
+registerPreset({
+  attribute: 'fx-page',
+  connect: (element, value, ctx) =>
+    applyPagination(element, {
+      url: value,
+      target: ctx('fx-target'),
+      append: element.hasAttribute('fx-append'),
+      prepend: element.hasAttribute('fx-prepend'),
       indicator: ctx('fx-indicator'),
     }),
 });

@@ -31,11 +31,16 @@ import {
   removeGeneratedAttributes,
   reconcileGeneratedAttributes,
 } from './core/generated-attributes.js';
+import { installRetrySupport } from './core/retry.js';
+import { installDeduplication } from './core/dedupe.js';
+import { uploadPlugin } from './plugins/upload.js';
+import { optimisticPlugin } from './plugins/optimistic.js';
 
 export { type FluxConfig } from './core/config.js';
 export { default as htmx } from 'htmx.org';
 export { FLUX_VERSION };
 export { inspectElement as inspect, doctor };
+export { uploadPlugin, optimisticPlugin };
 
 let configured = false;
 const teardowns: Array<() => void> = [];
@@ -127,6 +132,8 @@ export function configure(userConfig?: FluxConfig): ResolvedConfig {
     teardowns.push(installCacheIntegration(cache, activeHtmx));
     teardowns.push(installOpenController());
     teardowns.push(installCleanupHook());
+    teardowns.push(installRetrySupport());
+    teardowns.push(installDeduplication());
     activatePlugins(pluginApi());
     configured = true;
   }
@@ -264,6 +271,10 @@ function createFluxApi() {
     doctor,
     use,
     unuse,
+    plugins: {
+      upload: uploadPlugin,
+      optimistic: optimisticPlugin,
+    },
   };
 
   return api;

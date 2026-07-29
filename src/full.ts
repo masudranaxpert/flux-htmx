@@ -17,7 +17,8 @@ export { FLUX_VERSION };
 type WindowWithGlobals = typeof window & { Flux?: any; htmx?: any; Alpine?: any };
 
 function bootstrap() {
-  const win = typeof window !== 'undefined' ? (window as WindowWithGlobals) : ({} as WindowWithGlobals);
+  const win =
+    typeof window !== 'undefined' ? (window as WindowWithGlobals) : ({} as WindowWithGlobals);
   const metaConfig = readFluxMetaConfig();
   const policy = metaConfig.duplicatePolicy ?? 'reuse';
 
