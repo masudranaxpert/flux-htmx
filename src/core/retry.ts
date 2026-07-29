@@ -63,11 +63,44 @@ export function installRetrySupport(): () => void {
 
   const onRequest = (evt: Event) => {
     const ctx = getRequestContext(evt);
-    if (ctx.source) {
+    if (ctx.source && ctx.request) {
       // Cancel pending retry timers when a fresh request is initiated
       cancelElementRetryTimers(ctx.source);
+      
+      const isRetry = readHeader(ctx.request.headers, 'X-Flux-Retry') === 'true';
+      if (!isRetry) {
+        retryingElements.delete(ctx.source);
+      }
     }
   };
+
+  const onCleanup = (evt: Event) => {
+    const elt = (evt as CustomEvent).detail?.elt ?? evt.target;
+    if (elt instanceof Element) {
+      for (const [timerElt, timers] of activeRetryTimers.entries()) {
+        if (elt === timerElt || elt.contains(timerElt)) {
+          for (const timerId of timers) clearTimeout(timerId);
+          activeRetryTimers.delete(timerElt);
+          retryingElements.delete(timerElt);
+        }
+      }
+    }
+  };
+
+  function readHeader(headers: unknown, name: string): string | null {
+    if (!headers) return null;
+    if (typeof (headers as any).get === 'function') {
+      return (headers as any).get(name) ?? (headers as any).get(name.toLowerCase()) ?? null;
+    }
+    if (typeof headers === 'object') {
+      for (const [k, v] of Object.entries(headers as Record<string, unknown>)) {
+        if (k.toLowerCase() === name.toLowerCase() && v !== undefined && v !== null) {
+          return String(v);
+        }
+      }
+    }
+    return null;
+  }
 
   const onResponse = (evt: Event) => {
     const ctx = getRequestContext(evt);
@@ -150,7 +183,7 @@ export function installRetrySupport(): () => void {
           target: requestTarget,
           swap: element.getAttribute('hx-swap') ?? element.getAttribute('fx-swap') ?? 'innerHTML',
           values: requestParams,
-          headers: requestHeaders,
+          headers: { ...(requestHeaders as Record<string, string>), 'X-Flux-Retry': 'true' },
         });
       } else if (typeof activeHtmx?.trigger === 'function') {
         activeHtmx.trigger(element, 'click');
@@ -166,9 +199,11 @@ export function installRetrySupport(): () => void {
 
   document.addEventListener('htmx:before:request', onRequest);
   document.addEventListener('htmx:after:request', onResponse);
+  document.addEventListener('htmx:beforeCleanupElement', onCleanup);
   return () => {
     document.removeEventListener('htmx:before:request', onRequest);
     document.removeEventListener('htmx:after:request', onResponse);
+    document.removeEventListener('htmx:beforeCleanupElement', onCleanup);
     disposeRetrySupport();
   };
 }

@@ -41,3 +41,6 @@ test-results/
 .eslintcache
 .DS_Store
 Thumbs.db
+
+# npm auth token — never commit this
+.npmrc

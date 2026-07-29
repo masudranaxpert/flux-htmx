@@ -29,6 +29,7 @@ const OPTIONS = [
   'boost',
   'preload',
   'preserve',
+  'prefetch',
 ] as const;
 
 // One selector matching any Flux shorthand attribute, used for subtree discovery.

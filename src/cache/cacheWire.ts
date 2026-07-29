@@ -78,14 +78,6 @@ function getRequestHeaderVal(headers: unknown, name: string): string | null {
   return null;
 }
 
-const STANDARD_HTMX_VARY_HEADERS = new Set([
-  'hx-request',
-  'hx-target',
-  'hx-trigger',
-  'hx-current-url',
-  'accept-encoding',
-  'user-agent',
-]);
 
 export function installCacheIntegration(
   cache: FragmentCache,
@@ -113,7 +105,9 @@ export function installCacheIntegration(
     }
 
     if (ctx.ctx) {
-      ctx.ctx.isCacheHit = true;
+      if (!cached.isStale || !policy.swr) {
+        ctx.ctx.isCacheHit = true;
+      }
     }
 
     source.dispatchEvent(
@@ -180,7 +174,7 @@ export function installCacheIntegration(
     const pragma = (getHeader('Pragma') ?? '').toLowerCase();
     const contentType = (getHeader('Content-Type') ?? '').toLowerCase();
     const rawVary = getHeader('Vary') ?? '';
-    const varyTokens = rawVary.split(',').map((s) => s.trim().toLowerCase());
+    const varyTokens = rawVary.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
 
     const hasSetCookie = Boolean(getHeader('Set-Cookie'));
     const isNoStore =
@@ -195,10 +189,7 @@ export function installCacheIntegration(
       contentType.includes('text/html') ||
       contentType.includes('application/xhtml+xml') ||
       contentType === '';
-    const isUncacheableVary =
-      varyTokens.includes('*') ||
-      varyTokens.includes('cookie') ||
-      varyTokens.includes('authorization');
+    const isUncacheableVary = varyTokens.length > 0;
 
     if (
       policy.enabled &&
@@ -214,33 +205,12 @@ export function installCacheIntegration(
       !isUncacheableVary &&
       !hasAuthHeader
     ) {
-      let key = cacheKey(source, request);
-
-      // Vary header key extension for custom application response variants
-      if (rawVary) {
-        const varyParts: string[] = [];
-        for (const token of varyTokens) {
-          if (
-            token &&
-            token !== '*' &&
-            token !== 'cookie' &&
-            token !== 'authorization' &&
-            !STANDARD_HTMX_VARY_HEADERS.has(token)
-          ) {
-            const val = getRequestHeaderVal(request.headers, token);
-            if (val) varyParts.push(`${token}=${val}`);
-          }
-        }
-        if (varyParts.length > 0) {
-          key += `#vary:${varyParts.join(';')}`;
-        }
-      }
-
+      const key = cacheKey(source, request);
       cache.set(key, text, policy.ttl);
     }
 
     // Process fx-invalidate attribute on successful mutation responses
-    if (successful) {
+    if (successful && request.method && request.method.toUpperCase() !== 'GET') {
       const pattern = source.getAttribute(INVALIDATE_ATTR);
       if (pattern) {
         const normalized = normalizeInvalidationPattern(pattern);
@@ -262,7 +232,7 @@ export function installCacheIntegration(
   };
 }
 
-function cacheKey(
+export function cacheKey(
   source: Element,
   request: { method?: string; action?: string; parameters?: Record<string, unknown> },
 ): string {
@@ -323,11 +293,15 @@ function cacheKey(
   } else if (isFormSource && formElement) {
     try {
       const formData = new FormData(formElement);
+      const seenKeys = new Set<string>();
       for (const [k, v] of Array.from(formData.entries())) {
         if (typeof v === 'string') {
           if (isSensitiveFieldName(k, formElement)) continue;
           if (allowedVaryFields && !allowedVaryFields.has(k.toLowerCase())) continue;
-          params.delete(k);
+          if (!seenKeys.has(k)) {
+            params.delete(k);
+            seenKeys.add(k);
+          }
           params.append(k, v);
         }
       }

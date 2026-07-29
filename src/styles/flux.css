@@ -226,3 +226,62 @@ meter.flux-meter {
   border-radius: var(--flux-radius);
   overflow: hidden;
 }
+
+/* ==========================================================================
+   Toasts
+   ========================================================================== */
+
+#flux-toast-container {
+  position: fixed;
+  bottom: var(--flux-space-4);
+  right: var(--flux-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--flux-space-2);
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.flux-toast {
+  background: var(--flux-bg);
+  color: var(--flux-text);
+  border: 1px solid var(--flux-border);
+  padding: var(--flux-space-3) var(--flux-space-4);
+  border-radius: var(--flux-radius);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  font-family: var(--flux-font);
+  font-size: var(--flux-text-sm);
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: flux-toast-enter 0.3s forwards ease-out;
+  display: flex;
+  align-items: center;
+  gap: var(--flux-space-2);
+}
+
+.flux-toast.flux-toast-success {
+  border-left: 4px solid var(--flux-success);
+}
+
+.flux-toast.flux-toast-error {
+  border-left: 4px solid var(--flux-error);
+}
+
+.flux-toast-leave {
+  animation: flux-toast-leave 0.3s forwards ease-in;
+}
+
+@keyframes flux-toast-enter {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes flux-toast-leave {
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}

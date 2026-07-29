@@ -35,6 +35,10 @@ export function wireStatusTargeting(element: Element): OnStatusHandler | null {
   if (existingSig === signature && existingHandler) {
     return existingHandler;
   }
+  
+  if (existingHandler) {
+    existingHandler.disconnect();
+  }
 
   // Remove stale hx-status:* attributes no longer declared
   for (const attr of Array.from(element.attributes)) {
@@ -80,6 +84,7 @@ export function wireStatusTargeting(element: Element): OnStatusHandler | null {
   }
 
   element.setAttribute('data-flux-status-signature', signature);
+  element.setAttribute('data-flux-status', '1');
 
   const handler: OnStatusHandler = {
     disconnect() {

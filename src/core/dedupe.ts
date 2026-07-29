@@ -1,6 +1,7 @@
 // Concurrent Request Deduplication. Coalesces duplicate in-flight GET requests to the same URL into a single network call.
 
 import { getRequestContext } from './events.js';
+import { getRetryOptions } from './retry.js';
 
 interface PendingConsumer {
   element: Element;
@@ -54,7 +55,14 @@ export function installDeduplication(): () => void {
     const key = computeDedupeKey(element, method, url, ctx.request?.parameters, ctx.request?.headers);
     const consumers = inFlightRequests.get(key);
 
+    const isRetry = readHeader(ctx.request?.headers, 'X-Flux-Retry') === 'true';
+
     if (consumers) {
+      if (isRetry) {
+        // Retry request takes over as the new leader
+        consumers[0] = { element, target: ctx.target, swap: element.getAttribute('hx-swap') ?? element.getAttribute('fx-swap') ?? undefined };
+        return;
+      }
       // In-flight request exists: register as duplicate consumer and set dedupe hit flag
       if (ctx.ctx) {
         ctx.ctx.isDedupeHit = true;
@@ -86,6 +94,17 @@ export function installDeduplication(): () => void {
     const key = computeDedupeKey(ctx.source ?? document.body, method, url, ctx.request?.parameters, ctx.request?.headers);
     const consumers = inFlightRequests.get(key);
     if (!consumers) return;
+
+    if (!ctx.successful) {
+      const isRetryableError = ctx.status === 0 || ctx.status === 502 || ctx.status === 503 || ctx.status === 504;
+      if (isRetryableError && ctx.source) {
+        const opts = getRetryOptions(ctx.source);
+        if (opts) {
+          // Leader will retry. Do not delete group, keep followers suspended.
+          return;
+        }
+      }
+    }
 
     inFlightRequests.delete(key);
 

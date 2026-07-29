@@ -5,10 +5,11 @@ import { applySearch } from './search.js';
 import { applyLoad } from './load.js';
 import { applyPoll } from './poll.js';
 import { applyInfinite } from './infinite.js';
-import { applySubmit } from './submit.js';
-import { applyDelete } from './delete.js';
+import { applySubmit, disconnectSubmit } from './submit.js';
+import { applyDelete, disconnectDelete } from './delete.js';
 import { applyAutosave } from './autosave.js';
 import { applyPagination } from './pagination.js';
+import { applyPrefetch } from './prefetch.js';
 import { getGeneratedAttributes } from '../core/generated-attributes.js';
 
 export { applySearch } from './search.js';
@@ -19,6 +20,7 @@ export { applySubmit } from './submit.js';
 export { applyDelete } from './delete.js';
 export { applyAutosave } from './autosave.js';
 export { applyPagination } from './pagination.js';
+export { applyPrefetch } from './prefetch.js';
 
 export interface PresetContext {
   target?: string;
@@ -33,6 +35,7 @@ export interface RegisterPresetOptions {
 export interface PresetDefinition {
   attribute: string;
   connect(element: Element, value: string, ctx: (attr: string) => string | undefined): boolean;
+  disconnect?(element: Element): void;
   override?: boolean;
 }
 
@@ -156,6 +159,7 @@ registerPreset({
       reset: element.hasAttribute('fx-reset'),
       disable: ctx('fx-disable'),
     }),
+  disconnect: (element) => disconnectSubmit(element),
 });
 
 registerPreset({
@@ -171,6 +175,7 @@ registerPreset({
       success: ctx('fx-success'),
       invalidate: ctx('fx-invalidate'),
     }),
+  disconnect: (element) => disconnectDelete(element),
 });
 
 registerPreset({
@@ -181,6 +186,14 @@ registerPreset({
       delay: ctx('fx-delay'),
       target: ctx('fx-target'),
       indicator: ctx('fx-indicator'),
+    }),
+});
+
+registerPreset({
+  attribute: 'fx-prefetch',
+  connect: (element, value, ctx) =>
+    applyPrefetch(element, {
+      url: value,
     }),
 });
 
@@ -200,9 +213,20 @@ export function applyPreset(
   const signature = computePresetSignature(element, preset, value);
   const currentSig = element.getAttribute('data-flux-preset-signature');
   const isPresetGenerated = element.getAttribute('data-flux-preset') === preset.replace(/^fx-/, '');
-  const hasOwnedAttrs = getGeneratedAttributes(element).size > 0;
+  const generatedAttrs = getGeneratedAttributes(element);
+  const hasOwnedAttrs = generatedAttrs.size > 0;
+  
+  let allAttrsPresent = true;
+  if (hasOwnedAttrs) {
+    for (const [name, expectedValue] of generatedAttrs.entries()) {
+      if (element.getAttribute(name) !== expectedValue) {
+        allAttrsPresent = false;
+        break;
+      }
+    }
+  }
 
-  if (isPresetGenerated && currentSig === signature && hasOwnedAttrs) {
+  if (isPresetGenerated && currentSig === signature && hasOwnedAttrs && allAttrsPresent) {
     return false;
   }
 
@@ -237,26 +261,15 @@ function checkPresetConflicts(element: Element): string[] {
 
 function computePresetSignature(element: Element, preset: string, value: string): string {
   const attrs = [
-    'fx-target',
-    'fx-swap',
-    'fx-delay',
-    'fx-interval',
-    'fx-min-length',
-    'fx-method',
-    'fx-indicator',
-    'fx-append',
-    'fx-prepend',
-    'fx-confirm',
-    'fx-disable',
-    'fx-remove',
-    'fx-reset',
-    'fx-progress',
-    'fx-max-size',
-    'fx-allowed-types',
-    'fx-success',
-    'fx-error',
-    'fx-invalidate',
+    'fx-target', 'fx-swap', 'fx-delay', 'fx-interval', 'fx-min-length',
+    'fx-method', 'fx-indicator', 'fx-append', 'fx-prepend', 'fx-confirm',
+    'fx-disable', 'fx-remove', 'fx-reset', 'fx-progress', 'fx-max-size',
+    'fx-allowed-types', 'fx-success', 'fx-error', 'fx-invalidate',
   ];
-  const opts = attrs.map((a) => `${a}=${element.getAttribute(a) ?? ''}`).join(';');
+  let opts = '';
+  for (let i = 0; i < attrs.length; i++) {
+    if (i > 0) opts += ';';
+    opts += attrs[i] + '=' + (element.getAttribute(attrs[i]!) ?? '');
+  }
   return `${preset}:${value}:${opts}`;
 }

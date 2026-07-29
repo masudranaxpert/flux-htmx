@@ -71,7 +71,7 @@ export function inspectElement(element: Element | null): InspectionResult {
     const rawCache = element.getAttribute('fx-cache') ?? '';
     if (rawCache === 'false') {
       warnings.push('fx-cache="false" explicitly disables caching for this request');
-    } else if (rawCache && rawCache !== 'true' && !/^(\d+)(ms|s|m)?$/.test(rawCache.trim())) {
+    } else if (rawCache && rawCache !== 'true' && !/^(\d+)(ms|s|m|h|d)?$/i.test(rawCache.trim())) {
       warnings.push(`invalid fx-cache TTL expression "${rawCache}"`);
     }
   }

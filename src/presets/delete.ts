@@ -101,6 +101,10 @@ export function resolveRemoveTarget(element: Element, selector: string): Element
 
 export { resolveRemoveTarget as resolveRemovalTarget };
 
+export function disconnectDelete(element: Element): void {
+  deleteControllers.get(element)?.();
+}
+
 export function disposeDeleteControllers(): void {
   for (const cleanup of Array.from(activeDeleteDisposers)) {
     cleanup();
@@ -113,8 +117,13 @@ export function disposeDeleteControllers(): void {
   }
 }
 
-if (typeof document !== 'undefined') {
-  document.addEventListener('htmx:before:cleanup:element', (evt) => {
+let isDeleteInstalled = false;
+
+export function installDeleteControllers(): () => void {
+  if (typeof document === 'undefined' || isDeleteInstalled) return () => {};
+  isDeleteInstalled = true;
+
+  const onCleanup = (evt: Event) => {
     const target = (evt as CustomEvent).detail?.elt ?? evt.target;
     if (target instanceof Element) {
       deleteControllers.get(target)?.();
@@ -122,5 +131,11 @@ if (typeof document !== 'undefined') {
         deleteControllers.get(el)?.();
       }
     }
-  });
+  };
+
+  document.addEventListener('htmx:before:cleanup:element', onCleanup);
+  return () => {
+    document.removeEventListener('htmx:before:cleanup:element', onCleanup);
+    isDeleteInstalled = false;
+  };
 }

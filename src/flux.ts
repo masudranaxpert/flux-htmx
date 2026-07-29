@@ -10,14 +10,14 @@ import { install, expandPresets } from './core/lifecycle.js';
 import { resolveToken, shouldAttach } from './core/csrf.js';
 import { installFeedback, resetFeedbackForTests } from './core/feedback.js';
 import { installStatusTargeting, disposeStatusTargeting } from './core/status.js';
-import { FragmentCache } from './cache/cache.js';
+import { cache } from './cache/instance.js';
 import { installCacheIntegration } from './cache/cacheWire.js';
 import { installOpenController, disposeDialogControllers } from './components/components.js';
 import { log } from './core/logger.js';
 import { FLUX_VERSION } from './core/version.js';
 import { readFluxMetaConfig, reportDependencies, verifyHtmxVersion } from './core/startup.js';
-import { disposeDeleteControllers } from './presets/delete.js';
-import { disposeSubmitControllers } from './presets/submit.js';
+import { disposeDeleteControllers, installDeleteControllers } from './presets/delete.js';
+import { disposeSubmitControllers, installSubmitControllers } from './presets/submit.js';
 import { inspectElement, doctor } from './diagnostics/doctor.js';
 import { getRequestContext } from './core/events.js';
 import { safeQuerySelector } from './core/selectors.js';
@@ -51,7 +51,7 @@ let configured = false;
 const teardowns: Array<() => void> = [];
 let currentConfig: ResolvedConfig | null = null;
 
-export const cache = new FragmentCache();
+export { cache };
 
 export function isStarted(): boolean {
   return configured;
@@ -140,6 +140,8 @@ export function configure(userConfig?: FluxConfig): ResolvedConfig {
     if (lifecycle) teardowns.push(lifecycle);
     teardowns.push(installRequestHooks(() => currentConfig));
     teardowns.push(installStatusTargeting());
+    teardowns.push(installSubmitControllers());
+    teardowns.push(installDeleteControllers());
     teardowns.push(installFeedback(() => currentConfig));
     teardowns.push(installCacheIntegration(cache, activeHtmx));
     teardowns.push(installOpenController());
@@ -174,6 +176,10 @@ export interface DisposeOptions {
 
 /** Removes Flux listeners and resets runtime state. Performs soft or hard disposal. */
 export function dispose(options?: DisposeOptions): void {
+  if (options?.removeGeneratedAttributes) {
+    removeGeneratedAttributes(undefined, true);
+  }
+
   while (teardowns.length) teardowns.shift()?.();
   disposeRetrySupport();
   disposeStatusTargeting();
@@ -182,10 +188,6 @@ export function dispose(options?: DisposeOptions): void {
   disposeDialogControllers();
   deactivatePlugins();
   resetFeedbackForTests();
-
-  if (options?.removeGeneratedAttributes) {
-    removeGeneratedAttributes(undefined, true);
-  }
 
   if (options?.clearCache !== false) {
     cache.clear();

@@ -227,6 +227,10 @@ function clearFieldErrors(element: Element): void {
   }
 }
 
+export function disconnectSubmit(element: Element): void {
+  submitControllers.get(element)?.();
+}
+
 export function disposeSubmitControllers(): void {
   for (const cleanup of Array.from(activeSubmitDisposers)) {
     cleanup();
@@ -239,8 +243,13 @@ export function disposeSubmitControllers(): void {
   }
 }
 
-if (typeof document !== 'undefined') {
-  document.addEventListener('htmx:before:cleanup:element', (evt) => {
+let isSubmitInstalled = false;
+
+export function installSubmitControllers(): () => void {
+  if (typeof document === 'undefined' || isSubmitInstalled) return () => {};
+  isSubmitInstalled = true;
+
+  const onCleanup = (evt: Event) => {
     const target = (evt as CustomEvent).detail?.elt ?? evt.target;
     if (target instanceof Element) {
       submitControllers.get(target)?.();
@@ -248,5 +257,11 @@ if (typeof document !== 'undefined') {
         submitControllers.get(el)?.();
       }
     }
-  });
+  };
+
+  document.addEventListener('htmx:before:cleanup:element', onCleanup);
+  return () => {
+    document.removeEventListener('htmx:before:cleanup:element', onCleanup);
+    isSubmitInstalled = false;
+  };
 }

@@ -113,7 +113,7 @@ export function installFeedback(getConfig?: () => ResolvedConfig | null): () => 
     document.removeEventListener('htmx:abort', onAbortEvent);
     inFlight = 0;
     updateGlobalIndicator(false, getConfig);
-    for (const el of Array.from(activeElements.keys())) {
+    for (const el of activeElements.keys()) {
       el.removeAttribute('data-flux-loading');
     }
     activeElements.clear();
@@ -179,7 +179,50 @@ function announceAndMarkResult(evt: Event): void {
       if (isError) alpineStore.error?.(message);
       else alpineStore.success?.(message);
     }
+    if (ctx.source.hasAttribute('fx-toast') || document.body.hasAttribute('fx-toast')) {
+      showBuiltInToast(message, isError ? 'error' : 'success');
+    }
   }
+}
+
+function showBuiltInToast(message: string, type: 'success' | 'error'): void {
+  let container = document.getElementById('flux-toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'flux-toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `flux-toast flux-toast-${type}`;
+  toast.textContent = message;
+  
+  // Create close button (optional but good for UX)
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '&times;';
+  closeBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:1.2em;margin-left:auto;color:inherit;opacity:0.7;';
+  closeBtn.onclick = () => removeToast(toast);
+  toast.appendChild(closeBtn);
+
+  container.appendChild(toast);
+
+  const timeoutId = setTimeout(() => {
+    removeToast(toast);
+  }, 3000);
+
+  // Store timeout on element so it can be cleared if manually closed
+  (toast as any)._timeoutId = timeoutId;
+}
+
+function removeToast(toast: HTMLElement): void {
+  if (toast.classList.contains('flux-toast-leave')) return;
+  if ((toast as any)._timeoutId) {
+    clearTimeout((toast as any)._timeoutId);
+  }
+  toast.classList.add('flux-toast-leave');
+  toast.addEventListener('animationend', () => {
+    toast.remove();
+  });
 }
 
 /** Toggles data-flux-active / .flux-active on global indicator element. */

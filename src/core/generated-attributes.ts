@@ -6,7 +6,7 @@
 import { getPresetRegistry } from '../presets/index.js';
 
 const generatedAttributes = new WeakMap<Element, Map<string, string>>();
-const generatedElements = new Set<Element>();
+const generatedElements = new WeakSet<Element>();
 
 /**
  * Sets a generated attribute on `element`. If the attribute already exists and was NOT generated
@@ -24,7 +24,6 @@ export function setGeneratedAttribute(element: Element, name: string, value: str
     map?.delete(name);
     if (map?.size === 0) {
       generatedAttributes.delete(element);
-      generatedElements.delete(element);
     }
     return false;
   }
@@ -71,7 +70,6 @@ export function removeGeneratedAttribute(element: Element, name: string): void {
   attrMap?.delete(name);
   if (attrMap?.size === 0) {
     generatedAttributes.delete(element);
-    generatedElements.delete(element);
   }
 }
 
@@ -82,10 +80,14 @@ export function removeGeneratedAttributes(element?: Element, hardDispose = false
     return;
   }
 
-  for (const el of Array.from(generatedElements)) {
-    cleanElementGeneratedAttributes(el, hardDispose);
+  if (typeof document !== 'undefined') {
+    const candidates = document.querySelectorAll(
+      '[data-flux-preset], [data-flux-status], [data-flux-loading], [data-flux-error], [data-flux-disable-count], [data-flux-was-disabled]'
+    );
+    for (const el of candidates) {
+      cleanElementGeneratedAttributes(el, hardDispose);
+    }
   }
-  generatedElements.clear();
 }
 
 function cleanElementGeneratedAttributes(element: Element, hardDispose = false): void {
@@ -97,7 +99,6 @@ function cleanElementGeneratedAttributes(element: Element, hardDispose = false):
       }
     }
     generatedAttributes.delete(element);
-    generatedElements.delete(element);
   }
 
   if (hardDispose) {
@@ -133,9 +134,15 @@ function cleanElementGeneratedAttributes(element: Element, hardDispose = false):
 export function reconcileGeneratedAttributes(root?: Element): void {
   const presetRegistry = getPresetRegistry();
 
-  for (const element of Array.from(generatedElements)) {
-    if (root && root !== element && !root.contains(element)) continue;
+  if (typeof document === 'undefined') return;
 
+  const context = root ?? document;
+  const elements = Array.from(
+    context.querySelectorAll('[data-flux-preset], [data-flux-status]')
+  );
+  if (root) elements.push(root);
+
+  for (const element of elements) {
     const attrMap = generatedAttributes.get(element);
     if (!attrMap) continue;
 
@@ -146,12 +153,14 @@ export function reconcileGeneratedAttributes(root?: Element): void {
       const presetAttr = `fx-${currentPreset}`;
       hasPresetAttr = element.hasAttribute(presetAttr) && presetRegistry.has(presetAttr);
       if (!hasPresetAttr) {
+        const handler = presetRegistry.get(presetAttr);
+        handler?.disconnect?.(element);
         element.removeAttribute('data-flux-preset');
         element.removeAttribute('data-flux-preset-signature');
       }
     }
 
-    for (const [name] of Array.from(attrMap.entries())) {
+    for (const [name] of attrMap.entries()) {
       if (name.startsWith('hx-status:')) {
         const status = name.replace('hx-status:', '');
         if (!element.hasAttribute(`fx-on-${status}`)) {

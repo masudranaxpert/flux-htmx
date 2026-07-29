@@ -30,6 +30,9 @@ const DEFAULTS = {
   defaultTtlMs: 60_000,
 } as const;
 
+// ponytail: singleton avoids re-allocating TextEncoder on every cache set call
+const encoder = typeof TextEncoder !== 'undefined' ? new TextEncoder() : null;
+
 export class FragmentCache {
   private store = new Map<string, CacheEntry>();
   private readonly maxEntries: number;
@@ -81,10 +84,7 @@ export class FragmentCache {
     if (existing) {
       this.currentBytes -= existing.byteSize;
     }
-    const byteSize =
-      typeof TextEncoder !== 'undefined'
-        ? new TextEncoder().encode(value).length
-        : value.length * 2;
+    const byteSize = encoder ? encoder.encode(value).length : value.length * 2;
     const ttl = ttlMs ?? this.defaultTtlMs;
     const staleTtl = staleTtlMs ?? ttl * 5;
     const now = Date.now();
@@ -113,7 +113,7 @@ export class FragmentCache {
   invalidateMatching(pattern: string): number {
     const regex = wildcardToRegExp(pattern);
     let removed = 0;
-    for (const [key, entry] of Array.from(this.store.entries())) {
+    for (const [key, entry] of this.store) {
       if (regex.test(key)) {
         this.currentBytes -= entry.byteSize;
         this.store.delete(key);
@@ -141,7 +141,7 @@ export class FragmentCache {
     // First drop expired entries opportunistically.
     if (this.store.size > this.maxEntries || this.currentBytes > this.maxBytes) {
       const now = Date.now();
-      for (const [key, entry] of Array.from(this.store.entries())) {
+      for (const [key, entry] of this.store) {
         if (now >= entry.staleUntil) {
           this.currentBytes -= entry.byteSize;
           this.store.delete(key);

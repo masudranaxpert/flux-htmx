@@ -3,7 +3,7 @@
 
 import type { FluxPlugin, FluxPluginApi } from '../core/plugin.js';
 import { getRequestContext } from '../core/events.js';
-import { queryOne } from '../core/selectors.js';
+import { queryOne, safeClosest } from '../core/selectors.js';
 
 interface OptimisticSnapshot {
   source: Element;
@@ -12,6 +12,7 @@ interface OptimisticSnapshot {
   nextSibling: Node | null;
   displayStyle: string;
   addedClass?: string;
+  hadClassBefore: boolean;
   removed: boolean;
   rollbackOptIn: boolean;
 }
@@ -39,7 +40,7 @@ export const optimisticPlugin: FluxPlugin = {
           target = trigger;
         } else if (removeSelector.startsWith('closest ')) {
           const tag = removeSelector.replace('closest ', '').trim();
-          target = trigger.closest(tag);
+          target = safeClosest(trigger, tag);
         } else {
           target = queryOne(removeSelector, document);
         }
@@ -49,6 +50,8 @@ export const optimisticPlugin: FluxPlugin = {
 
       if (!target || activeSnapshots.has(trigger)) return;
 
+      const hadClassBefore = addClass ? target.classList.contains(addClass) : false;
+
       const snapshot: OptimisticSnapshot = {
         source: trigger,
         target,
@@ -56,6 +59,7 @@ export const optimisticPlugin: FluxPlugin = {
         nextSibling: target.nextSibling,
         displayStyle: (target as HTMLElement).style?.display ?? '',
         addedClass: addClass ?? undefined,
+        hadClassBefore,
         removed: Boolean(removeSelector),
         rollbackOptIn: trigger.hasAttribute('fx-rollback'),
       };
@@ -119,7 +123,7 @@ function restoreSnapshot(snapshot: OptimisticSnapshot): void {
     } else {
       snapshot.parent.appendChild(snapshot.target);
     }
-  } else if (snapshot.addedClass) {
+  } else if (snapshot.addedClass && !snapshot.hadClassBefore) {
     snapshot.target.classList.remove(snapshot.addedClass);
   }
 }

@@ -183,10 +183,11 @@ function wireUploadElement(element: Element, uploadUrl: string): void {
     element.classList.remove('flux-drag-over');
   };
 
-  const submitFormDataFallback = (droppedFiles: FileList | File[]) => {
+  const submitFormDataFallback = (droppedFiles: FileList | File[], fallbackInput?: HTMLInputElement | null) => {
     const formData = new FormData();
+    const fieldName = fallbackInput?.name || 'file';
     for (const file of Array.from(droppedFiles)) {
-      formData.append('file', file);
+      formData.append(fieldName, file);
     }
     const activeHtmx = (window as any).htmx ?? (globalThis as any).htmx;
     if (typeof activeHtmx?.ajax === 'function') {
@@ -227,7 +228,7 @@ function wireUploadElement(element: Element, uploadUrl: string): void {
           }
         } catch (e) {
           log.warn('[flux] DataTransfer file binding unsupported, using FormData fallback:', e);
-          submitFormDataFallback(droppedFiles);
+          submitFormDataFallback(droppedFiles, fileInput);
         }
       } else {
         submitFormDataFallback(droppedFiles);
