@@ -19,7 +19,6 @@ stable release.
 
 | Package             | Version              | Notes                                                                                                                    |
 | ------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `alpinejs`          | `3.15.12` (`latest`) | Not yet integrated (Phase 5). Verified available.                                                                        |
 | `typescript`        | `5.9.3`              | `latest` is `7.0.2`, but no `typescript-eslint` release supports TS 7 yet (peer cap `<6.1.0`). Pinned to the latest 5.x. |
 | `vite`              | `8.1.5`              | Uses the rolldown/`oxc` minifier; esbuild is no longer a dependency.                                                     |
 | `vitest`            | `4.1.10`             | Unit tests in jsdom.                                                                                                     |
