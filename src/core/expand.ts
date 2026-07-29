@@ -9,6 +9,7 @@ import {
   removeGeneratedAttribute,
   hasGeneratedAttribute,
 } from './generated-attributes.js';
+import { applyRecipe } from './recipes.js';
 
 // Verbs make an element actionable (matched by HTMX's `[hx-get],[hx-post],...` selector).
 const VERBS = ['get', 'post', 'put', 'patch', 'delete'] as const;
@@ -33,7 +34,7 @@ const OPTIONS = [
 ] as const;
 
 // One selector matching any Flux shorthand attribute, used for subtree discovery.
-const FLUX_SELECTOR = [...VERBS, ...OPTIONS, 'morph', 'history'].map((n) => `[fx-${n}]`).join(',');
+const FLUX_SELECTOR = [...VERBS, ...OPTIONS, 'morph', 'history', 'recipe', 'scope'].map((n) => `[fx-${n}]`).join(',');
 
 /** Returns true if `element` carries any Flux shorthand verb or option attribute. */
 export function hasFluxAttributes(element: Element): boolean {
@@ -53,6 +54,15 @@ export function fluxSelector(): string {
  */
 export function expandElement(element: Element): number {
   if (!(element instanceof Element)) return 0;
+
+  if (element.hasAttribute('fx-recipe')) {
+    applyRecipe(element, element.getAttribute('fx-recipe') || '');
+  }
+
+  const scope = element.closest('[fx-scope]');
+  if (scope && scope !== element) {
+    applyScope(element, scope);
+  }
 
   let written = 0;
   for (const verb of VERBS) written += syncShorthand(element, verb);
@@ -113,4 +123,16 @@ function syncShorthand(element: Element, name: string): 0 | 1 {
     element.setAttribute(marker, '1');
   }
   return written ? 1 : 0;
+}
+
+/** Inherits defaults from the nearest fx-scope if not explicitly set on the element */
+function applyScope(element: Element, scope: Element): void {
+  for (const attr of scope.attributes) {
+    if (attr.name.startsWith('fx-default-')) {
+      const originalName = attr.name.replace('fx-default-', 'fx-');
+      if (!element.hasAttribute(originalName)) {
+        element.setAttribute(originalName, attr.value);
+      }
+    }
+  }
 }

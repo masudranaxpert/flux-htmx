@@ -12,6 +12,11 @@ import { installFeedback, resetFeedbackForTests } from './core/feedback.js';
 import { installValidation } from './core/validation.js';
 import { installOfflineSupport, pendingCount, clearOfflineQueue, flush as flushOffline } from './core/offline.js';
 import { installStatusTargeting, disposeStatusTargeting } from './core/status.js';
+import { registerRecipe } from './core/recipes.js';
+import { installActionPipeline } from './core/action-lifecycle.js';
+import { defineActionPipeline } from './core/actions.js';
+export { registerRecipe as recipe } from './core/recipes.js';
+export { defineActionPipeline as action } from './core/actions.js';
 import { cache } from './cache/instance.js';
 import { installCacheIntegration } from './cache/cacheWire.js';
 import { installOpenController, disposeDialogControllers } from './components/components.js';
@@ -148,6 +153,7 @@ export function configure(userConfig?: FluxConfig): ResolvedConfig {
     if (validationTd) teardowns.push(validationTd);
     const offlineTd = installOfflineSupport(() => activeHtmx);
     teardowns.push(offlineTd);
+    teardowns.push(installActionPipeline());
     teardowns.push(installFeedback(() => currentConfig));
     teardowns.push(installCacheIntegration(cache, activeHtmx));
     teardowns.push(installOpenController());
@@ -286,6 +292,8 @@ function createFluxApi() {
     reconfigure,
     process,
     dispose,
+    recipe: registerRecipe,
+    action: defineActionPipeline,
     cache,
     htmx: activeHtmx,
     inspect: inspectElement,
