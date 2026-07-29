@@ -20,6 +20,8 @@ export function applyPagination(element: Element, options: PaginationOptions): b
   const swapMethod = options.append ? 'beforeend' : options.prepend ? 'afterbegin' : undefined;
   if (swapMethod) {
     setGeneratedAttribute(element, 'hx-swap', swapMethod);
+  } else {
+    removeGeneratedAttribute(element, 'hx-swap');
   }
 
   if (options.target && options.target.trim()) {

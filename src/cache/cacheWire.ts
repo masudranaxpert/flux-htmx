@@ -135,7 +135,7 @@ export function installCacheIntegration(
     }
   };
 
-  // after:request: store successful GET responses and update UI if SWR revalidation produced new content.
+  // after:request: store successful GET responses and update cache store on fresh background response.
   const onAfterRequest = (evt: Event) => {
     const ctx = getRequestContext(evt);
     const source = ctx.source;
@@ -213,19 +213,6 @@ export function installCacheIntegration(
       !hasAuthHeader
     ) {
       const key = cacheKey(source, request);
-      const existingCached = cache.get(key);
-
-      // If SWR mode revalidated with updated content, update UI with new text
-      if (policy.swr && existingCached !== null && existingCached !== text) {
-        const htmx = htmxInstance ?? (window as unknown as { htmx?: HtmxInstance }).htmx;
-        const target = ctx.target;
-        if (htmx?.swap && target) {
-          const swap =
-            source.getAttribute('hx-swap') ?? source.getAttribute('fx-swap') ?? 'innerHTML';
-          htmx.swap({ target, text, swap });
-        }
-      }
-
       cache.set(key, text, policy.ttl);
     }
 

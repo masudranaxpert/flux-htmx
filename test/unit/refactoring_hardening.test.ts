@@ -114,7 +114,7 @@ describe('Refactoring Hardening Test Suite', () => {
     expect(insp.presets).toContain('fx-submit');
 
     const doc = doctor(document.body);
-    expect(doc.fluxVersion).toBe('0.1.0-beta.0');
+    expect(doc.fluxVersion).toBe('1.0.0');
   });
 
   it('7. registerPreset returns teardown and warns on duplicate registration without override', () => {

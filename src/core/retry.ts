@@ -2,7 +2,6 @@
 
 import { log } from './logger.js';
 import { getRequestContext } from './events.js';
-import { setGeneratedAttribute } from './generated-attributes.js';
 
 export interface RetryOptions {
   maxRetries: number;
@@ -12,6 +11,7 @@ export interface RetryOptions {
 }
 
 const retryingElements = new WeakMap<Element, number>();
+const activeRetryTimers = new Set<NodeJS.Timeout>();
 
 /** Parses retry options declared on `element`. */
 export function getRetryOptions(element: Element): RetryOptions | null {
@@ -92,17 +92,38 @@ export function installRetrySupport(): () => void {
       }),
     );
 
-    setTimeout(() => {
+    const timerId = setTimeout(() => {
+      activeRetryTimers.delete(timerId);
       const activeHtmx = (window as any).htmx ?? (globalThis as any).htmx;
-      if (typeof activeHtmx?.trigger === 'function') {
-        activeHtmx.trigger(element, 'htmx:abort');
-      }
-      if (typeof activeHtmx?.process === 'function') {
-        activeHtmx.process(element);
+      const actionUrl =
+        ctx.request?.action ??
+        element.getAttribute('hx-get') ??
+        element.getAttribute('hx-post') ??
+        element.getAttribute('fx-get') ??
+        element.getAttribute('fx-post');
+
+      if (typeof activeHtmx?.ajax === 'function' && actionUrl) {
+        activeHtmx.ajax(method, actionUrl, element);
+      } else if (typeof activeHtmx?.trigger === 'function') {
+        activeHtmx.trigger(element, 'click');
+      } else if (element instanceof HTMLElement && typeof element.click === 'function') {
+        element.click();
       }
     }, backoffDelay);
+
+    activeRetryTimers.add(timerId);
   };
 
   document.addEventListener('htmx:after:request', onResponse);
-  return () => document.removeEventListener('htmx:after:request', onResponse);
+  return () => {
+    document.removeEventListener('htmx:after:request', onResponse);
+    disposeRetrySupport();
+  };
+}
+
+export function disposeRetrySupport(): void {
+  for (const id of Array.from(activeRetryTimers)) {
+    clearTimeout(id);
+  }
+  activeRetryTimers.clear();
 }

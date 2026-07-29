@@ -1,8 +1,10 @@
 // Flux Upload Progress Plugin: @flux/plugin-upload
-// Handles live upload percentage, drag & drop dropzones, file size limits, and MIME type validation.
+// Handles live upload percentage, drag & drop dropzones, file size limits, and MIME type validation with complete teardown.
 
 import type { FluxPlugin, FluxPluginApi } from '../core/plugin.js';
 import { log } from '../core/logger.js';
+
+const uploadElementCleanups = new WeakMap<Element, () => void>();
 
 export function parseMaxSizeBytes(sizeStr?: string | null): number | null {
   if (!sizeStr) return null;
@@ -72,6 +74,8 @@ export const uploadPlugin: FluxPlugin = {
 };
 
 function wireUploadElement(element: Element): void {
+  uploadElementCleanups.get(element)?.();
+
   const maxSizeStr = element.getAttribute('fx-max-size');
   const maxSizeBytes = parseMaxSizeBytes(maxSizeStr);
   const allowedTypes = element
@@ -133,5 +137,48 @@ function wireUploadElement(element: Element): void {
     }
   };
 
+  const onDragOver = (evt: Event) => {
+    evt.preventDefault();
+    element.setAttribute('data-flux-drag-over', '1');
+    element.classList.add('flux-drag-over');
+  };
+
+  const onDragLeave = () => {
+    element.removeAttribute('data-flux-drag-over');
+    element.classList.remove('flux-drag-over');
+  };
+
+  const onDrop = (evt: DragEvent) => {
+    evt.preventDefault();
+    onDragLeave();
+    if (evt.dataTransfer?.files && evt.dataTransfer.files.length > 0) {
+      if (validateFiles(evt.dataTransfer.files)) {
+        element.dispatchEvent(
+          new CustomEvent('flux:upload:drop', {
+            bubbles: true,
+            detail: { files: evt.dataTransfer.files },
+          }),
+        );
+      }
+    }
+  };
+
   element.addEventListener('change', onChange);
+  element.addEventListener('dragover', onDragOver);
+  element.addEventListener('dragenter', onDragOver);
+  element.addEventListener('dragleave', onDragLeave);
+  element.addEventListener('drop', onDrop as EventListener);
+
+  const cleanup = () => {
+    element.removeEventListener('change', onChange);
+    element.removeEventListener('dragover', onDragOver);
+    element.removeEventListener('dragenter', onDragOver);
+    element.removeEventListener('dragleave', onDragLeave);
+    element.removeEventListener('drop', onDrop as EventListener);
+    element.removeAttribute('data-flux-drag-over');
+    element.classList.remove('flux-drag-over');
+    uploadElementCleanups.delete(element);
+  };
+
+  uploadElementCleanups.set(element, cleanup);
 }

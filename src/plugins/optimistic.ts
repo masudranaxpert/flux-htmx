@@ -6,15 +6,17 @@ import { getRequestContext } from '../core/events.js';
 import { queryOne } from '../core/selectors.js';
 
 interface OptimisticSnapshot {
+  source: Element;
   target: Element;
   parent: Node | null;
   nextSibling: Node | null;
   displayStyle: string;
   addedClass?: string;
   removed: boolean;
+  rollbackOptIn: boolean;
 }
 
-const snapshots = new WeakMap<Element, OptimisticSnapshot>();
+const activeSnapshots = new Map<Element, OptimisticSnapshot>();
 
 export const optimisticPlugin: FluxPlugin = {
   name: 'optimistic-ui',
@@ -45,18 +47,20 @@ export const optimisticPlugin: FluxPlugin = {
         target = trigger;
       }
 
-      if (!target || snapshots.has(trigger)) return;
+      if (!target || activeSnapshots.has(trigger)) return;
 
       const snapshot: OptimisticSnapshot = {
+        source: trigger,
         target,
         parent: target.parentNode,
         nextSibling: target.nextSibling,
         displayStyle: (target as HTMLElement).style?.display ?? '',
         addedClass: addClass ?? undefined,
         removed: Boolean(removeSelector),
+        rollbackOptIn: trigger.hasAttribute('fx-rollback'),
       };
 
-      snapshots.set(trigger, snapshot);
+      activeSnapshots.set(trigger, snapshot);
 
       // Perform immediate optimistic mutation
       if (snapshot.removed) {
@@ -71,27 +75,16 @@ export const optimisticPlugin: FluxPlugin = {
       const source = ctx.source;
       if (!source) return;
 
-      const snapshot = snapshots.get(source);
+      const snapshot = activeSnapshots.get(source);
       if (!snapshot) return;
-
-      const shouldRollback = source.hasAttribute('fx-rollback');
 
       if (ctx.successful) {
         // Success: finalize optimistic UI mutation
-        snapshots.delete(source);
-      } else if (shouldRollback || !ctx.successful) {
-        // Failure: perform automatic rollback to restore original DOM state
-        if (snapshot.removed && snapshot.parent) {
-          if (snapshot.nextSibling && snapshot.parent.contains(snapshot.nextSibling)) {
-            snapshot.parent.insertBefore(snapshot.target, snapshot.nextSibling);
-          } else {
-            snapshot.parent.appendChild(snapshot.target);
-          }
-        } else if (snapshot.addedClass) {
-          snapshot.target.classList.remove(snapshot.addedClass);
-        }
-
-        snapshots.delete(source);
+        activeSnapshots.delete(source);
+      } else if (snapshot.rollbackOptIn) {
+        // Failure with explicit fx-rollback opt-in: perform automatic rollback
+        restoreSnapshot(snapshot);
+        activeSnapshots.delete(source);
 
         source.dispatchEvent(
           new CustomEvent('flux:optimistic:rollback', {
@@ -99,6 +92,8 @@ export const optimisticPlugin: FluxPlugin = {
             detail: { target: snapshot.target },
           }),
         );
+      } else {
+        activeSnapshots.delete(source);
       }
     };
 
@@ -108,6 +103,23 @@ export const optimisticPlugin: FluxPlugin = {
     return () => {
       document.removeEventListener('htmx:before:request', onRequest);
       document.removeEventListener('htmx:after:request', onResponse);
+      // Clean teardown: restore any pending optimistic DOM elements
+      for (const [key, snapshot] of Array.from(activeSnapshots.entries())) {
+        restoreSnapshot(snapshot);
+        activeSnapshots.delete(key);
+      }
     };
   },
 };
+
+function restoreSnapshot(snapshot: OptimisticSnapshot): void {
+  if (snapshot.removed && snapshot.parent) {
+    if (snapshot.nextSibling && snapshot.parent.contains(snapshot.nextSibling)) {
+      snapshot.parent.insertBefore(snapshot.target, snapshot.nextSibling);
+    } else {
+      snapshot.parent.appendChild(snapshot.target);
+    }
+  } else if (snapshot.addedClass) {
+    snapshot.target.classList.remove(snapshot.addedClass);
+  }
+}

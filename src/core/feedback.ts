@@ -84,7 +84,7 @@ export function installFeedback(getConfig?: () => ResolvedConfig | null): () => 
 
   const onAbortEvent = (evt: Event) => {
     const ctx = getRequestContext(evt);
-    if (ctx.isCacheHit) return;
+    if (ctx.isCacheHit || (ctx as any).isDedupeHit || ctx.ctx?.isDedupeHit) return;
     if (ctx.source) {
       setRequestState(ctx.source, 'aborted');
     }

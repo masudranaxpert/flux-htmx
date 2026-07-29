@@ -1,6 +1,6 @@
 {
   "name": "@flux/core",
-  "version": "0.1.0-beta.0",
+  "version": "1.0.0",
   "description": "Thin server-driven frontend layer on HTMX 4. Shorthand attributes, lifecycle, presets — without reimplementing htmx.",
   "license": "MIT",
   "type": "module",

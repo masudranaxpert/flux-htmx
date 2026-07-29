@@ -244,6 +244,8 @@ function computePresetSignature(element: Element, preset: string, value: string)
     'fx-min-length',
     'fx-method',
     'fx-indicator',
+    'fx-append',
+    'fx-prepend',
   ];
   const opts = attrs.map((a) => `${a}=${element.getAttribute(a) ?? ''}`).join(';');
   return `${preset}:${value}:${opts}`;

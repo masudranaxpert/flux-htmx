@@ -19,8 +19,9 @@ export function installDeduplication(): () => void {
     const element = ctx.source;
     if (!element) return;
 
+    // Explicit opt-in guard: only deduplicate when fx-dedupe="true" is declared
     const dedupeAttr = element.getAttribute('fx-dedupe');
-    if (dedupeAttr === 'false') return;
+    if (!dedupeAttr || dedupeAttr === 'false') return;
 
     const method = (ctx.request?.method ?? 'GET').toUpperCase();
     if (method !== 'GET') return;
@@ -29,11 +30,14 @@ export function installDeduplication(): () => void {
       ctx.request?.action ?? element.getAttribute('hx-get') ?? element.getAttribute('fx-get');
     if (!url) return;
 
-    const key = `GET:${url}`;
+    const key = computeDedupeKey(element, method, url, ctx.request?.parameters);
     const consumers = inFlightRequests.get(key);
 
     if (consumers) {
-      // In-flight request exists: register as duplicate consumer and abort duplicate network request
+      // In-flight request exists: register as duplicate consumer and set dedupe hit flag
+      if (ctx.ctx) {
+        ctx.ctx.isDedupeHit = true;
+      }
       consumers.push({
         element,
         target: ctx.target,
@@ -57,7 +61,7 @@ export function installDeduplication(): () => void {
       ctx.source?.getAttribute('fx-get');
     if (!url) return;
 
-    const key = `GET:${url}`;
+    const key = computeDedupeKey(ctx.source ?? document.body, method, url, ctx.request?.parameters);
     const consumers = inFlightRequests.get(key);
     if (!consumers) return;
 
@@ -87,4 +91,20 @@ export function installDeduplication(): () => void {
     document.removeEventListener('htmx:after:request', onResponse);
     inFlightRequests.clear();
   };
+}
+
+function computeDedupeKey(
+  source: Element,
+  method: string,
+  url: string,
+  params?: Record<string, unknown>,
+): string {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      if (v !== undefined && v !== null) searchParams.append(k, String(v));
+    }
+  }
+  const qStr = searchParams.toString();
+  return `${method}:${url}${qStr ? `?${qStr}` : ''}`;
 }
