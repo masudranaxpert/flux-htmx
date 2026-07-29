@@ -44,19 +44,19 @@ npm install htmx.org@4.0.0-beta6
 
 ```html
 <!-- Standalone Flux bundle (includes HTMX 4) -->
-<script src="https://cdn.jsdelivr.net/npm/flux-htmx@1.2.3/dist/flux.full.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flux-htmx@1.2.5/dist/flux.full.iife.js"></script>
 
 <!-- CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.2.3/dist/flux.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.2.5/dist/flux.css" />
 <!-- or minified -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.2.3/dist/flux.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.2.5/dist/flux.min.css" />
 ```
 
 ### unpkg
 
 ```html
-<script src="https://unpkg.com/flux-htmx@1.2.3/dist/flux.full.iife.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/flux-htmx@1.2.3/dist/flux.min.css" />
+<script src="https://unpkg.com/flux-htmx@1.2.5/dist/flux.full.iife.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/flux-htmx@1.2.5/dist/flux.min.css" />
 ```
 
 > **Tip:** Use `flux.full.iife.js` for CDN (includes everything). Use `flux.iife.js` for bundlers where htmx is already imported separately.
@@ -72,14 +72,14 @@ npm install htmx.org@4.0.0-beta6
     <meta charset="UTF-8" />
     <title>My App</title>
     <meta name="flux-config" content='{"csrf":{"strategy":"meta"}}' />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.2.3/dist/flux.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.2.5/dist/flux.css" />
   </head>
   <body>
     <div id="content">
       <a fx-get="/page-2" fx-target="#content" fx-prefetch>Go to Page 2</a>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/flux-htmx@1.2.3/dist/flux.full.iife.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flux-htmx@1.2.5/dist/flux.full.iife.js"></script>
   </body>
 </html>
 ```

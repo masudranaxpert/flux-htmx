@@ -15,8 +15,8 @@ function makeEl(html: string): Element {
 
 describe('Stable v1.0.0 Release Hardening & Features Test Suite', () => {
   it('1. Version: exposes the package version', () => {
-    expect(FLUX_VERSION).toBe('1.2.3');
-    expect(Flux.default.version).toBe('1.2.3');
+    expect(FLUX_VERSION).toBe('1.2.5');
+    expect(Flux.default.version).toBe('1.2.5');
   });
 
   it('2. Automatic Retry: parses fx-retry options and calculates backoff', () => {

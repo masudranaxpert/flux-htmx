@@ -100,7 +100,7 @@ test('exposes the correct global IIFE API shape without default wrapper', async 
   }));
 
   expect(result).toEqual({
-    version: '1.2.3',
+    version: '1.2.5',
     startType: 'function',
     startedType: 'boolean',
     hasDefaultWrapper: false,
