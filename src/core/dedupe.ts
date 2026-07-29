@@ -48,17 +48,10 @@ export function installDeduplication(): () => void {
 
     if (hasAuthorizationHeader(ctx.request?.headers)) return;
 
-    const url =
-      ctx.request?.action ?? element.getAttribute('hx-get') ?? element.getAttribute('fx-get');
+    const url = ctx.request?.action ?? element.getAttribute('hx-get') ?? element.getAttribute('fx-get');
     if (!url) return;
 
-    const key = computeDedupeKey(
-      element,
-      method,
-      url,
-      ctx.request?.parameters,
-      ctx.request?.headers,
-    );
+    const key = computeDedupeKey(element, method, url, ctx.request?.parameters, ctx.request?.headers);
     const consumers = inFlightRequests.get(key);
 
     if (consumers) {
@@ -87,27 +80,19 @@ export function installDeduplication(): () => void {
     const method = (ctx.request?.method ?? 'GET').toUpperCase();
     if (method !== 'GET') return;
 
-    const url =
-      ctx.request?.action ??
-      ctx.source?.getAttribute('hx-get') ??
-      ctx.source?.getAttribute('fx-get');
+    const url = ctx.request?.action ?? ctx.source?.getAttribute('hx-get') ?? ctx.source?.getAttribute('fx-get');
     if (!url) return;
 
-    const key = computeDedupeKey(
-      ctx.source ?? document.body,
-      method,
-      url,
-      ctx.request?.parameters,
-      ctx.request?.headers,
-    );
+    const key = computeDedupeKey(ctx.source ?? document.body, method, url, ctx.request?.parameters, ctx.request?.headers);
     const consumers = inFlightRequests.get(key);
     if (!consumers) return;
 
     inFlightRequests.delete(key);
 
+    const activeHtmx = (window as any).htmx ?? (globalThis as any).htmx;
+
     if (ctx.successful && ctx.text !== null && ctx.text !== undefined) {
-      const activeHtmx = (window as any).htmx ?? (globalThis as any).htmx;
-      // Share response payload with secondary consumers (handles empty "" string responses cleanly)
+      // Share response payload & fire follower lifecycle events for secondary consumers
       for (let i = 1; i < consumers.length; i++) {
         const consumer = consumers[i];
         if (consumer && consumer.target && typeof activeHtmx?.swap === 'function') {
@@ -116,6 +101,39 @@ export function installDeduplication(): () => void {
             text: ctx.text,
             swap: consumer.swap ?? 'innerHTML',
           });
+
+          consumer.element.dispatchEvent(
+            new CustomEvent('htmx:after:swap', {
+              bubbles: true,
+              detail: { elt: consumer.element, target: consumer.target, xhr: ctx.detail.xhr, response: ctx.text },
+            }),
+          );
+
+          consumer.element.dispatchEvent(
+            new CustomEvent('flux:dedupe:success', {
+              bubbles: true,
+              detail: { element: consumer.element, target: consumer.target, text: ctx.text },
+            }),
+          );
+        }
+      }
+    } else if (!ctx.successful) {
+      // Leader failure: propagate error lifecycle events to secondary followers
+      for (let i = 1; i < consumers.length; i++) {
+        const consumer = consumers[i];
+        if (consumer && consumer.element) {
+          consumer.element.dispatchEvent(
+            new CustomEvent('flux:dedupe:error', {
+              bubbles: true,
+              detail: { element: consumer.element, status: ctx.status, text: ctx.text },
+            }),
+          );
+          consumer.element.dispatchEvent(
+            new CustomEvent('htmx:responseError', {
+              bubbles: true,
+              detail: { elt: consumer.element, xhr: ctx.detail.xhr, status: ctx.status },
+            }),
+          );
         }
       }
     }
@@ -163,8 +181,8 @@ function computeDedupeKey(
     }
   }
 
-  const sortedEntries = Array.from(searchParams.entries()).sort(
-    ([aK, aV], [bK, bV]) => aK.localeCompare(bK) || aV.localeCompare(bV),
+  const sortedEntries = Array.from(searchParams.entries()).sort(([aK, aV], [bK, bV]) =>
+    aK.localeCompare(bK) || aV.localeCompare(bV),
   );
 
   const canonicalParams = new URLSearchParams();

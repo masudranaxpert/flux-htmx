@@ -1,28 +1,13 @@
-// Connects the fragment cache to HTMX's request lifecycle. A GET whose source carries
-// fx-cache="60s" (or empty fx-cache) is served from cache when fresh and stored on fetch;
-// a mutation whose source carries fx-invalidate clears matching keys after a successful response.
-// Supports Stale-While-Revalidate (SWR) mode via fx-cache-mode="stale-while-revalidate".
+// HTMX cache integration adapter. Bridges HTMX event detail shape with FragmentCache.
+// GET-only, handles fx-cache, fx-cache-mode, fx-cache-key, fx-invalidate, and response Vary header support.
 
-import type { FragmentCache } from './cache.js';
-import { isCacheableMethod } from './cache.js';
+import { FragmentCache, isCacheableMethod } from './cache.js';
 import { getRequestContext } from '../core/events.js';
-import { log } from '../core/logger.js';
 
 const CACHE_ATTR = 'fx-cache';
-const CACHE_KEY_ATTR = 'fx-cache-key';
 const CACHE_MODE_ATTR = 'fx-cache-mode';
+const CACHE_KEY_ATTR = 'fx-cache-key';
 const INVALIDATE_ATTR = 'fx-invalidate';
-const VARY_ATTR = 'fx-cache-vary';
-
-const SENSITIVE_FIELDS = new Set([
-  'password',
-  'pass',
-  'csrfmiddlewaretoken',
-  '_csrf',
-  'authenticity_token',
-  'csrf_token',
-  'token',
-]);
 
 export interface CachePolicy {
   enabled: boolean;
@@ -30,40 +15,39 @@ export interface CachePolicy {
   swr: boolean;
 }
 
-export function getCachePolicy(element: Element): CachePolicy {
-  if (!element.hasAttribute(CACHE_ATTR)) {
-    return { enabled: false, swr: false };
+export function parseCacheTtl(value: string | null): number | undefined {
+  if (value === null || value === undefined) return undefined;
+  const normalized = value.trim();
+  if (normalized === 'true' || normalized === '') return 60_000;
+  if (/^\d+$/.test(normalized)) return Number(normalized) * 1000;
+
+  const match = /^(\d+)(ms|s|m|h|d)?$/i.exec(normalized);
+  if (!match) return undefined;
+
+  const num = Number(match[1]);
+  const unit = (match[2] ?? 's').toLowerCase();
+  switch (unit) {
+    case 'ms':
+      return num;
+    case 's':
+      return num * 1000;
+    case 'm':
+      return num * 60_000;
+    case 'h':
+      return num * 3600_000;
+    case 'd':
+      return num * 86400_000;
+    default:
+      return undefined;
   }
-
-  const raw = element.getAttribute(CACHE_ATTR) ?? '';
-  if (raw === 'false') {
-    return { enabled: false, swr: false };
-  }
-
-  const mode = element.getAttribute(CACHE_MODE_ATTR);
-  const swr = mode === 'stale-while-revalidate' || element.getAttribute('fx-cache-swr') === 'true';
-
-  const ttl = parseTtl(raw);
-  if (ttl === undefined) {
-    log.warn(`invalid fx-cache TTL "${raw}" on element; disabling fragment cache`);
-    return { enabled: false, swr: false };
-  }
-
-  return { enabled: true, ttl, swr };
 }
 
-function isSensitiveField(key: string, source?: Element): boolean {
-  const lower = key.toLowerCase();
-  if (SENSITIVE_FIELDS.has(lower)) return true;
-  if (source instanceof Element) {
-    const inputs = Array.from(source.querySelectorAll('input'));
-    for (const input of inputs) {
-      if (input.getAttribute('name') === key && input.type === 'password') {
-        return true;
-      }
-    }
-  }
-  return false;
+export function getCachePolicy(element: Element): CachePolicy {
+  const cacheValue = element.getAttribute(CACHE_ATTR);
+  const ttl = parseCacheTtl(cacheValue);
+  const mode = element.getAttribute(CACHE_MODE_ATTR);
+  const swr = mode === 'stale-while-revalidate';
+  return { enabled: ttl !== undefined, ttl, swr };
 }
 
 function hasAuthorizationHeader(headers: unknown): boolean {
@@ -72,21 +56,36 @@ function hasAuthorizationHeader(headers: unknown): boolean {
     return Boolean((headers as any).get('Authorization') ?? (headers as any).get('authorization'));
   }
   if (typeof headers === 'object') {
-    const record = headers as Record<string, unknown>;
-    for (const [k, v] of Object.entries(record)) {
+    for (const [k, v] of Object.entries(headers as Record<string, unknown>)) {
       if (k.toLowerCase() === 'authorization' && Boolean(v)) return true;
     }
   }
   return false;
 }
 
-function normalizeInvalidationPattern(pattern: string): string {
-  return pattern.startsWith('GET:') ? pattern : `GET:${pattern}`;
+function getRequestHeaderVal(headers: unknown, name: string): string | null {
+  if (!headers) return null;
+  if (typeof (headers as any).get === 'function') {
+    return (headers as any).get(name) ?? (headers as any).get(name.toLowerCase()) ?? null;
+  }
+  if (typeof headers === 'object') {
+    for (const [k, v] of Object.entries(headers as Record<string, unknown>)) {
+      if (k.toLowerCase() === name.toLowerCase() && v !== undefined && v !== null) {
+        return String(v);
+      }
+    }
+  }
+  return null;
 }
 
-interface HtmxInstance {
-  swap?: (ctx: any) => any;
-}
+const STANDARD_HTMX_VARY_HEADERS = new Set([
+  'hx-request',
+  'hx-target',
+  'hx-trigger',
+  'hx-current-url',
+  'accept-encoding',
+  'user-agent',
+]);
 
 export function installCacheIntegration(
   cache: FragmentCache,
@@ -94,7 +93,7 @@ export function installCacheIntegration(
 ): () => void {
   if (typeof document === 'undefined') return () => {};
 
-  // config:request: if a cached entry exists for this GET, swap it directly and abort the fetch unless in SWR mode.
+  // config:request: intercept cacheable GET requests and serve from cache if fresh/stale
   const onConfigRequest = (evt: Event) => {
     const ctx = getRequestContext(evt);
     const source = ctx.source;
@@ -196,7 +195,7 @@ export function installCacheIntegration(
       contentType.includes('text/html') ||
       contentType.includes('application/xhtml+xml') ||
       contentType === '';
-    const isPersonalizedVary =
+    const isUncacheableVary =
       varyTokens.includes('*') ||
       varyTokens.includes('cookie') ||
       varyTokens.includes('authorization');
@@ -212,23 +211,40 @@ export function installCacheIntegration(
       !isNoStore &&
       !hasSetCookie &&
       isHtmlContent &&
-      !isPersonalizedVary &&
+      !isUncacheableVary &&
       !hasAuthHeader
     ) {
-      const key = cacheKey(source, request);
+      let key = cacheKey(source, request);
+
+      // Vary header key extension for custom application response variants
+      if (rawVary) {
+        const varyParts: string[] = [];
+        for (const token of varyTokens) {
+          if (
+            token &&
+            token !== '*' &&
+            token !== 'cookie' &&
+            token !== 'authorization' &&
+            !STANDARD_HTMX_VARY_HEADERS.has(token)
+          ) {
+            const val = getRequestHeaderVal(request.headers, token);
+            if (val) varyParts.push(`${token}=${val}`);
+          }
+        }
+        if (varyParts.length > 0) {
+          key += `#vary:${varyParts.join(';')}`;
+        }
+      }
+
       cache.set(key, text, policy.ttl);
     }
 
-    // Mutation invalidation (only on successful mutation)
-    if (
-      successful &&
-      !isCacheableMethod(request.method ?? 'GET') &&
-      source.hasAttribute(INVALIDATE_ATTR)
-    ) {
-      const spec = source.getAttribute(INVALIDATE_ATTR) ?? '';
-      for (const part of spec.split(/\s+/).filter(Boolean)) {
-        const normalized = normalizeInvalidationPattern(part);
-        if (part.includes('*')) {
+    // Process fx-invalidate attribute on successful mutation responses
+    if (successful) {
+      const pattern = source.getAttribute(INVALIDATE_ATTR);
+      if (pattern) {
+        const normalized = normalizeInvalidationPattern(pattern);
+        if (pattern.includes('*')) {
           cache.invalidateMatching(normalized);
         } else {
           cache.invalidate(normalized);
@@ -267,13 +283,23 @@ function cacheKey(
     }
   }
 
+  const cacheVaryAttr = source.getAttribute('fx-cache-vary');
+  const allowedVaryFields = cacheVaryAttr
+    ? new Set(cacheVaryAttr.split(',').map((s) => s.trim().toLowerCase()))
+    : null;
+
+  const isFormSource = source instanceof HTMLFormElement;
+  const formElement = isFormSource ? (source as HTMLFormElement) : null;
+
   const params = new URLSearchParams();
   let basePath = canonicalPath;
 
   if (rawAction.includes('?')) {
     const qIndex = rawAction.indexOf('?');
     const existingParams = new URLSearchParams(rawAction.slice(qIndex + 1));
-    for (const [k, v] of existingParams.entries()) {
+    for (const [k, v] of Array.from(existingParams.entries())) {
+      if (isSensitiveFieldName(k, formElement)) continue;
+      if (allowedVaryFields && !allowedVaryFields.has(k.toLowerCase())) continue;
       params.append(k, v);
     }
   }
@@ -281,79 +307,89 @@ function cacheKey(
   if (request.parameters) {
     for (const [k, v] of Object.entries(request.parameters)) {
       if (v !== undefined && v !== null) {
+        if (isSensitiveFieldName(k, formElement)) continue;
+        if (allowedVaryFields && !allowedVaryFields.has(k.toLowerCase())) continue;
+
         params.delete(k);
         if (Array.isArray(v)) {
-          for (const item of v) params.append(k, String(item));
+          for (let i = 0; i < v.length; i++) {
+            params.append(`${k}[${i}]`, String(v[i]));
+          }
         } else {
           params.append(k, String(v));
         }
       }
     }
-  } else {
-    const form = source instanceof HTMLFormElement ? source : source.closest('form');
-    if (form instanceof HTMLFormElement) {
-      const formData = new FormData(form);
-      const seen = new Set<string>();
-      for (const [k, v] of formData.entries()) {
-        if (!seen.has(k)) {
+  } else if (isFormSource && formElement) {
+    try {
+      const formData = new FormData(formElement);
+      for (const [k, v] of Array.from(formData.entries())) {
+        if (typeof v === 'string') {
+          if (isSensitiveFieldName(k, formElement)) continue;
+          if (allowedVaryFields && !allowedVaryFields.has(k.toLowerCase())) continue;
           params.delete(k);
-          seen.add(k);
+          params.append(k, v);
         }
-        if (typeof v === 'string') params.append(k, v);
       }
-    } else if (
-      source instanceof HTMLInputElement ||
-      source instanceof HTMLSelectElement ||
-      source instanceof HTMLTextAreaElement
-    ) {
-      if (
-        source instanceof HTMLInputElement &&
-        (source.type === 'checkbox' || source.type === 'radio')
-      ) {
-        if (source.checked && source.name && source.value) {
-          params.delete(source.name);
-          params.append(source.name, source.value);
-        }
-      } else if (source.name && source.value) {
-        params.delete(source.name);
-        params.append(source.name, source.value);
-      }
+    } catch {
+      // Ignore FormData read errors on detached forms
     }
   }
 
-  const varyAttr = source.getAttribute(VARY_ATTR);
-  const varyFields = varyAttr
-    ? new Set(
-        varyAttr
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean),
-      )
-    : null;
-
-  const sortedEntries = Array.from(params.entries())
-    .filter(([k]) => {
-      const allowedByVary = !varyFields || varyFields.has(k);
-      return allowedByVary && !isSensitiveField(k, source);
-    })
-    .sort(([aKey, aVal], [bKey, bVal]) => aKey.localeCompare(bKey) || aVal.localeCompare(bVal));
+  const sortedEntries = Array.from(params.entries()).sort(([aK, aV], [bK, bV]) =>
+    aK.localeCompare(bK) || aV.localeCompare(bV),
+  );
 
   const canonicalParams = new URLSearchParams();
-  for (const [k, v] of sortedEntries) canonicalParams.append(k, v);
+  for (const [k, v] of sortedEntries) {
+    canonicalParams.append(k, v);
+  }
 
-  const queryString = canonicalParams.toString();
-  const url = queryString ? `${basePath}?${queryString}` : basePath;
-
-  return `${method}:${url}`;
+  const qStr = canonicalParams.toString();
+  return `${method}:${basePath}${qStr ? `?${qStr}` : ''}`;
 }
 
-function parseTtl(value: string, defaultTtlMs = 60_000): number | undefined {
-  if (!value || value === 'true') return defaultTtlMs;
-  if (value === 'false') return undefined;
-  const match = /^(\d+)(ms|s|m)?$/.exec(value.trim());
-  if (!match) return undefined;
-  const n = Number(match[1]);
-  const unit = match[2] ?? 'ms';
-  const multiplier = unit === 'ms' ? 1 : unit === 's' ? 1000 : 60_000;
-  return n * multiplier;
+function isSensitiveFieldName(name: string, form: HTMLFormElement | null): boolean {
+  const lower = name.toLowerCase();
+  if (
+    lower.includes('password') ||
+    lower.includes('secret') ||
+    lower.includes('token') ||
+    lower.includes('auth') ||
+    lower.includes('creditcard') ||
+    lower.includes('cvv')
+  ) {
+    return true;
+  }
+  if (form) {
+    const input = findNamedInput(form, name);
+    if (input && input.type.toLowerCase() === 'password') {
+      return true;
+    }
+  }
+  return false;
 }
+
+function findNamedInput(form: HTMLFormElement, name: string): HTMLInputElement | null {
+  const namedItem = form.elements.namedItem(name);
+  if (namedItem instanceof HTMLInputElement) return namedItem;
+  if (typeof RadioNodeList !== 'undefined' && namedItem instanceof RadioNodeList) {
+    const item = namedItem.item(0);
+    if (item instanceof HTMLInputElement) return item;
+  }
+  const unindexedName = name.replace(/\[\d+\]$/, '');
+  const unindexedItem = form.elements.namedItem(unindexedName);
+  if (unindexedItem instanceof HTMLInputElement) return unindexedItem;
+  return null;
+}
+
+function normalizeInvalidationPattern(pattern: string): string {
+  const trimmed = pattern.trim();
+  if (trimmed.startsWith('GET:')) return trimmed;
+  if (trimmed.includes(':') && !trimmed.startsWith('/')) return trimmed;
+  return `GET:${trimmed}`;
+}
+
+export type HtmxInstance = {
+  swap?: (opts: { target: Element; text: string; swap?: string }) => void;
+};

@@ -68,7 +68,7 @@ export function installFeedback(getConfig?: () => ResolvedConfig | null): () => 
 
   const onErrorEvent = (evt: Event) => {
     const ctx = getRequestContext(evt);
-    if (ctx.isDedupeHit || (ctx as any).ctx?.isDedupeHit) return;
+    if (ctx.isDedupeHit || ctx.isCacheHit || (ctx as any).ctx?.isDedupeHit || (ctx as any).ctx?.isCacheHit) return;
     if (ctx.source) {
       setRequestState(ctx.source, 'network-error');
       const message = ctx.source.getAttribute(ERROR_ATTR) ?? 'Request failed';
@@ -78,7 +78,7 @@ export function installFeedback(getConfig?: () => ResolvedConfig | null): () => 
 
   const onTimeoutEvent = (evt: Event) => {
     const ctx = getRequestContext(evt);
-    if (ctx.isDedupeHit || (ctx as any).ctx?.isDedupeHit) return;
+    if (ctx.isDedupeHit || ctx.isCacheHit || (ctx as any).ctx?.isDedupeHit || (ctx as any).ctx?.isCacheHit) return;
     if (ctx.source) {
       setRequestState(ctx.source, 'timeout');
     }
@@ -86,7 +86,7 @@ export function installFeedback(getConfig?: () => ResolvedConfig | null): () => 
 
   const onAbortEvent = (evt: Event) => {
     const ctx = getRequestContext(evt);
-    if (ctx.isCacheHit || (ctx as any).isDedupeHit || ctx.ctx?.isDedupeHit) return;
+    if (ctx.isCacheHit || ctx.isDedupeHit || (ctx as any).isDedupeHit || ctx.ctx?.isDedupeHit || (ctx as any).ctx?.isCacheHit) return;
     if (ctx.source) {
       setRequestState(ctx.source, 'aborted');
     }
@@ -112,6 +112,10 @@ export function installFeedback(getConfig?: () => ResolvedConfig | null): () => 
     document.removeEventListener('htmx:timeout', onTimeoutEvent);
     document.removeEventListener('htmx:abort', onAbortEvent);
     inFlight = 0;
+    updateGlobalIndicator(false, getConfig);
+    for (const el of Array.from(activeElements.keys())) {
+      el.removeAttribute('data-flux-loading');
+    }
     activeElements.clear();
   };
 
@@ -152,6 +156,7 @@ function announceAndMarkResult(evt: Event): void {
 
   const isError = !ctx.successful;
   if (isError) {
+    if (ctx.isCacheHit || (ctx as any).ctx?.isCacheHit) return;
     if (ctx.status === 0) {
       setRequestState(ctx.source, 'network-error');
     } else {

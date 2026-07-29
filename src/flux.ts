@@ -19,19 +19,24 @@ import { readFluxMetaConfig, reportDependencies, verifyHtmxVersion } from './cor
 import { disposeDeleteControllers } from './presets/delete.js';
 import { disposeSubmitControllers } from './presets/submit.js';
 import { inspectElement, doctor } from './diagnostics/doctor.js';
+import { getRequestContext } from './core/events.js';
+import { safeQuerySelector } from './core/selectors.js';
 import {
   usePlugin,
   unregisterPlugin,
   activatePlugins,
   deactivatePlugins,
   type FluxPlugin,
+  type FluxPluginApi,
 } from './core/plugin.js';
 import { registerPreset } from './presets/index.js';
 import {
+  setGeneratedAttribute,
+  removeGeneratedAttribute,
   removeGeneratedAttributes,
   reconcileGeneratedAttributes,
 } from './core/generated-attributes.js';
-import { installRetrySupport } from './core/retry.js';
+import { installRetrySupport, disposeRetrySupport } from './core/retry.js';
 import { installDeduplication } from './core/dedupe.js';
 import { uploadPlugin } from './plugins/upload.js';
 import { optimisticPlugin } from './plugins/optimistic.js';
@@ -56,7 +61,7 @@ export function config(): ResolvedConfig | null {
   return currentConfig;
 }
 
-function pluginApi() {
+function pluginApi(): FluxPluginApi {
   return {
     version: FLUX_VERSION,
     registerPreset: (
@@ -69,6 +74,10 @@ function pluginApi() {
         connect: (el, val) => handler(el as HTMLElement, val),
         override: options?.override,
       }),
+    setGeneratedAttribute,
+    removeGeneratedAttribute,
+    safeQuery: safeQuerySelector,
+    readHtmxEvent: getRequestContext,
   };
 }
 
@@ -166,6 +175,7 @@ export interface DisposeOptions {
 /** Removes Flux listeners and resets runtime state. Performs soft or hard disposal. */
 export function dispose(options?: DisposeOptions): void {
   while (teardowns.length) teardowns.shift()?.();
+  disposeRetrySupport();
   disposeStatusTargeting();
   disposeDeleteControllers();
   disposeSubmitControllers();

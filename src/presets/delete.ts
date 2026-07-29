@@ -1,7 +1,7 @@
 // fx-delete: high-level delete preset. Expands to hx-delete and attaches
 // confirmation, item removal, success notification, and cache invalidation mechanics.
 
-import { queryOne } from '../core/selectors.js';
+import { queryOne, safeClosest } from '../core/selectors.js';
 import { setGeneratedAttribute, removeGeneratedAttribute } from '../core/generated-attributes.js';
 import { getRequestContext } from '../core/events.js';
 
@@ -94,7 +94,7 @@ export function resolveRemoveTarget(element: Element, selector: string): Element
   if (trimmed === 'this' || trimmed === 'self') return element;
   if (trimmed === 'closest tr' || trimmed === 'closest li' || trimmed.startsWith('closest ')) {
     const tag = trimmed.replace('closest ', '').trim();
-    return element.closest(tag);
+    return safeClosest(element, tag);
   }
   return queryOne(trimmed, typeof document !== 'undefined' ? document : element.ownerDocument);
 }

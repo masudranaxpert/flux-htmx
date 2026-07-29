@@ -59,18 +59,25 @@ export function wireStatusTargeting(element: Element): OnStatusHandler | null {
       document.querySelector(selector);
     } catch (e) {
       log.warn(`invalid CSS selector "${selector}" in fx-on-${code}:`, e);
+      removeGeneratedAttribute(element, `hx-status:${code}`);
       continue;
     }
 
     const nativeStatusAttr = `hx-status:${code}`;
-    if (setGeneratedAttribute(element, nativeStatusAttr, JSON.stringify({ target: selector }))) {
-      wiredCount++;
-    } else {
-      wiredCount++;
-    }
+    setGeneratedAttribute(element, nativeStatusAttr, JSON.stringify({ target: selector }));
+    wiredCount++;
   }
 
-  if (wiredCount === 0) return null;
+  if (wiredCount === 0) {
+    for (const attr of Array.from(element.attributes)) {
+      if (attr.name.startsWith('hx-status:')) {
+        removeGeneratedAttribute(element, attr.name);
+      }
+    }
+    existingHandler?.disconnect();
+    element.removeAttribute('data-flux-status-signature');
+    return null;
+  }
 
   element.setAttribute('data-flux-status-signature', signature);
 

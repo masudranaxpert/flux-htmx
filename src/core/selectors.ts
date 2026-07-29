@@ -31,3 +31,16 @@ export function queryMany(
 export function safeQuerySelector(selector: string, context?: Element | Document): Element | null {
   return queryOne(selector, context ?? document);
 }
+
+export function safeClosest(
+  element: Element | null | undefined,
+  selector: string | null | undefined,
+): Element | null {
+  if (!element || !selector || typeof selector !== 'string') return null;
+  try {
+    return element.closest(selector);
+  } catch (error) {
+    log.warn(`invalid closest selector "${selector}":`, error);
+    return null;
+  }
+}

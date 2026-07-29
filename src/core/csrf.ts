@@ -35,13 +35,14 @@ export function readCookie(name: string): string | null {
 
 export function readMeta(name: string): string | null {
   if (typeof document === 'undefined') return null;
-  const el = document.querySelector(`meta[name="${cssEscapeAttribute(name)}"]`);
-  const content = el?.getAttribute('content');
-  return content && content.length > 0 ? content : null;
-}
-
-function cssEscapeAttribute(name: string): string {
-  return name.replace(/["\\]/g, '\\$&');
+  const metas = document.querySelectorAll('meta[name]');
+  for (const meta of Array.from(metas)) {
+    if (meta.getAttribute('name') === name) {
+      const content = meta.getAttribute('content');
+      return content && content.length > 0 ? content : null;
+    }
+  }
+  return null;
 }
 
 /** Resolves the current token per `config` without deciding whether to send it. */

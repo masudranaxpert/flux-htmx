@@ -1,6 +1,9 @@
 // Flux Public Plugin System: Flux.use(plugin), Flux.unuse(pluginName)
 
 import { log } from './logger.js';
+import { setGeneratedAttribute, removeGeneratedAttribute } from './generated-attributes.js';
+import { safeQuerySelector } from './selectors.js';
+import { getRequestContext } from './events.js';
 
 export type PluginCleanup = () => void;
 
@@ -11,6 +14,10 @@ export interface FluxPluginApi {
     handler: (element: HTMLElement, value: string) => boolean,
     options?: { override?: boolean },
   ): PluginCleanup;
+  setGeneratedAttribute(element: Element, name: string, value: string): boolean;
+  removeGeneratedAttribute(element: Element, name: string): void;
+  safeQuery(selector: string, root?: Element | Document): Element | null;
+  readHtmxEvent(event: Event): ReturnType<typeof getRequestContext>;
 }
 
 export interface FluxPlugin {
@@ -67,6 +74,10 @@ function activatePlugin(plugin: FluxPlugin, api: FluxPluginApi): void {
       teardowns.push(teardown);
       return teardown;
     },
+    setGeneratedAttribute,
+    removeGeneratedAttribute,
+    safeQuery: safeQuerySelector,
+    readHtmxEvent: getRequestContext,
   };
 
   try {
@@ -76,6 +87,9 @@ function activatePlugin(plugin: FluxPlugin, api: FluxPluginApi): void {
     }
   } catch (error) {
     log.error(`Plugin "${plugin.name}" setup failed:`, error);
+    // Rollback any registrations made prior to setup failure
+    deactivatePluginInstance(plugin.name);
+    installedPlugins.delete(plugin.name);
   }
 }
 

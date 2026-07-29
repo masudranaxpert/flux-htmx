@@ -4,6 +4,7 @@
 import type { FluxPlugin, FluxPluginApi } from '../core/plugin.js';
 import { log } from '../core/logger.js';
 import { removeGeneratedAttribute, setGeneratedAttribute } from '../core/generated-attributes.js';
+import { safeQuerySelector } from '../core/selectors.js';
 
 const activeUploadControllers = new Map<Element, () => void>();
 
@@ -61,13 +62,17 @@ export const uploadPlugin: FluxPlugin = {
         const form = source.closest('[fx-upload], [fx-progress]') ?? source;
         const progressSelector = form.getAttribute('fx-progress');
         if (progressSelector) {
-          const progressEl = document.querySelector(progressSelector);
-          if (progressEl instanceof HTMLProgressElement) {
-            progressEl.value = percent;
-            progressEl.max = 100;
-          } else if (progressEl instanceof HTMLElement) {
-            progressEl.style.setProperty('--upload-progress', `${percent}%`);
-            progressEl.setAttribute('aria-valuenow', String(percent));
+          try {
+            const progressEl = safeQuerySelector(progressSelector);
+            if (progressEl instanceof HTMLProgressElement) {
+              progressEl.value = percent;
+              progressEl.max = 100;
+            } else if (progressEl instanceof HTMLElement) {
+              progressEl.style.setProperty('--upload-progress', `${percent}%`);
+              progressEl.setAttribute('aria-valuenow', String(percent));
+            }
+          } catch (e) {
+            log.warn(`[flux] invalid fx-progress selector "${progressSelector}":`, e);
           }
         }
       }
@@ -133,8 +138,8 @@ function wireUploadElement(element: Element, uploadUrl: string): void {
         const fileName = file.name.toLowerCase();
         const matchesType = allowedTypes.some((pattern) => {
           if (pattern.endsWith('/*')) {
-            const group = pattern.slice(0, -2);
-            return fileType.startsWith(group);
+            const prefix = pattern.slice(0, -1);
+            return fileType.startsWith(prefix);
           }
           if (pattern.startsWith('.')) {
             return fileName.endsWith(pattern);
@@ -178,6 +183,17 @@ function wireUploadElement(element: Element, uploadUrl: string): void {
     element.classList.remove('flux-drag-over');
   };
 
+  const submitFormDataFallback = (droppedFiles: FileList | File[]) => {
+    const formData = new FormData();
+    for (const file of Array.from(droppedFiles)) {
+      formData.append('file', file);
+    }
+    const activeHtmx = (window as any).htmx ?? (globalThis as any).htmx;
+    if (typeof activeHtmx?.ajax === 'function') {
+      activeHtmx.ajax('POST', uploadUrl, { source: element, values: formData });
+    }
+  };
+
   const onDrop = (evt: DragEvent) => {
     evt.preventDefault();
     onDragLeave();
@@ -210,18 +226,11 @@ function wireUploadElement(element: Element, uploadUrl: string): void {
             fileInput.form.requestSubmit();
           }
         } catch (e) {
-          log.warn('[flux] DataTransfer file binding unsupported:', e);
+          log.warn('[flux] DataTransfer file binding unsupported, using FormData fallback:', e);
+          submitFormDataFallback(droppedFiles);
         }
       } else {
-        // Form/Dropzone without file input: submit automatic AJAX upload
-        const formData = new FormData();
-        for (const file of Array.from(droppedFiles)) {
-          formData.append('file', file);
-        }
-        const activeHtmx = (window as any).htmx ?? (globalThis as any).htmx;
-        if (typeof activeHtmx?.ajax === 'function') {
-          activeHtmx.ajax('POST', uploadUrl, { source: element, values: formData });
-        }
+        submitFormDataFallback(droppedFiles);
       }
     }
   };

@@ -101,12 +101,26 @@ function cleanElementGeneratedAttributes(element: Element, hardDispose = false):
   }
 
   if (hardDispose) {
-    element.removeAttribute('data-flux-preset');
-    element.removeAttribute('data-flux-preset-signature');
-    element.removeAttribute('data-flux-status-signature');
-    element.removeAttribute('data-flux-disabled');
-    element.removeAttribute('data-flux-was-disabled');
-    element.removeAttribute('data-flux-disable-count');
+    const fluxDataAttrs = [
+      'data-flux-preset',
+      'data-flux-preset-signature',
+      'data-flux-status',
+      'data-flux-status-signature',
+      'data-flux-disabled',
+      'data-flux-was-disabled',
+      'data-flux-disable-count',
+      'data-flux-loading',
+      'data-flux-success',
+      'data-flux-error',
+      'data-flux-http-error',
+      'data-flux-network-error',
+      'data-flux-timeout',
+      'data-flux-aborted',
+      'data-flux-remove',
+    ];
+    for (const attr of fluxDataAttrs) {
+      element.removeAttribute(attr);
+    }
     for (const attr of Array.from(element.attributes)) {
       if (attr.name.startsWith('data-flux-gen-')) {
         element.removeAttribute(attr.name);

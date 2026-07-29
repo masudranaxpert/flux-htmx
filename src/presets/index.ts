@@ -9,6 +9,7 @@ import { applySubmit } from './submit.js';
 import { applyDelete } from './delete.js';
 import { applyAutosave } from './autosave.js';
 import { applyPagination } from './pagination.js';
+import { getGeneratedAttributes } from '../core/generated-attributes.js';
 
 export { applySearch } from './search.js';
 export { applyLoad } from './load.js';
@@ -198,11 +199,10 @@ export function applyPreset(
 
   const signature = computePresetSignature(element, preset, value);
   const currentSig = element.getAttribute('data-flux-preset-signature');
+  const isPresetGenerated = element.getAttribute('data-flux-preset') === preset.replace(/^fx-/, '');
+  const hasOwnedAttrs = getGeneratedAttributes(element).size > 0;
 
-  if (
-    element.getAttribute('data-flux-preset') === preset.replace(/^fx-/, '') &&
-    currentSig === signature
-  ) {
+  if (isPresetGenerated && currentSig === signature && hasOwnedAttrs) {
     return false;
   }
 
@@ -246,6 +246,16 @@ function computePresetSignature(element: Element, preset: string, value: string)
     'fx-indicator',
     'fx-append',
     'fx-prepend',
+    'fx-confirm',
+    'fx-disable',
+    'fx-remove',
+    'fx-reset',
+    'fx-progress',
+    'fx-max-size',
+    'fx-allowed-types',
+    'fx-success',
+    'fx-error',
+    'fx-invalidate',
   ];
   const opts = attrs.map((a) => `${a}=${element.getAttribute(a) ?? ''}`).join(';');
   return `${preset}:${value}:${opts}`;

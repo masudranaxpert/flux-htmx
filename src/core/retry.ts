@@ -11,7 +11,17 @@ export interface RetryOptions {
 }
 
 const retryingElements = new WeakMap<Element, number>();
-const activeRetryTimers = new Set<NodeJS.Timeout>();
+const activeRetryTimers = new Map<Element, Set<NodeJS.Timeout>>();
+
+export function cancelElementRetryTimers(element: Element): void {
+  const timers = activeRetryTimers.get(element);
+  if (timers) {
+    for (const timerId of timers) {
+      clearTimeout(timerId);
+    }
+    activeRetryTimers.delete(element);
+  }
+}
 
 /** Parses retry options declared on `element`. */
 export function getRetryOptions(element: Element): RetryOptions | null {
@@ -51,10 +61,30 @@ function parseDelayMs(val: string): number {
 export function installRetrySupport(): () => void {
   if (typeof document === 'undefined') return () => {};
 
+  const onRequest = (evt: Event) => {
+    const ctx = getRequestContext(evt);
+    if (ctx.source) {
+      // Cancel pending retry timers when a fresh request is initiated
+      cancelElementRetryTimers(ctx.source);
+    }
+  };
+
   const onResponse = (evt: Event) => {
     const ctx = getRequestContext(evt);
     const element = ctx.source;
     if (!element) return;
+
+    // Retry skip guard: skip retries for cache hits, dedupe hits, and user aborts
+    if (
+      ctx.isCacheHit ||
+      ctx.isDedupeHit ||
+      (ctx.ctx as any)?.isCacheHit ||
+      (ctx.ctx as any)?.isDedupeHit ||
+      (ctx.ctx as any)?.aborted
+    ) {
+      cancelElementRetryTimers(element);
+      return;
+    }
 
     const opts = getRetryOptions(element);
     if (!opts) return;
@@ -69,6 +99,7 @@ export function installRetrySupport(): () => void {
 
     if (!isRetryableError) {
       retryingElements.delete(element);
+      cancelElementRetryTimers(element);
       return;
     }
 
@@ -76,6 +107,7 @@ export function installRetrySupport(): () => void {
     if (currentAttempt >= opts.maxRetries) {
       log.warn(`[flux] max retries (${opts.maxRetries}) reached for element:`, element);
       retryingElements.delete(element);
+      cancelElementRetryTimers(element);
       return;
     }
 
@@ -103,8 +135,13 @@ export function installRetrySupport(): () => void {
     const requestHeaders = ctx.request?.headers;
     const requestTarget = ctx.target ?? element;
 
+    cancelElementRetryTimers(element);
+
     const timerId = setTimeout(() => {
-      activeRetryTimers.delete(timerId);
+      const timers = activeRetryTimers.get(element);
+      timers?.delete(timerId);
+      if (timers?.size === 0) activeRetryTimers.delete(element);
+
       const activeHtmx = (window as any).htmx ?? (globalThis as any).htmx;
 
       if (typeof activeHtmx?.ajax === 'function' && actionUrl) {
@@ -122,19 +159,25 @@ export function installRetrySupport(): () => void {
       }
     }, backoffDelay);
 
-    activeRetryTimers.add(timerId);
+    const elementTimers = activeRetryTimers.get(element) ?? new Set();
+    elementTimers.add(timerId);
+    activeRetryTimers.set(element, elementTimers);
   };
 
+  document.addEventListener('htmx:before:request', onRequest);
   document.addEventListener('htmx:after:request', onResponse);
   return () => {
+    document.removeEventListener('htmx:before:request', onRequest);
     document.removeEventListener('htmx:after:request', onResponse);
     disposeRetrySupport();
   };
 }
 
 export function disposeRetrySupport(): void {
-  for (const id of Array.from(activeRetryTimers)) {
-    clearTimeout(id);
+  for (const timers of Array.from(activeRetryTimers.values())) {
+    for (const id of Array.from(timers)) {
+      clearTimeout(id);
+    }
   }
   activeRetryTimers.clear();
 }

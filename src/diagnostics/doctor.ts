@@ -54,6 +54,10 @@ export function inspectElement(element: Element | null): InspectionResult {
     );
   }
 
+  if (element.hasAttribute('fx-append') && element.hasAttribute('fx-prepend')) {
+    warnings.push('conflicting pagination swap attributes fx-append and fx-prepend declared on same element');
+  }
+
   // Check raw hx-* vs fx-* method conflicts
   if (
     element.hasAttribute('hx-get') &&
@@ -130,12 +134,12 @@ export function doctor(root?: Element): DoctorReport {
     if (activeRoot.matches?.(selector)) elements.push(activeRoot);
     elements.push(...Array.from(activeRoot.querySelectorAll(selector)));
 
-    // Scan any elements with fx-on-* attributes
-    const allDescendants = Array.from(activeRoot.querySelectorAll('*'));
-    for (const descendant of allDescendants) {
-      for (const attr of Array.from(descendant.attributes)) {
+    // Scan root & descendants for fx-on-* status attributes
+    const allCandidates = [activeRoot, ...Array.from(activeRoot.querySelectorAll('*'))];
+    for (const candidate of allCandidates) {
+      for (const attr of Array.from(candidate.attributes)) {
         if (attr.name.startsWith('fx-on-')) {
-          elements.push(descendant);
+          elements.push(candidate);
           break;
         }
       }
