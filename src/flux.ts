@@ -54,6 +54,8 @@ export { default as htmx } from 'htmx.org';
 export { FLUX_VERSION };
 export { inspectElement as inspect, doctor };
 export { uploadPlugin, optimisticPlugin };
+export { applyRealtime, disconnectRealtime } from './presets/realtime.js';
+export { applySearch, disconnectSearch } from './presets/search.js';
 
 let configured = false;
 const teardowns: Array<() => void> = [];

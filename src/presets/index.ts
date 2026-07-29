@@ -1,7 +1,7 @@
 // Higher-level Flux presets. Data-driven preset definition registry with option signatures and override protection.
 
 import { log } from '../core/logger.js';
-import { applySearch } from './search.js';
+import { applySearch, disconnectSearch } from './search.js';
 import { applyLoad } from './load.js';
 import { applyPoll } from './poll.js';
 import { applyInfinite } from './infinite.js';
@@ -10,9 +10,10 @@ import { applyDelete, disconnectDelete } from './delete.js';
 import { applyAutosave } from './autosave.js';
 import { applyPagination } from './pagination.js';
 import { applyPrefetch, disconnectPrefetch, disposePrefetchControllers } from './prefetch.js';
+import { applyRealtime, disconnectRealtime } from './realtime.js';
 import { getGeneratedAttributes } from '../core/generated-attributes.js';
 
-export { applySearch } from './search.js';
+export { applySearch, disconnectSearch } from './search.js';
 export { applyLoad } from './load.js';
 export { applyPoll } from './poll.js';
 export { applyInfinite } from './infinite.js';
@@ -21,6 +22,7 @@ export { applyDelete } from './delete.js';
 export { applyAutosave } from './autosave.js';
 export { applyPagination } from './pagination.js';
 export { applyPrefetch, disconnectPrefetch, disposePrefetchControllers } from './prefetch.js';
+export { applyRealtime, disconnectRealtime } from './realtime.js';
 
 export interface PresetContext {
   target?: string;
@@ -86,7 +88,9 @@ registerPreset({
       delay: ctx('fx-delay'),
       minLength: ctx('fx-min-length'),
       indicator: ctx('fx-indicator'),
+      clearSelector: ctx('fx-search-clear'),
     }),
+  disconnect: (element) => disconnectSearch(element),
 });
 
 registerPreset({
@@ -196,6 +200,19 @@ registerPreset({
       url: value,
     }),
   disconnect: (element) => disconnectPrefetch(element),
+});
+
+registerPreset({
+  attribute: 'fx-realtime',
+  connect: (element, value, ctx) =>
+    applyRealtime(element, {
+      url: value,
+      target: ctx('fx-target'),
+      swap: ctx('fx-swap'),
+      event: ctx('fx-event'),
+      withCredentials: element.hasAttribute('fx-with-credentials'),
+    }),
+  disconnect: (element) => disconnectRealtime(element),
 });
 
 /** Dispatches an element's preset attribute to its registered handler. Returns true if a preset ran. */

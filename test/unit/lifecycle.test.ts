@@ -25,9 +25,9 @@ describe('expandPresets', () => {
     const root = makeRoot('<input fx-search="/q" fx-target="#r" fx-delay="300ms">');
     expandPresets(root);
     const input = root.querySelector('input')!;
-    // Preset produced hx-get + hx-trigger; generic fx-target becomes hx-target.
+    // Preset produced hx-get + hx-trigger (native debounce uses flux:search-ready); generic fx-target becomes hx-target.
     expect(input.getAttribute('hx-get')).toBe('/q');
-    expect(input.getAttribute('hx-trigger')).toContain('changed');
+    expect(input.getAttribute('hx-trigger')).toBe('flux:search-ready');
     expect(input.getAttribute('hx-target')).toBe('#r');
     // fx-* source attributes are preserved.
     expect(input.getAttribute('fx-search')).toBe('/q');
