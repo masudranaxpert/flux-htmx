@@ -92,9 +92,10 @@ describe('Refactoring Hardening Test Suite', () => {
   it('5. Plugins reactivate cleanly across reconfigure()', () => {
     const setupSpy = vi.fn();
     Flux.use({
-      name: 'reactivate-plugin',
-      setup: () => setupSpy(),
+      name: 'reactivate-test',
+      setup: setupSpy,
     });
+    Flux.start();
 
     expect(setupSpy).toHaveBeenCalledTimes(1);
 

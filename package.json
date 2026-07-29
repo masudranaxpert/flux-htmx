@@ -63,6 +63,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
+    "test:log": "vitest run --reporter=verbose",
     "test:unit": "vitest run",
     "test:browser": "playwright test --config=test/e2e/playwright.config.ts",
     "test:watch": "vitest",

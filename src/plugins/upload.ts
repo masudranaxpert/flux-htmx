@@ -1,10 +1,11 @@
 // Flux Upload Progress Plugin: @flux/plugin-upload
-// Handles live upload percentage, drag & drop dropzones, file size limits, and MIME type validation with complete teardown.
+// Handles live upload percentage, drag & drop dropzones, file size limits, MIME type validation, and automatic dropped file submission.
 
 import type { FluxPlugin, FluxPluginApi } from '../core/plugin.js';
 import { log } from '../core/logger.js';
+import { setGeneratedAttribute } from '../core/generated-attributes.js';
 
-const uploadElementCleanups = new WeakMap<Element, () => void>();
+const activeUploadControllers = new Map<Element, () => void>();
 
 export function parseMaxSizeBytes(sizeStr?: string | null): number | null {
   if (!sizeStr) return null;
@@ -26,13 +27,17 @@ export const uploadPlugin: FluxPlugin = {
     // Register fx-upload preset
     const unregisterPreset = api.registerPreset('fx-upload', (element, value) => {
       if (!(element instanceof HTMLFormElement || element instanceof HTMLElement)) return false;
+      if (!value || !value.trim()) {
+        log.error('[flux] fx-upload requires a non-empty URL');
+        return false;
+      }
 
-      element.setAttribute('hx-post', value);
-      element.setAttribute('hx-encoding', 'multipart/form-data');
+      setGeneratedAttribute(element, 'hx-post', value.trim());
+      setGeneratedAttribute(element, 'hx-encoding', 'multipart/form-data');
       element.setAttribute('data-flux-preset', 'upload');
 
       // Wire file validation & drag-and-drop
-      wireUploadElement(element);
+      wireUploadElement(element, value.trim());
       return true;
     });
 
@@ -69,12 +74,17 @@ export const uploadPlugin: FluxPlugin = {
     return () => {
       unregisterPreset();
       document.removeEventListener('htmx:xhr:progress', onProgress);
+      // Clean teardown: dispose all active element upload controllers
+      for (const cleanup of Array.from(activeUploadControllers.values())) {
+        cleanup();
+      }
+      activeUploadControllers.clear();
     };
   },
 };
 
-function wireUploadElement(element: Element): void {
-  uploadElementCleanups.get(element)?.();
+function wireUploadElement(element: Element, uploadUrl: string): void {
+  activeUploadControllers.get(element)?.();
 
   const maxSizeStr = element.getAttribute('fx-max-size');
   const maxSizeBytes = parseMaxSizeBytes(maxSizeStr);
@@ -151,14 +161,40 @@ function wireUploadElement(element: Element): void {
   const onDrop = (evt: DragEvent) => {
     evt.preventDefault();
     onDragLeave();
-    if (evt.dataTransfer?.files && evt.dataTransfer.files.length > 0) {
-      if (validateFiles(evt.dataTransfer.files)) {
-        element.dispatchEvent(
-          new CustomEvent('flux:upload:drop', {
-            bubbles: true,
-            detail: { files: evt.dataTransfer.files },
-          }),
-        );
+    const droppedFiles = evt.dataTransfer?.files;
+    if (!droppedFiles || droppedFiles.length === 0) return;
+
+    if (validateFiles(droppedFiles)) {
+      element.dispatchEvent(
+        new CustomEvent('flux:upload:drop', {
+          bubbles: true,
+          detail: { files: droppedFiles },
+        }),
+      );
+
+      // Automatic dropped-file binding & upload
+      const fileInput = element.querySelector('input[type="file"]') as HTMLInputElement | null;
+      if (fileInput) {
+        try {
+          const dataTransfer = new DataTransfer();
+          for (const file of Array.from(droppedFiles)) {
+            dataTransfer.items.add(file);
+          }
+          fileInput.files = dataTransfer.files;
+          fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+        } catch (e) {
+          log.warn('[flux] DataTransfer file binding unsupported:', e);
+        }
+      } else {
+        // Form/Dropzone without file input: submit automatic AJAX upload
+        const formData = new FormData();
+        for (const file of Array.from(droppedFiles)) {
+          formData.append('file', file);
+        }
+        const activeHtmx = (window as any).htmx ?? (globalThis as any).htmx;
+        if (typeof activeHtmx?.ajax === 'function') {
+          activeHtmx.ajax('POST', uploadUrl, { source: element, values: formData });
+        }
       }
     }
   };
@@ -177,8 +213,8 @@ function wireUploadElement(element: Element): void {
     element.removeEventListener('drop', onDrop as EventListener);
     element.removeAttribute('data-flux-drag-over');
     element.classList.remove('flux-drag-over');
-    uploadElementCleanups.delete(element);
+    activeUploadControllers.delete(element);
   };
 
-  uploadElementCleanups.set(element, cleanup);
+  activeUploadControllers.set(element, cleanup);
 }

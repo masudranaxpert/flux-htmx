@@ -92,18 +92,29 @@ export function installRetrySupport(): () => void {
       }),
     );
 
+    const actionUrl =
+      ctx.request?.action ??
+      element.getAttribute('hx-get') ??
+      element.getAttribute('hx-post') ??
+      element.getAttribute('fx-get') ??
+      element.getAttribute('fx-post');
+
+    const requestParams = ctx.request?.parameters;
+    const requestHeaders = ctx.request?.headers;
+    const requestTarget = ctx.target ?? element;
+
     const timerId = setTimeout(() => {
       activeRetryTimers.delete(timerId);
       const activeHtmx = (window as any).htmx ?? (globalThis as any).htmx;
-      const actionUrl =
-        ctx.request?.action ??
-        element.getAttribute('hx-get') ??
-        element.getAttribute('hx-post') ??
-        element.getAttribute('fx-get') ??
-        element.getAttribute('fx-post');
 
       if (typeof activeHtmx?.ajax === 'function' && actionUrl) {
-        activeHtmx.ajax(method, actionUrl, element);
+        activeHtmx.ajax(method, actionUrl, {
+          source: element,
+          target: requestTarget,
+          swap: element.getAttribute('hx-swap') ?? element.getAttribute('fx-swap') ?? 'innerHTML',
+          values: requestParams,
+          headers: requestHeaders,
+        });
       } else if (typeof activeHtmx?.trigger === 'function') {
         activeHtmx.trigger(element, 'click');
       } else if (element instanceof HTMLElement && typeof element.click === 'function') {

@@ -72,6 +72,7 @@ describe('Final Hardening (v0.1.0-beta.0) Comprehensive Test Suite', () => {
     Flux.dispose();
     const setupSpy = vi.fn();
     Flux.use({ name: 'deferred-plugin', setup: setupSpy });
+    Flux.start();
 
     expect(setupSpy).toHaveBeenCalledTimes(1);
   });

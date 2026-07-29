@@ -37,7 +37,9 @@ export function usePlugin(plugin: FluxPlugin, api: FluxPluginApi, isStarted = fa
   }
 
   installedPlugins.set(plugin.name, plugin);
-  activatePlugin(plugin, api);
+  if (isStarted) {
+    activatePlugin(plugin, api);
+  }
 }
 
 export function activatePlugins(api: FluxPluginApi): void {

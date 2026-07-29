@@ -16,6 +16,7 @@ export interface RequestContext {
   text: string | null;
   successful: boolean;
   isCacheHit: boolean;
+  isDedupeHit: boolean;
 }
 
 export function getRequestContext(event: Event): RequestContext {
@@ -41,6 +42,7 @@ export function getRequestContext(event: Event): RequestContext {
         : typeof status === 'number' && status >= 200 && status < 300;
 
   const isCacheHit = Boolean(ctx.isCacheHit);
+  const isDedupeHit = Boolean(ctx.isDedupeHit);
 
   return {
     detail,
@@ -52,5 +54,6 @@ export function getRequestContext(event: Event): RequestContext {
     text,
     successful,
     isCacheHit,
+    isDedupeHit,
   };
 }

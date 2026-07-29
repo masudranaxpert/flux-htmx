@@ -67,9 +67,9 @@ export function installDeduplication(): () => void {
 
     inFlightRequests.delete(key);
 
-    if (ctx.successful && ctx.text) {
+    if (ctx.successful && ctx.text !== null && ctx.text !== undefined) {
       const activeHtmx = (window as any).htmx ?? (globalThis as any).htmx;
-      // Share response payload with secondary consumers
+      // Share response payload with secondary consumers (handles empty "" string responses cleanly)
       for (let i = 1; i < consumers.length; i++) {
         const consumer = consumers[i];
         if (consumer && consumer.target && typeof activeHtmx?.swap === 'function') {
@@ -100,11 +100,40 @@ function computeDedupeKey(
   params?: Record<string, unknown>,
 ): string {
   const searchParams = new URLSearchParams();
-  if (params) {
-    for (const [k, v] of Object.entries(params)) {
-      if (v !== undefined && v !== null) searchParams.append(k, String(v));
+
+  if (url.includes('?')) {
+    const qIndex = url.indexOf('?');
+    const existingParams = new URLSearchParams(url.slice(qIndex + 1));
+    for (const [k, v] of existingParams.entries()) {
+      searchParams.append(k, v);
     }
   }
-  const qStr = searchParams.toString();
-  return `${method}:${url}${qStr ? `?${qStr}` : ''}`;
+
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      if (v !== undefined && v !== null) {
+        searchParams.delete(k);
+        if (Array.isArray(v)) {
+          for (let i = 0; i < v.length; i++) {
+            searchParams.append(`${k}[${i}]`, String(v[i]));
+          }
+        } else {
+          searchParams.append(k, String(v));
+        }
+      }
+    }
+  }
+
+  const sortedEntries = Array.from(searchParams.entries()).sort(
+    ([aK, aV], [bK, bV]) => aK.localeCompare(bK) || aV.localeCompare(bV),
+  );
+
+  const canonicalParams = new URLSearchParams();
+  for (const [k, v] of sortedEntries) {
+    canonicalParams.append(k, v);
+  }
+
+  const basePath = url.split('?')[0] ?? url;
+  const qStr = canonicalParams.toString();
+  return `${method}:${basePath}${qStr ? `?${qStr}` : ''}`;
 }

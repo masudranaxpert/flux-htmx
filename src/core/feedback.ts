@@ -68,6 +68,7 @@ export function installFeedback(getConfig?: () => ResolvedConfig | null): () => 
 
   const onErrorEvent = (evt: Event) => {
     const ctx = getRequestContext(evt);
+    if (ctx.isDedupeHit || (ctx as any).ctx?.isDedupeHit) return;
     if (ctx.source) {
       setRequestState(ctx.source, 'network-error');
       const message = ctx.source.getAttribute(ERROR_ATTR) ?? 'Request failed';
@@ -77,6 +78,7 @@ export function installFeedback(getConfig?: () => ResolvedConfig | null): () => 
 
   const onTimeoutEvent = (evt: Event) => {
     const ctx = getRequestContext(evt);
+    if (ctx.isDedupeHit || (ctx as any).ctx?.isDedupeHit) return;
     if (ctx.source) {
       setRequestState(ctx.source, 'timeout');
     }
@@ -146,7 +148,7 @@ function installOfflineTracking(): () => void {
 
 function announceAndMarkResult(evt: Event): void {
   const ctx = getRequestContext(evt);
-  if (!ctx.source) return;
+  if (!ctx.source || ctx.isDedupeHit || (ctx as any).ctx?.isDedupeHit) return;
 
   const isError = !ctx.successful;
   if (isError) {

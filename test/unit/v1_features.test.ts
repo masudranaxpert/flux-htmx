@@ -49,7 +49,7 @@ describe('Stable v1.0.0 Release Hardening & Features Test Suite', () => {
     expect(el.getAttribute('hx-swap')).toBeNull();
   });
 
-  it('4. Upload Progress Plugin: parses byte sizes and handles drag-and-drop', () => {
+  it('4. Upload Progress Plugin: parses byte sizes, handles drag-and-drop and cleans up on dispose', () => {
     expect(parseMaxSizeBytes('20mb')).toBe(20971520);
     expect(parseMaxSizeBytes('500kb')).toBe(512000);
     expect(parseMaxSizeBytes('100')).toBe(100);
@@ -58,7 +58,9 @@ describe('Stable v1.0.0 Release Hardening & Features Test Suite', () => {
     Flux.configure();
     Flux.use(uploadPlugin);
 
-    const form = makeEl('<form fx-upload="/files" fx-max-size="10mb"></form>');
+    const form = makeEl(
+      '<form fx-upload="/files" fx-max-size="10mb"><input type="file" name="doc"/></form>',
+    );
     document.body.appendChild(form);
     Flux.process(document.body);
 
@@ -69,6 +71,9 @@ describe('Stable v1.0.0 Release Hardening & Features Test Suite', () => {
     const dragLeaveEvt = new CustomEvent('dragleave', { bubbles: true });
     form.dispatchEvent(dragLeaveEvt);
     expect(form.getAttribute('data-flux-drag-over')).toBeNull();
+
+    Flux.dispose({ removeGeneratedAttributes: true });
+    expect(form.getAttribute('hx-post')).toBeNull();
   });
 
   it('5. Optimistic UI Plugin: requires explicit fx-rollback for DOM rollback', () => {
