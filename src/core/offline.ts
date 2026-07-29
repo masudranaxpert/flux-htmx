@@ -67,7 +67,7 @@ async function replayEntry(
   );
 }
 
-async function flush(activeHtmx: any): Promise<void> {
+export async function flush(activeHtmx: any): Promise<void> {
   const entries = dequeueAll();
   for (const entry of entries) {
     try {
