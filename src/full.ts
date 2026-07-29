@@ -10,6 +10,17 @@ import { FLUX_VERSION } from './core/version.js';
 import { readFluxMetaConfig, duplicatePolicy, reportDependencies } from './core/startup.js';
 import { inspectElement, doctor } from './diagnostics/doctor.js';
 
+// UI Plugins
+import { installDropdown } from './plugins/dropdown.js';
+import { installTabs } from './plugins/tabs.js';
+import { installAccordion } from './plugins/accordion.js';
+import { installModal } from './plugins/modal.js';
+import { installTransitions } from './plugins/transitions.js';
+import { installState } from './plugins/state.js';
+import { installPersist } from './plugins/persist.js';
+import { installTable } from './plugins/table.js';
+import { installForm } from './plugins/form.js';
+
 export { FLUX_VERSION };
 
 type WindowWithGlobals = typeof window & { Flux?: any; htmx?: any; };
@@ -36,6 +47,18 @@ function bootstrap() {
   const startAll = (element?: Element) => {
     if (!started) {
       configure(metaConfig.flux);
+      
+      // Install UI Plugins
+      installDropdown();
+      installTabs();
+      installAccordion();
+      installModal();
+      installTransitions();
+      installState();
+      installPersist();
+      installTable();
+      installForm();
+      
       process(element);
       started = true;
     } else {
