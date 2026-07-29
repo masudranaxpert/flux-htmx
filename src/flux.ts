@@ -10,6 +10,7 @@ import { install, expandPresets } from './core/lifecycle.js';
 import { resolveToken, shouldAttach } from './core/csrf.js';
 import { installFeedback, resetFeedbackForTests } from './core/feedback.js';
 import { installValidation } from './core/validation.js';
+import { installOfflineSupport, pendingCount, clearOfflineQueue, flush as flushOffline } from './core/offline.js';
 import { installStatusTargeting, disposeStatusTargeting } from './core/status.js';
 import { cache } from './cache/instance.js';
 import { installCacheIntegration } from './cache/cacheWire.js';
@@ -145,6 +146,8 @@ export function configure(userConfig?: FluxConfig): ResolvedConfig {
     teardowns.push(installDeleteControllers());
     const validationTd = installValidation();
     if (validationTd) teardowns.push(validationTd);
+    const offlineTd = installOfflineSupport(() => activeHtmx);
+    teardowns.push(offlineTd);
     teardowns.push(installFeedback(() => currentConfig));
     teardowns.push(installCacheIntegration(cache, activeHtmx));
     teardowns.push(installOpenController());
@@ -289,6 +292,11 @@ function createFluxApi() {
     doctor,
     use,
     unuse,
+    offline: {
+      get pending() { return pendingCount(); },
+      flush: () => flushOffline(activeHtmx),
+      clear: clearOfflineQueue,
+    },
     plugins: {
       upload: uploadPlugin,
       optimistic: optimisticPlugin,
