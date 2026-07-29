@@ -2,7 +2,7 @@
 //
 // Automatically sets data-flux-loading on active request sources and toggles global
 // indicators; sets data-flux-success / data-flux-error on completion; announces messages from
-// fx-success / fx-error via aria-live. Integrates with Alpine toast store if present.
+// fx-success / fx-error via aria-live. Also dispatches flux:toast events.
 
 import type { ResolvedConfig } from './config.js';
 import { log } from './logger.js';
@@ -166,6 +166,7 @@ function announceAndMarkResult(evt: Event): void {
     setRequestState(ctx.source, 'success');
   }
 
+  const type = isError ? 'error' : 'success';
   const message = isError
     ? ctx.source.getAttribute(ERROR_ATTR)
     : ctx.status >= 200 && ctx.status < 300
@@ -174,13 +175,9 @@ function announceAndMarkResult(evt: Event): void {
 
   if (message) {
     announce(message);
-    const alpineStore = (window as any).Alpine?.store?.('fluxToast');
-    if (alpineStore) {
-      if (isError) alpineStore.error?.(message);
-      else alpineStore.success?.(message);
-    }
+    document.dispatchEvent(new CustomEvent('flux:toast', { detail: { message, type } }));
     if (ctx.source.hasAttribute('fx-toast') || document.body.hasAttribute('fx-toast')) {
-      showBuiltInToast(message, isError ? 'error' : 'success');
+      showBuiltInToast(message, type);
     }
   }
 }

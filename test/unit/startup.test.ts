@@ -19,8 +19,8 @@ describe('duplicatePolicy', () => {
 
   it('warns (no throw) on warn policy', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    expect(duplicatePolicy('alpine', {}, 'warn')).toBe(false);
-    expect(warnSpy).toHaveBeenCalled();
+    expect(duplicatePolicy('htmx', {}, 'warn')).toBe(false);
+    expect(warnSpy).toHaveBeenCalledTimes(1);
     warnSpy.mockRestore();
   });
 });
@@ -29,15 +29,13 @@ describe('reportDependencies', () => {
   it('reports versions where present', () => {
     const deps = reportDependencies({
       htmx: { version: '4.0.0-beta6' },
-      alpine: { version: '3.15.12' },
     });
-    expect(deps).toEqual({ htmx: '4.0.0-beta6', alpine: '3.15.12' });
+    expect(deps).toEqual({ htmx: '4.0.0-beta6' });
   });
 
   it('returns "unknown" when version is absent', () => {
-    expect(reportDependencies({ htmx: {}, alpine: {} })).toEqual({
+    expect(reportDependencies({ htmx: {} })).toEqual({
       htmx: 'unknown',
-      alpine: 'unknown',
     });
   });
 });

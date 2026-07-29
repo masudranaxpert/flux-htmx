@@ -275,7 +275,6 @@ function createFluxApi() {
     get dependencies() {
       return reportDependencies({
         htmx: activeHtmx,
-        alpine: typeof window !== 'undefined' ? (window as any).Alpine : undefined,
       });
     },
     get isStarted() {
