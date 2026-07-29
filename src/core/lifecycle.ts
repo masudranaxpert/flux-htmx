@@ -11,10 +11,17 @@ export function expandPresets(root: Element): number {
   let count = 0;
 
   const registry = getPresetRegistry();
-  
-  // P0-7 / P1-9: Apply recipes and scopes first so that generated fx-* presets are caught by the preset registry
-  const fluxElements = matching(root, fluxSelector());
-  for (const el of fluxElements) {
+
+  const candidateSelector = [
+    fluxSelector(),
+    ...Array.from(registry.keys(), (attr) => `[${attr}]`),
+    '[data-flux-recipe-owned]',
+    '[data-flux-scope-owned]',
+  ].join(',');
+  const candidates = matching(root, candidateSelector);
+
+  // Apply recipes/scopes before presets so inherited preset options are visible to connect().
+  for (const el of candidates) {
     applyRecipeAndScope(el);
   }
 
@@ -29,7 +36,7 @@ export function expandPresets(root: Element): number {
     }
   }
 
-  for (const el of fluxElements) {
+  for (const el of candidates) {
     count += expandElement(el);
   }
 

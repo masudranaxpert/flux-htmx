@@ -92,7 +92,7 @@ const COMPONENT_SNIPPETS: Record<string, string> = {
   <p>Dialog content</p>
   <form method="dialog"><button class="flux-btn" fx-close>Close</button></form>
 </dialog>`,
-  toast: `<!-- toast region (populate via Alpine.store('fluxToast')) -->
+  toast: `<!-- toast region (populate via Flux toast event) -->
 <div class="flux-toast-region" role="region" aria-label="Notifications"></div>`,
   progress: `<progress class="flux-progress" value="65" max="100">65%</progress>`,
 };

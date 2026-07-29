@@ -14,14 +14,14 @@ file; gzip size assumes default gzip/Brotli-class text compression over the mini
 | `flux.full.iife.js` | 93.58 kB | 31.93 kB |
 | `flux.css`          | 5.5 kB   | 1.82 kB  |
 
-`flux.full.iife.js` is dominated by HTMX 4 and Alpine; the Flux-specific portion of the full
+`flux.full.iife.js` is dominated by HTMX 4; the Flux-specific portion of the full
 bundle is the same code counted in `flux.iife.js`.
 
 ## Performance budget
 
 The budget the core build is held to:
 
-- **Core size.** The Flux core (no HTMX, no Alpine) stays under 8 kB min+gzip. The current
+- **Core size.** The Flux core (no HTMX) stays under 8 kB min+gzip. The current
   4.56 kB gzip figure is within budget.
 - **No long tasks.** No synchronous work in the request, swap, or expansion path may exceed
   50 ms on the target-class hardware. Expansion is a single DOM-subtree scan per

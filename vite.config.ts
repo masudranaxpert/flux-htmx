@@ -32,12 +32,11 @@ export default defineConfig(({ mode }) => {
         fileName: () => fileName,
       },
       rollupOptions: {
-        external: isFull ? [] : ['htmx.org', 'alpinejs'],
+        external: isFull ? [] : ['htmx.org'],
         output: {
           exports: isIife ? 'default' : 'named',
           globals: {
             'htmx.org': '(globalThis.htmx || void 0)',
-            alpinejs: '(globalThis.Alpine || void 0)',
           },
         },
       },

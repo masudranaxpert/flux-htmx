@@ -12,8 +12,7 @@
     "fx",
     "frontend",
     "toast",
-    "prefetch",
-    "alpine"
+    "prefetch"
   ],
   "license": "MIT",
   "type": "module",
@@ -40,15 +39,11 @@
     "node": ">=20"
   },
   "peerDependencies": {
-    "htmx.org": "4.0.0-beta6",
-    "alpinejs": ">=3.0.0"
+    "htmx.org": "4.0.0-beta6"
   },
   "peerDependenciesMeta": {
     "htmx.org": {
       "optional": false
-    },
-    "alpinejs": {
-      "optional": true
     }
   },
   "devDependencies": {

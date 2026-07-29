@@ -1,21 +1,32 @@
 import { log } from '../core/logger.js';
 import { cache } from '../cache/instance.js';
-import { cacheKey, getCachePolicy } from '../cache/cacheWire.js';
+import { cacheKey, canStoreResponse, getCachePolicy } from '../cache/cacheWire.js';
 
 export interface PrefetchOptions {
   url: string;
 }
 
 let PREFETCHED = new WeakSet<Element>();
+const prefetchControllers = new WeakMap<Element, { signature: string; cleanup: () => void }>();
+const activePrefetchCleanups = new Set<() => void>();
 
 export function applyPrefetch(element: Element, options: PrefetchOptions): boolean {
-  // Only bind once per element
   const marker = 'data-flux-prefetch-bound';
-  if (element.hasAttribute(marker)) return false;
-  element.setAttribute(marker, '1');
-
   const url = options.url || element.getAttribute('fx-get') || element.getAttribute('hx-get');
   if (!url) return false;
+  const signature = [
+    url,
+    element.getAttribute('fx-cache') ?? '',
+    element.getAttribute('fx-cache-mode') ?? '',
+    element.getAttribute('fx-cache-key') ?? '',
+  ].join('|');
+
+  const existingController = prefetchControllers.get(element);
+  if (existingController?.signature === signature) return false;
+  existingController?.cleanup();
+
+  element.setAttribute(marker, '1');
+  element.setAttribute('data-flux-preset', 'prefetch');
 
   const onTrigger = () => {
     if (PREFETCHED.has(element)) return;
@@ -36,13 +47,9 @@ export function applyPrefetch(element: Element, options: PrefetchOptions): boole
       },
     })
       .then(async (res) => {
-        if (!res.ok) return;
+        if (!canStoreResponse({ method: 'GET' }, res)) return;
         const text = await res.text();
-        
-        // Also check response headers for no-store
-        const cacheControl = (res.headers.get('Cache-Control') ?? '').toLowerCase();
-        if (cacheControl.includes('no-store') || cacheControl.includes('no-cache')) return;
-        
+
         cache.set(key, text, policy.ttl ?? 60000); // Default to 60s if no policy
         log.info(`[flux] Prefetched and cached: ${url}`);
       })
@@ -55,19 +62,29 @@ export function applyPrefetch(element: Element, options: PrefetchOptions): boole
   element.addEventListener('touchstart', onTrigger, { once: true, passive: true });
   element.addEventListener('focusin', onTrigger, { once: true });
 
+  const cleanup = () => {
+    element.removeEventListener('mouseenter', onTrigger);
+    element.removeEventListener('touchstart', onTrigger);
+    element.removeEventListener('focusin', onTrigger);
+    element.removeAttribute(marker);
+    PREFETCHED.delete(element);
+    prefetchControllers.delete(element);
+    activePrefetchCleanups.delete(cleanup);
+  };
+  prefetchControllers.set(element, { signature, cleanup });
+  activePrefetchCleanups.add(cleanup);
+
   return true;
 }
 
 export function disconnectPrefetch(element: Element): void {
-  element.removeAttribute('data-flux-prefetch-bound');
-  PREFETCHED.delete(element);
+  prefetchControllers.get(element)?.cleanup();
+  element.removeAttribute('data-flux-preset');
+  element.removeAttribute('data-flux-preset-signature');
 }
 
 export function disposePrefetchControllers(): void {
-  if (typeof document !== 'undefined') {
-    for (const el of Array.from(document.querySelectorAll('[data-flux-prefetch-bound]'))) {
-      el.removeAttribute('data-flux-prefetch-bound');
-    }
-  }
+  for (const cleanup of Array.from(activePrefetchCleanups)) cleanup();
+  activePrefetchCleanups.clear();
   PREFETCHED = new WeakSet();
 }

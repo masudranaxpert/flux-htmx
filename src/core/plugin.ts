@@ -18,7 +18,10 @@ export interface FluxPluginApi {
   removeGeneratedAttribute(element: Element, name: string): void;
   safeQuery(selector: string, context?: Element | Document): Element | null;
   readHtmxEvent(evt: Event): ReturnType<typeof getRequestContext>;
-  registerAction(name: string, handler: (targetArg: string, sourceElement: Element, eventDetail?: any) => void | Promise<void>): void;
+  registerAction(
+    name: string,
+    handler: (targetArg: string, sourceElement: Element, eventDetail?: any) => void | Promise<void>,
+  ): PluginCleanup;
 }
 
 export interface FluxPlugin {
@@ -79,7 +82,11 @@ function activatePlugin(plugin: FluxPlugin, api: FluxPluginApi): void {
     removeGeneratedAttribute,
     safeQuery: safeQuerySelector,
     readHtmxEvent: getRequestContext,
-    registerAction: api.registerAction,
+    registerAction: (name, handler) => {
+      const teardown = api.registerAction(name, handler);
+      teardowns.push(teardown);
+      return teardown;
+    },
   };
 
   try {

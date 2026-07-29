@@ -7,13 +7,15 @@ import { log } from './logger.js';
 export function installValidation(): (() => void) | null {
   if (typeof document === 'undefined') return null;
 
+  document.addEventListener('htmx:config:request', onValidate);
   document.addEventListener('htmx:confirm', onConfirm);
   return () => {
+    document.removeEventListener('htmx:config:request', onValidate);
     document.removeEventListener('htmx:confirm', onConfirm);
   };
 }
 
-function onConfirm(evt: Event): void {
+function onValidate(evt: Event): void {
   const customEvt = evt as CustomEvent;
   const detail = customEvt.detail;
   const elt = (detail?.ctx?.sourceElement ?? detail?.elt) as Element | undefined;
@@ -28,7 +30,10 @@ function onConfirm(evt: Event): void {
 
   if (!form.reportValidity()) {
     log.info('[flux] Form validation failed, aborting request.');
-    evt.preventDefault(); // This stops the htmx request
+    evt.preventDefault();
     detail.dropRequest?.();
   }
 }
+
+// Keep validation compatible with explicit hx-confirm while config:request covers fx-validate alone.
+const onConfirm = onValidate;

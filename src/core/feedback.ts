@@ -68,27 +68,26 @@ export function installFeedback(getConfig?: () => ResolvedConfig | null): () => 
 
   const onErrorEvent = (evt: Event) => {
     const ctx = getRequestContext(evt);
-    if (ctx.isDedupeHit || ctx.isCacheHit || (ctx as any).ctx?.isDedupeHit || (ctx as any).ctx?.isCacheHit) return;
+    if (
+      ctx.isDedupeHit ||
+      ctx.isCacheHit ||
+      (ctx as any).ctx?.isDedupeHit ||
+      (ctx as any).ctx?.isCacheHit
+    )
+      return;
     if (ctx.source) {
-      setRequestState(ctx.source, 'network-error');
+      const error = ctx.detail.error;
+      const name = String(error?.name ?? '');
+      const errorMessage = String(error?.message ?? error ?? '');
+      const state =
+        name === 'TimeoutError' || /timed?\s*out|timeout/i.test(errorMessage)
+          ? 'timeout'
+          : name === 'AbortError'
+            ? 'aborted'
+            : 'network-error';
+      setRequestState(ctx.source, state);
       const message = ctx.source.getAttribute(ERROR_ATTR) ?? 'Request failed';
       announce(message);
-    }
-  };
-
-  const onTimeoutEvent = (evt: Event) => {
-    const ctx = getRequestContext(evt);
-    if (ctx.isDedupeHit || ctx.isCacheHit || (ctx as any).ctx?.isDedupeHit || (ctx as any).ctx?.isCacheHit) return;
-    if (ctx.source) {
-      setRequestState(ctx.source, 'timeout');
-    }
-  };
-
-  const onAbortEvent = (evt: Event) => {
-    const ctx = getRequestContext(evt);
-    if (ctx.isCacheHit || ctx.isDedupeHit || (ctx as any).isDedupeHit || ctx.ctx?.isDedupeHit || (ctx as any).ctx?.isCacheHit) return;
-    if (ctx.source) {
-      setRequestState(ctx.source, 'aborted');
     }
   };
 
@@ -100,8 +99,6 @@ export function installFeedback(getConfig?: () => ResolvedConfig | null): () => 
   document.addEventListener('htmx:after:request', onAfterRequest);
   document.addEventListener('htmx:finally:request', onFinallyRequest);
   document.addEventListener('htmx:error', onErrorEvent);
-  document.addEventListener('htmx:timeout', onTimeoutEvent);
-  document.addEventListener('htmx:abort', onAbortEvent);
 
   teardown = () => {
     offlineTeardown();
@@ -109,8 +106,6 @@ export function installFeedback(getConfig?: () => ResolvedConfig | null): () => 
     document.removeEventListener('htmx:after:request', onAfterRequest);
     document.removeEventListener('htmx:finally:request', onFinallyRequest);
     document.removeEventListener('htmx:error', onErrorEvent);
-    document.removeEventListener('htmx:timeout', onTimeoutEvent);
-    document.removeEventListener('htmx:abort', onAbortEvent);
     inFlight = 0;
     updateGlobalIndicator(false, getConfig);
     for (const el of activeElements.keys()) {
@@ -193,11 +188,12 @@ export function showBuiltInToast(message: string, type: 'success' | 'error'): vo
   const toast = document.createElement('div');
   toast.className = `flux-toast flux-toast-${type}`;
   toast.textContent = message;
-  
+
   // Create close button (optional but good for UX)
   const closeBtn = document.createElement('button');
   closeBtn.innerHTML = '&times;';
-  closeBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:1.2em;margin-left:auto;color:inherit;opacity:0.7;';
+  closeBtn.style.cssText =
+    'background:none;border:none;cursor:pointer;font-size:1.2em;margin-left:auto;color:inherit;opacity:0.7;';
   closeBtn.onclick = () => removeToast(toast);
   toast.appendChild(closeBtn);
 
@@ -217,9 +213,13 @@ function removeToast(toast: HTMLElement): void {
     clearTimeout((toast as any)._timeoutId);
   }
   toast.classList.add('flux-toast-leave');
-  toast.addEventListener('animationend', () => {
-    toast.remove();
-  }, { once: true });
+  toast.addEventListener(
+    'animationend',
+    () => {
+      toast.remove();
+    },
+    { once: true },
+  );
   setTimeout(() => toast.remove(), 300); // fallback if no animation
 }
 

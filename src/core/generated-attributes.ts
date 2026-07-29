@@ -6,7 +6,7 @@
 import { getPresetRegistry } from '../presets/index.js';
 
 const generatedAttributes = new WeakMap<Element, Map<string, string>>();
-const generatedElements = new WeakSet<Element>();
+const generatedElements = new Set<Element>();
 
 /**
  * Sets a generated attribute on `element`. If the attribute already exists and was NOT generated
@@ -24,6 +24,7 @@ export function setGeneratedAttribute(element: Element, name: string, value: str
     map?.delete(name);
     if (map?.size === 0) {
       generatedAttributes.delete(element);
+      generatedElements.delete(element);
     }
     return false;
   }
@@ -70,6 +71,7 @@ export function removeGeneratedAttribute(element: Element, name: string): void {
   attrMap?.delete(name);
   if (attrMap?.size === 0) {
     generatedAttributes.delete(element);
+    generatedElements.delete(element);
   }
 }
 
@@ -80,9 +82,13 @@ export function removeGeneratedAttributes(element?: Element, hardDispose = false
     return;
   }
 
-  if (typeof document !== 'undefined') {
+  for (const tracked of Array.from(generatedElements)) {
+    cleanElementGeneratedAttributes(tracked, hardDispose);
+  }
+
+  if (hardDispose && typeof document !== 'undefined') {
     const candidates = document.querySelectorAll(
-      '[data-flux-preset], [data-flux-status], [data-flux-loading], [data-flux-error], [data-flux-disable-count], [data-flux-was-disabled]'
+      '[data-flux-preset], [data-flux-status], [data-flux-loading], [data-flux-error], [data-flux-disable-count], [data-flux-was-disabled], [data-flux-recipe-owned], [data-flux-scope-owned]',
     );
     for (const el of candidates) {
       cleanElementGeneratedAttributes(el, hardDispose);
@@ -99,6 +105,7 @@ function cleanElementGeneratedAttributes(element: Element, hardDispose = false):
       }
     }
     generatedAttributes.delete(element);
+    generatedElements.delete(element);
   }
 
   if (hardDispose) {
@@ -118,6 +125,8 @@ function cleanElementGeneratedAttributes(element: Element, hardDispose = false):
       'data-flux-timeout',
       'data-flux-aborted',
       'data-flux-remove',
+      'data-flux-recipe-owned',
+      'data-flux-scope-owned',
     ];
     for (const attr of fluxDataAttrs) {
       element.removeAttribute(attr);
@@ -137,9 +146,7 @@ export function reconcileGeneratedAttributes(root?: Element): void {
   if (typeof document === 'undefined') return;
 
   const context = root ?? document;
-  const elements = Array.from(
-    context.querySelectorAll('[data-flux-preset], [data-flux-status]')
-  );
+  const elements = Array.from(context.querySelectorAll('[data-flux-preset], [data-flux-status]'));
   if (root) elements.push(root);
 
   for (const element of elements) {

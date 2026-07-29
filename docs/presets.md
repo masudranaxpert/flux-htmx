@@ -14,11 +14,7 @@ Debounced, race-safe live search on an `<input>`.
 **Expansion**
 
 ```html
-<input
-  hx-get="<url>"
-  hx-trigger="flux:search-ready"
-  hx-sync="this:replace"
-/>
+<input hx-get="<url>" hx-trigger="flux:search-ready" hx-sync="this:replace" />
 ```
 
 `fx-search` uses a native event listener to debounce input and enforce `fx-min-length` (eval-free). `fx-delay` defaults to `300ms`; `fx-min-length` defaults to `0`. `hx-sync="this:replace"`
@@ -210,12 +206,7 @@ Server-Sent Events (SSE) preset that automatically connects to an event stream a
 **Syntax**
 
 ```html
-<div
-  fx-realtime="<url>"
-  fx-target="<selector>"
-  fx-swap="<strategy>"
-  fx-event="<event-name>"
-></div>
+<div fx-realtime="<url>" fx-target="<selector>" fx-swap="<strategy>" fx-event="<event-name>"></div>
 ```
 
 **Example**
@@ -231,7 +222,7 @@ Decoupled plugin presets registered via `Flux.use(plugin)`:
 ### Upload Progress Plugin (`fx-upload`)
 
 ```html
-<form fx-upload="/api/files" fx-progress="#bar" fx-max-size="20mb">
+<form fx-upload="/api/files" fx-max-size="20mb">
   <input type="file" multiple />
 </form>
 ```

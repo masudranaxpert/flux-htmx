@@ -4,28 +4,57 @@
 import { queryMany } from './selectors.js';
 import { showBuiltInToast } from './feedback.js';
 
-export type ActionHandler = (targetArg: string, sourceElement: Element, eventDetail?: any) => void | Promise<void>;
+export type ActionHandler = (
+  targetArg: string,
+  sourceElement: Element,
+  eventDetail?: any,
+) => void | Promise<void>;
 
 const actionHandlers = new Map<string, ActionHandler>();
 const namedActionPipelines = new Map<string, string[]>();
 
-/** Registers a custom action handler. */
-export function registerAction(name: string, handler: ActionHandler): void {
+/** Registers a custom action handler and returns an ownership-safe unregister function. */
+export function registerAction(name: string, handler: ActionHandler): () => void {
+  const previous = actionHandlers.get(name);
   actionHandlers.set(name, handler);
+  return () => {
+    if (actionHandlers.get(name) !== handler) return;
+    if (previous) actionHandlers.set(name, previous);
+    else actionHandlers.delete(name);
+  };
 }
 
 /** Registers a reusable pipeline of actions under a name. */
 export function defineActionPipeline(name: string, pipeline: string[] | string): void {
-  const steps = Array.isArray(pipeline) ? pipeline : pipeline.split(';').map(s => s.trim()).filter(Boolean);
+  const steps = Array.isArray(pipeline)
+    ? pipeline
+    : pipeline
+        .split(';')
+        .map((s) => s.trim())
+        .filter(Boolean);
   namedActionPipelines.set(name, steps);
 }
 
 /** Executes a named pipeline */
-export async function executeNamedPipeline(name: string, sourceElement: Element, eventDetail?: any): Promise<void> {
+export async function executeNamedPipeline(
+  name: string,
+  sourceElement: Element,
+  eventDetail?: any,
+): Promise<void> {
   const pipeline = namedActionPipelines.get(name);
   if (pipeline) {
     for (const action of pipeline) {
-      await executeAction(action, sourceElement, eventDetail);
+      try {
+        await executeAction(action, sourceElement, eventDetail);
+      } catch (err) {
+        console.warn(`[flux] Action "${action}" failed:`, err);
+        sourceElement.dispatchEvent(
+          new CustomEvent('flux:action:error', {
+            bubbles: true,
+            detail: { action, error: err },
+          }),
+        );
+      }
     }
   } else {
     console.warn(`[flux] Unknown action pipeline: "${name}"`);
@@ -33,7 +62,11 @@ export async function executeNamedPipeline(name: string, sourceElement: Element,
 }
 
 /** Parses and executes a single action string (e.g. "close:#modal" or "reset") */
-export async function executeAction(actionString: string, sourceElement: Element, eventDetail?: any): Promise<void> {
+export async function executeAction(
+  actionString: string,
+  sourceElement: Element,
+  eventDetail?: any,
+): Promise<void> {
   const parts = actionString.trim().split(':');
   const actionName = parts.shift()?.trim();
   if (!actionName) return;
@@ -49,14 +82,23 @@ export async function executeAction(actionString: string, sourceElement: Element
 }
 
 /** Parses a semicolon-separated list of actions and executes them sequentially. */
-export async function executePipeline(pipelineString: string, sourceElement: Element, eventDetail?: any): Promise<void> {
-  const actions = pipelineString.split(';').map(s => s.trim()).filter(Boolean);
+export async function executePipeline(
+  pipelineString: string,
+  sourceElement: Element,
+  eventDetail?: any,
+): Promise<void> {
+  const actions = pipelineString
+    .split(';')
+    .map((s) => s.trim())
+    .filter(Boolean);
   for (const action of actions) {
     try {
       await executeAction(action, sourceElement, eventDetail);
     } catch (err) {
       console.warn(`[flux] Action "${action}" failed:`, err);
-      sourceElement.dispatchEvent(new CustomEvent('flux:action:error', { bubbles: true, detail: { action, error: err } }));
+      sourceElement.dispatchEvent(
+        new CustomEvent('flux:action:error', { bubbles: true, detail: { action, error: err } }),
+      );
     }
   }
 }
@@ -64,8 +106,10 @@ export async function executePipeline(pipelineString: string, sourceElement: Ele
 // -- Built-in Actions --
 
 registerAction('close', (targetArg, source) => {
-  const targets = targetArg ? queryMany(targetArg, source.ownerDocument) : [source.closest('dialog')];
-  targets.forEach(t => {
+  const targets = targetArg
+    ? queryMany(targetArg, source.ownerDocument)
+    : [source.closest('dialog')];
+  targets.forEach((t) => {
     if (t && typeof (t as any).close === 'function') (t as any).close();
     else if (t) t.removeAttribute('open');
   });
@@ -74,7 +118,7 @@ registerAction('close', (targetArg, source) => {
 registerAction('open', (targetArg, source) => {
   if (!targetArg) return;
   const targets = queryMany(targetArg, source.ownerDocument);
-  targets.forEach(t => {
+  targets.forEach((t) => {
     if (t instanceof HTMLDialogElement) t.showModal();
     else t.setAttribute('open', '');
   });
@@ -82,7 +126,7 @@ registerAction('open', (targetArg, source) => {
 
 registerAction('reset', (targetArg, source) => {
   const targets = targetArg ? queryMany(targetArg, source.ownerDocument) : [source.closest('form')];
-  targets.forEach(t => {
+  targets.forEach((t) => {
     if (t instanceof HTMLFormElement) t.reset();
   });
 });
@@ -90,7 +134,7 @@ registerAction('reset', (targetArg, source) => {
 registerAction('refresh', (targetArg, source) => {
   const targets = targetArg ? queryMany(targetArg, source.ownerDocument) : [source];
   const activeHtmx = (window as any).htmx;
-  targets.forEach(t => {
+  targets.forEach((t) => {
     if (typeof activeHtmx?.trigger === 'function') {
       activeHtmx.trigger(t, 'refresh');
     } else {
@@ -101,13 +145,15 @@ registerAction('refresh', (targetArg, source) => {
 
 registerAction('remove', (targetArg, source) => {
   const targets = targetArg ? queryMany(targetArg, source.ownerDocument) : [source];
-  targets.forEach(t => t.remove());
+  targets.forEach((t) => t.remove());
 });
 
 registerAction('toast', (targetArg, source) => {
   showBuiltInToast(targetArg, 'success');
   // Optional: still fire the event if anything else listens to it
-  document.dispatchEvent(new CustomEvent('flux:toast', { detail: { message: targetArg, type: 'success' } }));
+  document.dispatchEvent(
+    new CustomEvent('flux:toast', { detail: { message: targetArg, type: 'success' } }),
+  );
 });
 
 // We can add more built-ins as needed (add-class, remove-class, focus, etc.)

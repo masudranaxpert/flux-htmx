@@ -84,13 +84,12 @@ Native HTML component controllers provide declarative modal & popover management
 | Attribute                                     | Plugin                 | Behavior                                                               |
 | --------------------------------------------- | ---------------------- | ---------------------------------------------------------------------- |
 | `fx-upload="/files"`                          | Upload Progress Plugin | Configures multipart upload with progress tracking and file validation |
-| `fx-progress="#progress-bar"`                 | Upload Progress Plugin | Updates `<progress>` value or `--upload-progress` CSS custom property  |
 | `fx-max-size="20mb"`                          | Upload Progress Plugin | Validates maximum file size limit before issuing upload request        |
 | `fx-allowed-types="image/*,.pdf"`             | Upload Progress Plugin | Validates allowed file MIME types or extensions before upload          |
 | `fx-optimistic-remove="closest li"`           | Optimistic UI Plugin   | Instantly removes element on click before request completes            |
 | `fx-optimistic-class="hidden"`                | Optimistic UI Plugin   | Instantly adds class to element on click before request completes      |
 | `fx-rollback`                                 | Optimistic UI Plugin   | Automatically restores original element DOM state if request fails     |
-| `fx-success="Message"`                        | Feedback               | Screen reader announcement & Alpine toast push on HTTP 2xx             |
-| `fx-error="Message"`                          | Feedback               | Screen reader announcement & Alpine toast push on HTTP 4xx/5xx         |
+| `fx-success="Message"`                        | Feedback               | Screen reader announcement & Flux toast push on HTTP 2xx             |
+| `fx-error="Message"`                          | Feedback               | Screen reader announcement & Flux toast push on HTTP 4xx/5xx         |
 | `fx-reset`                                    | `<form>` elements      | Resets form inputs upon HTTP 2xx success                               |
 | `fx-remove="this"` / `fx-remove="closest tr"` | Delete preset          | Removes element/ancestor from DOM upon HTTP 2xx success                |

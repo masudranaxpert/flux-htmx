@@ -50,20 +50,7 @@ export function getCachePolicy(element: Element): CachePolicy {
   return { enabled: ttl !== undefined, ttl, swr };
 }
 
-function hasAuthorizationHeader(headers: unknown): boolean {
-  if (!headers) return false;
-  if (typeof (headers as any).get === 'function') {
-    return Boolean((headers as any).get('Authorization') ?? (headers as any).get('authorization'));
-  }
-  if (typeof headers === 'object') {
-    for (const [k, v] of Object.entries(headers as Record<string, unknown>)) {
-      if (k.toLowerCase() === 'authorization' && Boolean(v)) return true;
-    }
-  }
-  return false;
-}
-
-function getRequestHeaderVal(headers: unknown, name: string): string | null {
+function getHeader(headers: unknown, name: string): string | null {
   if (!headers) return null;
   if (typeof (headers as any).get === 'function') {
     return (headers as any).get(name) ?? (headers as any).get(name.toLowerCase()) ?? null;
@@ -78,6 +65,33 @@ function getRequestHeaderVal(headers: unknown, name: string): string | null {
   return null;
 }
 
+export function canStoreResponse(
+  request: { method?: string; headers?: unknown },
+  response: { status?: number; ok?: boolean; headers?: unknown },
+): boolean {
+  const status = response.status ?? (response.ok ? 200 : 0);
+  const cacheControl = (getHeader(response.headers, 'Cache-Control') ?? '').toLowerCase();
+  const pragma = (getHeader(response.headers, 'Pragma') ?? '').toLowerCase();
+  const contentType = (getHeader(response.headers, 'Content-Type') ?? '').toLowerCase();
+
+  return (
+    isCacheableMethod(request.method ?? 'GET') &&
+    status >= 200 &&
+    status < 300 &&
+    status !== 204 &&
+    !getHeader(request.headers, 'Authorization') &&
+    !getHeader(response.headers, 'Authorization') &&
+    !getHeader(response.headers, 'Set-Cookie') &&
+    !(getHeader(response.headers, 'Vary') ?? '').trim() &&
+    !['no-store', 'private', 'no-cache', 'max-age=0', 's-maxage=0'].some((token) =>
+      cacheControl.includes(token),
+    ) &&
+    !pragma.includes('no-cache') &&
+    (!contentType ||
+      contentType.includes('text/html') ||
+      contentType.includes('application/xhtml+xml'))
+  );
+}
 
 export function installCacheIntegration(
   cache: FragmentCache,
@@ -165,45 +179,21 @@ export function installCacheIntegration(
       return null;
     };
 
-    const hasReqAuth = hasAuthorizationHeader(request.headers);
-    const hasResAuth =
-      hasAuthorizationHeader(ctx.ctx.response?.headers) || Boolean(getHeader('Authorization'));
-    const hasAuthHeader = hasReqAuth || hasResAuth;
-
-    const cacheControl = (getHeader('Cache-Control') ?? '').toLowerCase();
-    const pragma = (getHeader('Pragma') ?? '').toLowerCase();
-    const contentType = (getHeader('Content-Type') ?? '').toLowerCase();
-    const rawVary = getHeader('Vary') ?? '';
-    const varyTokens = rawVary.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
-
-    const hasSetCookie = Boolean(getHeader('Set-Cookie'));
-    const isNoStore =
-      cacheControl.includes('no-store') ||
-      cacheControl.includes('private') ||
-      cacheControl.includes('no-cache') ||
-      cacheControl.includes('max-age=0') ||
-      cacheControl.includes('s-maxage=0') ||
-      pragma.includes('no-cache');
-
-    const isHtmlContent =
-      contentType.includes('text/html') ||
-      contentType.includes('application/xhtml+xml') ||
-      contentType === '';
-    const isUncacheableVary = varyTokens.length > 0;
+    const response = {
+      status,
+      headers: {
+        get: (name: string) => getHeader(name),
+      },
+    };
 
     if (
       policy.enabled &&
       policy.ttl !== undefined &&
-      isCacheableMethod(request.method ?? 'GET') &&
       text !== null &&
       text !== undefined &&
       successful &&
       !is204 &&
-      !isNoStore &&
-      !hasSetCookie &&
-      isHtmlContent &&
-      !isUncacheableVary &&
-      !hasAuthHeader
+      canStoreResponse(request, response)
     ) {
       const key = cacheKey(source, request);
       cache.set(key, text, policy.ttl);
@@ -310,8 +300,8 @@ export function cacheKey(
     }
   }
 
-  const sortedEntries = Array.from(params.entries()).sort(([aK, aV], [bK, bV]) =>
-    aK.localeCompare(bK) || aV.localeCompare(bV),
+  const sortedEntries = Array.from(params.entries()).sort(
+    ([aK, aV], [bK, bV]) => aK.localeCompare(bK) || aV.localeCompare(bV),
   );
 
   const canonicalParams = new URLSearchParams();

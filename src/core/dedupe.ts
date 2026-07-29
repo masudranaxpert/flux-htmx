@@ -49,10 +49,17 @@ export function installDeduplication(): () => void {
 
     if (hasAuthorizationHeader(ctx.request?.headers)) return;
 
-    const url = ctx.request?.action ?? element.getAttribute('hx-get') ?? element.getAttribute('fx-get');
+    const url =
+      ctx.request?.action ?? element.getAttribute('hx-get') ?? element.getAttribute('fx-get');
     if (!url) return;
 
-    const key = computeDedupeKey(element, method, url, ctx.request?.parameters, ctx.request?.headers);
+    const key = computeDedupeKey(
+      element,
+      method,
+      url,
+      ctx.request?.parameters,
+      ctx.request?.headers,
+    );
     const consumers = inFlightRequests.get(key);
 
     const isRetry = readHeader(ctx.request?.headers, 'X-Flux-Retry') === 'true';
@@ -60,7 +67,11 @@ export function installDeduplication(): () => void {
     if (consumers) {
       if (isRetry) {
         // Retry request takes over as the new leader
-        consumers[0] = { element, target: ctx.target, swap: element.getAttribute('hx-swap') ?? element.getAttribute('fx-swap') ?? undefined };
+        consumers[0] = {
+          element,
+          target: ctx.target,
+          swap: element.getAttribute('hx-swap') ?? element.getAttribute('fx-swap') ?? undefined,
+        };
         return;
       }
       // In-flight request exists: register as duplicate consumer and set dedupe hit flag
@@ -88,15 +99,25 @@ export function installDeduplication(): () => void {
     const method = (ctx.request?.method ?? 'GET').toUpperCase();
     if (method !== 'GET') return;
 
-    const url = ctx.request?.action ?? ctx.source?.getAttribute('hx-get') ?? ctx.source?.getAttribute('fx-get');
+    const url =
+      ctx.request?.action ??
+      ctx.source?.getAttribute('hx-get') ??
+      ctx.source?.getAttribute('fx-get');
     if (!url) return;
 
-    const key = computeDedupeKey(ctx.source ?? document.body, method, url, ctx.request?.parameters, ctx.request?.headers);
+    const key = computeDedupeKey(
+      ctx.source ?? document.body,
+      method,
+      url,
+      ctx.request?.parameters,
+      ctx.request?.headers,
+    );
     const consumers = inFlightRequests.get(key);
     if (!consumers) return;
 
     if (!ctx.successful) {
-      const isRetryableError = ctx.status === 0 || ctx.status === 502 || ctx.status === 503 || ctx.status === 504;
+      const isRetryableError =
+        ctx.status === 0 || ctx.status === 502 || ctx.status === 503 || ctx.status === 504;
       if (isRetryableError && ctx.source) {
         const opts = getRetryOptions(ctx.source);
         if (opts) {
@@ -124,7 +145,12 @@ export function installDeduplication(): () => void {
           consumer.element.dispatchEvent(
             new CustomEvent('htmx:after:swap', {
               bubbles: true,
-              detail: { elt: consumer.element, target: consumer.target, xhr: ctx.detail.xhr, response: ctx.text },
+              detail: {
+                elt: consumer.element,
+                target: consumer.target,
+                xhr: ctx.detail.xhr,
+                response: ctx.text,
+              },
             }),
           );
 
@@ -148,9 +174,20 @@ export function installDeduplication(): () => void {
             }),
           );
           consumer.element.dispatchEvent(
-            new CustomEvent('htmx:responseError', {
+            new CustomEvent('htmx:response:error', {
               bubbles: true,
-              detail: { elt: consumer.element, xhr: ctx.detail.xhr, status: ctx.status },
+              detail: {
+                ctx: {
+                  ...ctx.ctx,
+                  sourceElement: consumer.element,
+                  target: consumer.target,
+                  response: ctx.ctx.response ?? {
+                    status: ctx.status,
+                    headers: ctx.detail.xhr?.headers,
+                  },
+                  text: ctx.text,
+                },
+              },
             }),
           );
         }
@@ -200,8 +237,8 @@ function computeDedupeKey(
     }
   }
 
-  const sortedEntries = Array.from(searchParams.entries()).sort(([aK, aV], [bK, bV]) =>
-    aK.localeCompare(bK) || aV.localeCompare(bV),
+  const sortedEntries = Array.from(searchParams.entries()).sort(
+    ([aK, aV], [bK, bV]) => aK.localeCompare(bK) || aV.localeCompare(bV),
   );
 
   const canonicalParams = new URLSearchParams();

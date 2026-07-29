@@ -17,7 +17,7 @@ At processing time, Flux expands this to `hx-get="/users" hx-target="#users"` on
 
 ## Quick Installation
 
-The simplest setup is the pre-bundled IIFE, which includes HTMX 4, Alpine.js, and Flux in a single script tag:
+The simplest setup is the pre-bundled IIFE, which includes HTMX 4 and Flux in a single script tag:
 
 ```html
 <link rel="stylesheet" href="/flux.css" />
@@ -25,13 +25,15 @@ The simplest setup is the pre-bundled IIFE, which includes HTMX 4, Alpine.js, an
 <script src="/flux.full.iife.js"></script>
 ```
 
-`flux.full.iife.js` loads HTMX, Alpine, and Flux in the correct order, exposes `window.Flux`, `window.htmx`, and `window.Alpine`, and starts automatically.
+`flux.full.iife.js` loads HTMX and Flux in the correct order, exposes `window.Flux` and `window.htmx`, and starts automatically.
 
-If your page already loads HTMX 4 and Alpine, use `flux.iife.js` instead:
+If your page already loads HTMX 4, use `flux.iife.js`:
 
 ```html
+<!-- HTMX 4 (required first) -->
 <script src="/htmx.js"></script>
-<script src="/alpine.js"></script>
+
+<!-- Flux core (IIFE) -->
 <script src="/flux.iife.js"></script>
 ```
 
@@ -42,7 +44,7 @@ If your page already loads HTMX 4 and Alpine, use `flux.iife.js` instead:
 - **Status Routing**: `fx-on-422="#errors"`, `fx-on-404="#not-found"`.
 - **Component Controls**: `fx-open="#modal"`, `fx-close="#modal"`, focus restoration.
 - **Client Fragment Caching**: `fx-cache="60s"`, `fx-invalidate="key"`.
-- **Accessible Feedback**: Live-region announcements & Alpine toast store integration via `fx-success` and `fx-error`.
+- **Accessible Feedback**: Live-region announcements via `fx-success` and `fx-error`.
 
 ## Documentation
 

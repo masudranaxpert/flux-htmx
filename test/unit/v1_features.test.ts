@@ -78,7 +78,7 @@ describe('Stable v1.0.0 Release Hardening & Features Test Suite', () => {
     form.dispatchEvent(dragLeaveEvt);
     expect(form.getAttribute('data-flux-drag-over')).toBeNull();
 
-    Flux.unuse('upload-progress');
+    Flux.unuse('upload');
 
     // Scoped cleanup: form's hx-post is cleaned up, but normalBtn's hx-get remains untouched!
     expect(form.getAttribute('hx-post')).toBeNull();

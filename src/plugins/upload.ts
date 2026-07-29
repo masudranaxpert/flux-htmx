@@ -21,7 +21,7 @@ export function parseMaxSizeBytes(sizeStr?: string | null): number | null {
 }
 
 export const uploadPlugin: FluxPlugin = {
-  name: 'upload-progress',
+  name: 'upload',
   setup(api: FluxPluginApi) {
     if (typeof document === 'undefined') return;
 
@@ -46,9 +46,6 @@ export const uploadPlugin: FluxPlugin = {
       return true;
     });
 
-    // HTMX 4 fetch() migration: htmx:xhr:progress no longer fires.
-    // Native upload progress via fx-progress requires a custom XHR/fetch uploader implementation.
-
     return () => {
       unregisterPreset();
       // Clean teardown: dispose all active element upload controllers
@@ -72,14 +69,13 @@ export const uploadPlugin: FluxPlugin = {
 function wireUploadElement(element: Element, uploadUrl: string): void {
   const maxSizeStr = element.getAttribute('fx-max-size');
   const maxSizeBytes = parseMaxSizeBytes(maxSizeStr);
-  const progressAttr = element.getAttribute('fx-progress') ?? '';
   const allowedTypes = element
     .getAttribute('fx-allowed-types')
     ?.split(',')
     .map((s) => s.trim().toLowerCase());
 
   // Signature check including runtime options
-  const signature = `${uploadUrl}|${progressAttr}|${maxSizeStr ?? ''}|${allowedTypes?.join(',') ?? ''}`;
+  const signature = `${uploadUrl}|${maxSizeStr ?? ''}|${allowedTypes?.join(',') ?? ''}`;
   const currentSig = element.getAttribute('data-flux-preset-signature');
   if (currentSig === signature) return;
   element.setAttribute('data-flux-preset-signature', signature);
@@ -151,7 +147,10 @@ function wireUploadElement(element: Element, uploadUrl: string): void {
     element.classList.remove('flux-drag-over');
   };
 
-  const submitFormDataFallback = (droppedFiles: FileList | File[], fallbackInput?: HTMLInputElement | null) => {
+  const submitFormDataFallback = (
+    droppedFiles: FileList | File[],
+    fallbackInput?: HTMLInputElement | null,
+  ) => {
     const formData = new FormData();
     const fieldName = fallbackInput?.name || 'file';
     for (const file of Array.from(droppedFiles)) {

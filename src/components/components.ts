@@ -3,7 +3,7 @@
 //   - fx-open="#id" → opens a <dialog> (with focus & focus restoration) or toggles a popover
 //   - fx-close="#id" / fx-close → closes target <dialog> or popover
 //   - fx-confirm-dialog="#id" → native HTML <dialog> confirmation before issuing request
-//   - fx-toast-region → mounts an accessible live region Alpine can populate
+//   - fx-toast-region → mounts an accessible live region Flux can populate
 
 import { log } from '../core/logger.js';
 

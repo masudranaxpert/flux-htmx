@@ -233,7 +233,7 @@ export function applyPreset(
   const isPresetGenerated = element.getAttribute('data-flux-preset') === preset.replace(/^fx-/, '');
   const generatedAttrs = getGeneratedAttributes(element);
   const hasOwnedAttrs = generatedAttrs.size > 0;
-  
+
   let allAttrsPresent = true;
   if (hasOwnedAttrs) {
     for (const [name, expectedValue] of generatedAttrs.entries()) {
@@ -279,10 +279,27 @@ function checkPresetConflicts(element: Element): string[] {
 
 function computePresetSignature(element: Element, preset: string, value: string): string {
   const attrs = [
-    'fx-target', 'fx-swap', 'fx-delay', 'fx-interval', 'fx-min-length',
-    'fx-method', 'fx-indicator', 'fx-append', 'fx-prepend', 'fx-confirm',
-    'fx-disable', 'fx-remove', 'fx-reset', 'fx-progress', 'fx-max-size',
-    'fx-allowed-types', 'fx-success', 'fx-error', 'fx-invalidate',
+    'fx-target',
+    'fx-swap',
+    'fx-delay',
+    'fx-interval',
+    'fx-min-length',
+    'fx-method',
+    'fx-indicator',
+    'fx-append',
+    'fx-prepend',
+    'fx-confirm',
+    'fx-disable',
+    'fx-remove',
+    'fx-reset',
+    'fx-max-size',
+    'fx-allowed-types',
+    'fx-success',
+    'fx-error',
+    'fx-invalidate',
+    'fx-cache',
+    'fx-cache-mode',
+    'fx-cache-key',
   ];
   let opts = '';
   for (let i = 0; i < attrs.length; i++) {

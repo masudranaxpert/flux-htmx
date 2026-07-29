@@ -7,10 +7,10 @@ you load scripts. All builds expose the same `fx-*` attributes and the same glob
 
 | File                | Format | Bundles                | Description & Primary Use Case                                   |
 | ------------------- | ------ | ---------------------- | ---------------------------------------------------------------- |
-| `flux.full.iife.js` | IIFE   | Flux + HTMX 4 + Alpine | All-in-One Standalone script tag (Django, Laravel, Go, Rails)    |
-| `flux.iife.js`      | IIFE   | Flux core only         | Use when HTMX 4 & Alpine are pre-loaded via separate script tags |
-| `flux.full.js`      | ESM    | Flux + HTMX 4 + Alpine | Standalone ES Module bundle                                      |
-| `flux.js`           | ESM    | Flux core only         | Bundlers (Vite, Rollup, webpack)                                 |
+| `flux.full.iife.js` | IIFE   | Flux + HTMX 4 | All-in-One Standalone script tag (Django, Laravel, Go, Rails)    |
+| `flux.iife.js`      | IIFE   | Flux core only         | Use when HTMX 4 is pre-loaded via separate script tags |
+| `flux.full.js`      | ESM    | Flux + HTMX 4 | Standalone ES Module bundle                                      |
+| `flux.js`           | ESM    | Flux core only         | Use with Vite, Webpack, etc. (import htmx separately)            |
 | `flux.css`          | CSS    | —                      | Styling & accessible live region                                 |
 | `flux.min.css`      | CSS    | —                      | Minified stylesheet for production                               |
 
@@ -21,12 +21,11 @@ All browser builds expose a global `window.Flux` object for browser debugging, r
 ```js
 // Public Inspection Properties & Status
 Flux.version; // string: "0.1.0-beta.0"
-Flux.dependencies; // object: { htmx: "4.0.0-beta6", alpine: "3.15.12" }
+Flux.dependencies; // object: { htmx: "4.0.0-beta6" }
 Flux.isStarted; // boolean: true / false
 Flux.config; // object: active ResolvedConfig instance
 Flux.cache; // FragmentCache instance
-Flux.htmx; // active HTMX instance reference
-window.Alpine; // exposed Alpine.js instance (standalone build)
+Flux.htmx; // exposed HTMX instance (standalone build)
 
 // Core Methods
 Flux.start(el); // Manually initialize Flux and process target element
