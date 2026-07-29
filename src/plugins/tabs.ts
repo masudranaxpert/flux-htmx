@@ -31,7 +31,7 @@ function handleTabKeydown(e: KeyboardEvent) {
     const tabsContainer = tab.closest('[fx-tabs]');
     if (!tabsContainer) return;
 
-    const allTabs = Array.from(queryAllSafely(tabsContainer, '[fx-tab]')) as HTMLElement[];
+    const allTabs = Array.from(queryAllSafely('[fx-tab]', tabsContainer)) as HTMLElement[];
     const index = allTabs.indexOf(tab);
     if (index > -1) {
       let nextIndex = e.key === 'ArrowRight' ? index + 1 : index - 1;
@@ -39,6 +39,7 @@ function handleTabKeydown(e: KeyboardEvent) {
       if (nextIndex < 0) nextIndex = allTabs.length - 1;
 
       const nextTab = allTabs[nextIndex];
+      if (!nextTab) return;
       const nextTabId = nextTab.getAttribute('fx-tab');
       if (nextTabId) {
         activateTab(tabsContainer, nextTabId);
@@ -50,7 +51,7 @@ function handleTabKeydown(e: KeyboardEvent) {
 
 function activateTab(container: Element, tabId: string) {
   // Update tabs
-  const allTabs = queryAllSafely(container, '[fx-tab]');
+  const allTabs = queryAllSafely('[fx-tab]', container);
   for (const tab of allTabs) {
     if (tab.getAttribute('fx-tab') === tabId) {
       tab.setAttribute('aria-selected', 'true');
@@ -62,7 +63,7 @@ function activateTab(container: Element, tabId: string) {
   }
 
   // Update panels
-  const allPanels = queryAllSafely(container, '[fx-panel]');
+  const allPanels = queryAllSafely('[fx-panel]', container);
   for (const panel of allPanels) {
     if (panel.getAttribute('fx-panel') === tabId) {
       panel.removeAttribute('hidden');

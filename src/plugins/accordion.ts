@@ -23,7 +23,7 @@ function handleAccordionClick(e: MouseEvent) {
     if (!isExpanded) {
       if (accordion && !isMultiple) {
         // Close other disclosures in the same accordion
-        const siblings = queryAllSafely(accordion, '[fx-disclosure]');
+        const siblings = queryAllSafely('[fx-disclosure]', accordion);
         for (const sibling of siblings) {
           if (sibling !== disclosure) {
             closeDisclosure(sibling);

@@ -25,7 +25,7 @@ function handleStateClick(e: MouseEvent) {
       const [key, ...rest] = val.split(':');
       const value = rest.join(':');
       const container = setBtn.closest('[fx-state]') || document.body;
-      setState(container, key, value);
+      setState(container, key as string, value);
     }
   }
 }
@@ -34,7 +34,7 @@ function setState(container: Element, key: string, value: string) {
   container.setAttribute(`data-state-${key}`, value);
   
   // Optionally update classes based on state: fx-class-[key]="value:class"
-  const boundElements = queryAllSafely(container, `[fx-bind-${key}]`);
+  const boundElements = queryAllSafely(`[fx-bind-${key}]`, container);
   for (const el of boundElements) {
     const bindExpr = el.getAttribute(`fx-bind-${key}`);
     if (bindExpr) {

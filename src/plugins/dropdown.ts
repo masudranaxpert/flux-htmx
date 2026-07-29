@@ -28,7 +28,7 @@ function handleDropdownClick(e: MouseEvent) {
   }
 
   // Click outside handling
-  const allOpenDropdowns = queryAllSafely(document, '[fx-dropdown][fx-open]');
+  const allOpenDropdowns = queryAllSafely('[fx-dropdown][fx-open]', document);
   for (const dropdown of allOpenDropdowns) {
     if (!dropdown.contains(target)) {
       closeDropdown(dropdown);
@@ -38,7 +38,7 @@ function handleDropdownClick(e: MouseEvent) {
 
 function handleDropdownKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
-    const allOpenDropdowns = queryAllSafely(document, '[fx-dropdown][fx-open]');
+    const allOpenDropdowns = queryAllSafely('[fx-dropdown][fx-open]', document);
     for (const dropdown of allOpenDropdowns) {
       closeDropdown(dropdown);
       // Restore focus to trigger

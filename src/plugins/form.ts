@@ -5,7 +5,7 @@ export function installForm() {
   document.addEventListener('input', handleFormInput);
   
   // Track original values
-  document.addEventListener('DOMContentLoaded', initializeDirtyState);
+  document.addEventListener('DOMContentLoaded', () => initializeDirtyState());
   document.addEventListener('htmx:afterSettle', (e: Event) => {
     initializeDirtyState((e as CustomEvent).detail.el);
   });
@@ -61,9 +61,9 @@ function handleFormInput(e: Event) {
 }
 
 function initializeDirtyState(root: Element | Document = document) {
-  const forms = queryAllSafely(root, 'form[fx-dirty]');
+  const forms = queryAllSafely('form[fx-dirty]', root);
   for (const form of forms) {
-    const inputs = queryAllSafely(form, 'input, select, textarea');
+    const inputs = queryAllSafely('input, select, textarea', form);
     for (const el of inputs) {
       const input = el as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
       const val = input.type === 'checkbox' ? (input as HTMLInputElement).checked.toString() : input.value;

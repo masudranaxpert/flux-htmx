@@ -4,7 +4,7 @@ export function installPersist() {
   document.addEventListener('change', handlePersistChange);
   
   // Restore on load and on htmx swaps
-  document.addEventListener('DOMContentLoaded', restorePersisted);
+  document.addEventListener('DOMContentLoaded', () => restorePersisted());
   document.addEventListener('htmx:afterSettle', (e: Event) => {
     restorePersisted((e as CustomEvent).detail.el);
   });
@@ -30,7 +30,7 @@ function handlePersistChange(e: Event) {
 }
 
 function restorePersisted(root: Element | Document = document) {
-  const persistedElements = queryAllSafely(root, '[fx-persist]');
+  const persistedElements = queryAllSafely('[fx-persist]', root);
   for (const el of persistedElements) {
     const target = el as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
     const key = `fx-persist:${target.getAttribute('fx-persist')}`;
