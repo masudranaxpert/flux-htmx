@@ -14,9 +14,9 @@ import { installOfflineSupport, pendingCount, clearOfflineQueue, flush as flushO
 import { installStatusTargeting, disposeStatusTargeting } from './core/status.js';
 import { registerRecipe } from './core/recipes.js';
 import { installActionPipeline } from './core/action-lifecycle.js';
-import { defineActionPipeline } from './core/actions.js';
+import { registerAction, defineActionPipeline } from './core/actions.js';
 export { registerRecipe as recipe } from './core/recipes.js';
-export { defineActionPipeline as action } from './core/actions.js';
+export { registerAction, defineActionPipeline as action } from './core/actions.js';
 import { cache } from './cache/instance.js';
 import { installCacheIntegration } from './cache/cacheWire.js';
 import { installOpenController, disposeDialogControllers } from './components/components.js';
@@ -25,6 +25,7 @@ import { FLUX_VERSION } from './core/version.js';
 import { readFluxMetaConfig, reportDependencies, verifyHtmxVersion } from './core/startup.js';
 import { disposeDeleteControllers, installDeleteControllers } from './presets/delete.js';
 import { disposeSubmitControllers, installSubmitControllers } from './presets/submit.js';
+import { disposePrefetchControllers } from './presets/index.js';
 import { inspectElement, doctor } from './diagnostics/doctor.js';
 import { getRequestContext } from './core/events.js';
 import { safeQuerySelector } from './core/selectors.js';
@@ -85,6 +86,7 @@ function pluginApi(): FluxPluginApi {
     removeGeneratedAttribute,
     safeQuery: safeQuerySelector,
     readHtmxEvent: getRequestContext,
+    registerAction,
   };
 }
 
@@ -197,6 +199,7 @@ export function dispose(options?: DisposeOptions): void {
   disposeStatusTargeting();
   disposeDeleteControllers();
   disposeSubmitControllers();
+  disposePrefetchControllers();
   disposeDialogControllers();
   deactivatePlugins();
   resetFeedbackForTests();
@@ -250,7 +253,7 @@ function installCleanupHook(): () => void {
   if (typeof document === 'undefined') return () => {};
 
   const onCleanup = (evt: Event) => {
-    const target = (evt as CustomEvent).detail?.elt ?? evt.target;
+    const target = (evt as CustomEvent).detail?.ctx?.targetElement ?? evt.target;
     if (target instanceof Element) {
       removeGeneratedAttributes(target);
       const children = Array.from(target.querySelectorAll('*'));
@@ -260,8 +263,8 @@ function installCleanupHook(): () => void {
     }
   };
 
-  document.addEventListener('htmx:before:cleanup:element', onCleanup);
-  return () => document.removeEventListener('htmx:before:cleanup:element', onCleanup);
+  document.addEventListener('htmx:before:cleanup', onCleanup);
+  return () => document.removeEventListener('htmx:before:cleanup', onCleanup);
 }
 
 function createFluxApi() {
@@ -293,6 +296,7 @@ function createFluxApi() {
     dispose,
     recipe: registerRecipe,
     action: defineActionPipeline,
+    registerAction,
     cache,
     htmx: activeHtmx,
     inspect: inspectElement,

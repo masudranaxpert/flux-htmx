@@ -29,6 +29,7 @@ describe('New Features: fx-prefetch and fx-toast', () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
       text: () => Promise.resolve('prefetched content'),
+      headers: { get: () => null },
     });
     global.fetch = mockFetch as any;
 

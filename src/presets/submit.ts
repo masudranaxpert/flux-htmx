@@ -250,7 +250,7 @@ export function installSubmitControllers(): () => void {
   isSubmitInstalled = true;
 
   const onCleanup = (evt: Event) => {
-    const target = (evt as CustomEvent).detail?.elt ?? evt.target;
+    const target = (evt as CustomEvent).detail?.ctx?.targetElement ?? evt.target;
     if (target instanceof Element) {
       submitControllers.get(target)?.();
       for (const el of Array.from(target.querySelectorAll('[data-flux-preset="submit"]'))) {
@@ -259,9 +259,9 @@ export function installSubmitControllers(): () => void {
     }
   };
 
-  document.addEventListener('htmx:before:cleanup:element', onCleanup);
+  document.addEventListener('htmx:before:cleanup', onCleanup);
   return () => {
-    document.removeEventListener('htmx:before:cleanup:element', onCleanup);
+    document.removeEventListener('htmx:before:cleanup', onCleanup);
     isSubmitInstalled = false;
   };
 }

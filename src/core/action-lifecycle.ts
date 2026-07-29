@@ -1,35 +1,34 @@
 import { executePipeline, executeAction, executeNamedPipeline } from './actions.js';
+import { getRequestContext } from './events.js';
 
 export function installActionPipeline(): () => void {
   if (typeof document === 'undefined') return () => {};
 
   const onAfterRequest = async (evt: Event) => {
-    const detail = (evt as CustomEvent).detail;
-    if (!detail) return;
-    const { elt, successful, failed } = detail;
-    if (!elt) return;
+    const ctx = getRequestContext(evt);
+    const element = ctx.source;
 
-    if (successful) {
-      const successPipeline = elt.getAttribute('fx-on-success');
+    if (!element) return;
+
+    if (ctx.successful) {
+      const successPipeline = element.getAttribute('fx-on-success');
       if (successPipeline) {
-        await executePipeline(successPipeline, elt, detail);
+        await executePipeline(successPipeline, element, ctx.detail);
       }
-      const successNamedAction = elt.getAttribute('fx-success-action');
+      const successNamedAction = element.getAttribute('fx-success-action');
       if (successNamedAction) {
-        await executeNamedPipeline(successNamedAction, elt, detail);
+        await executeNamedPipeline(successNamedAction, element, ctx.detail);
       }
-    }
-
-    if (failed) {
-      const errorPipeline = elt.getAttribute('fx-on-error');
+    } else {
+      const errorPipeline = element.getAttribute('fx-on-error');
       if (errorPipeline) {
-        await executePipeline(errorPipeline, elt, detail);
+        await executePipeline(errorPipeline, element, ctx.detail);
       }
     }
   };
 
-  document.addEventListener('htmx:afterRequest', onAfterRequest);
+  document.addEventListener('htmx:after:request', onAfterRequest);
   return () => {
-    document.removeEventListener('htmx:afterRequest', onAfterRequest);
+    document.removeEventListener('htmx:after:request', onAfterRequest);
   };
 }

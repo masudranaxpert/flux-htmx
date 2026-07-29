@@ -9,7 +9,7 @@ import { applySubmit, disconnectSubmit } from './submit.js';
 import { applyDelete, disconnectDelete } from './delete.js';
 import { applyAutosave } from './autosave.js';
 import { applyPagination } from './pagination.js';
-import { applyPrefetch } from './prefetch.js';
+import { applyPrefetch, disconnectPrefetch, disposePrefetchControllers } from './prefetch.js';
 import { getGeneratedAttributes } from '../core/generated-attributes.js';
 
 export { applySearch } from './search.js';
@@ -20,7 +20,7 @@ export { applySubmit } from './submit.js';
 export { applyDelete } from './delete.js';
 export { applyAutosave } from './autosave.js';
 export { applyPagination } from './pagination.js';
-export { applyPrefetch } from './prefetch.js';
+export { applyPrefetch, disconnectPrefetch, disposePrefetchControllers } from './prefetch.js';
 
 export interface PresetContext {
   target?: string;
@@ -195,6 +195,7 @@ registerPreset({
     applyPrefetch(element, {
       url: value,
     }),
+  disconnect: (element) => disconnectPrefetch(element),
 });
 
 /** Dispatches an element's preset attribute to its registered handler. Returns true if a preset ran. */

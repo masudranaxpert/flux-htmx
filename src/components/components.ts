@@ -124,10 +124,8 @@ export function installOpenController(): () => void {
 
   // Handle fx-confirm-dialog
   const onConfirm = (evt: Event) => {
-    const detail = (evt as CustomEvent).detail as
-      | { elt?: Element; issueRequest?: (skipConfirm?: boolean) => void; dropRequest?: () => void }
-      | undefined;
-    const elt = detail?.elt;
+    const detail = (evt as CustomEvent).detail;
+    const elt = (detail?.ctx?.sourceElement ?? detail?.elt) as Element | undefined;
     if (!elt) return;
 
     const dialogSelector = elt.getAttribute('fx-confirm-dialog');

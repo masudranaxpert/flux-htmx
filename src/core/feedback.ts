@@ -182,7 +182,7 @@ function announceAndMarkResult(evt: Event): void {
   }
 }
 
-function showBuiltInToast(message: string, type: 'success' | 'error'): void {
+export function showBuiltInToast(message: string, type: 'success' | 'error'): void {
   let container = document.getElementById('flux-toast-container');
   if (!container) {
     container = document.createElement('div');
@@ -219,7 +219,8 @@ function removeToast(toast: HTMLElement): void {
   toast.classList.add('flux-toast-leave');
   toast.addEventListener('animationend', () => {
     toast.remove();
-  });
+  }, { once: true });
+  setTimeout(() => toast.remove(), 300); // fallback if no animation
 }
 
 /** Toggles data-flux-active / .flux-active on global indicator element. */

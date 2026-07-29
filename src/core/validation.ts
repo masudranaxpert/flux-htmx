@@ -15,7 +15,8 @@ export function installValidation(): (() => void) | null {
 
 function onConfirm(evt: Event): void {
   const customEvt = evt as CustomEvent;
-  const elt = customEvt.detail?.elt as Element | undefined;
+  const detail = customEvt.detail;
+  const elt = (detail?.ctx?.sourceElement ?? detail?.elt) as Element | undefined;
   if (!elt) return;
 
   // Check if elt or its parent form has fx-validate
@@ -28,5 +29,6 @@ function onConfirm(evt: Event): void {
   if (!form.reportValidity()) {
     log.info('[flux] Form validation failed, aborting request.');
     evt.preventDefault(); // This stops the htmx request
+    detail.dropRequest?.();
   }
 }

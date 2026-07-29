@@ -75,7 +75,7 @@ export function installRetrySupport(): () => void {
   };
 
   const onCleanup = (evt: Event) => {
-    const elt = (evt as CustomEvent).detail?.elt ?? evt.target;
+    const elt = (evt as CustomEvent).detail?.ctx?.targetElement ?? evt.target;
     if (elt instanceof Element) {
       for (const [timerElt, timers] of activeRetryTimers.entries()) {
         if (elt === timerElt || elt.contains(timerElt)) {
@@ -199,11 +199,11 @@ export function installRetrySupport(): () => void {
 
   document.addEventListener('htmx:before:request', onRequest);
   document.addEventListener('htmx:after:request', onResponse);
-  document.addEventListener('htmx:beforeCleanupElement', onCleanup);
+  document.addEventListener('htmx:before:cleanup', onCleanup);
   return () => {
     document.removeEventListener('htmx:before:request', onRequest);
     document.removeEventListener('htmx:after:request', onResponse);
-    document.removeEventListener('htmx:beforeCleanupElement', onCleanup);
+    document.removeEventListener('htmx:before:cleanup', onCleanup);
     disposeRetrySupport();
   };
 }

@@ -2,6 +2,7 @@
 // serialises request details to localStorage, and replays on reconnection.
 
 const STORAGE_KEY = 'flux:offline:queue';
+import { getRequestContext } from './events.js';
 
 export interface OfflineEntry {
   id: string;
@@ -99,16 +100,16 @@ export function installOfflineSupport(
   const onBeforeRequest = (evt: Event): void => {
     if (navigator.onLine) return;
 
-    const detail = (evt as CustomEvent).detail ?? {};
-    const elt = detail.elt as Element | undefined;
+    const ctx = getRequestContext(evt);
+    const elt = ctx.source;
     if (!elt?.hasAttribute('fx-offline')) return;
 
     // Cancel the live request and queue it instead.
     evt.preventDefault();
 
-    const method: string = detail.requestConfig?.verb ?? 'get';
-    const url: string = detail.requestConfig?.path ?? detail.path ?? '';
-    const rawParams = detail.requestConfig?.parameters ?? {};
+    const method: string = ctx.request?.method ?? 'get';
+    const url: string = ctx.request?.action ?? '';
+    const rawParams = ctx.request?.parameters ?? {};
     // Flatten to Record<string,string> for JSON serialisation.
     const params: Record<string, string> = {};
     for (const [k, v] of Object.entries(rawParams)) {
@@ -128,14 +129,14 @@ export function installOfflineSupport(
     flush(getHtmx());
   };
 
-  document.addEventListener('htmx:beforeRequest', onBeforeRequest);
+  document.addEventListener('htmx:before:request', onBeforeRequest);
   window.addEventListener('online', onOnline);
 
   // Replay any leftover entries from a previous session on install.
   if (navigator.onLine) flush(getHtmx());
 
   return () => {
-    document.removeEventListener('htmx:beforeRequest', onBeforeRequest);
+    document.removeEventListener('htmx:before:request', onBeforeRequest);
     window.removeEventListener('online', onOnline);
   };
 }

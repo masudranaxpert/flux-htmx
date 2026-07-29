@@ -26,7 +26,7 @@ export function getRecipe(name: string): RecipeConfig | undefined {
  * Applies a recipe to an element by writing the corresponding `fx-*` attributes,
  * provided they do not already exist (explicit element attributes take precedence).
  */
-export function applyRecipe(element: Element, recipeName: string): void {
+export function applyRecipe(element: Element, recipeName: string, writtenKeys?: Set<string>): void {
   const config = getRecipe(recipeName);
   if (!config) {
     console.warn(`[flux] Recipe "${recipeName}" not found.`);
@@ -43,6 +43,7 @@ export function applyRecipe(element: Element, recipeName: string): void {
     // Do not overwrite explicit attributes on the element
     if (!element.hasAttribute(attrName)) {
       element.setAttribute(attrName, value === true ? '' : String(value));
+      writtenKeys?.add(attrName);
     }
   }
 }

@@ -35,9 +35,9 @@ export function getRequestContext(event: Event): RequestContext {
     (detail.target instanceof Element ? detail.target : null);
 
   const successful =
-    ctx.successful === true
+    ctx.successful === true || detail.successful === true
       ? true
-      : ctx.successful === false
+      : ctx.successful === false || detail.successful === false
         ? false
         : typeof status === 'number' && status >= 200 && status < 300;
 

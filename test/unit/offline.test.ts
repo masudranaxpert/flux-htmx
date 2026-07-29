@@ -35,12 +35,12 @@ describe('fx-offline: Offline Request Queue', () => {
     document.body.appendChild(el);
 
     let prevented = false;
-    const beforeReq = new CustomEvent('htmx:beforeRequest', {
+    const beforeReq = new CustomEvent('htmx:before:request', {
       bubbles: true,
       cancelable: true,
       detail: {
         elt: el,
-        requestConfig: { verb: 'post', path: '/api/save', parameters: { name: 'John' } },
+        ctx: { request: { method: 'post', action: '/api/save', parameters: { name: 'John' } } },
       },
     });
     beforeReq.preventDefault = () => { prevented = true; };
@@ -61,12 +61,12 @@ describe('fx-offline: Offline Request Queue', () => {
     el.setAttribute('fx-offline', '');
     document.body.appendChild(el);
 
-    const beforeReq = new CustomEvent('htmx:beforeRequest', {
+    const beforeReq = new CustomEvent('htmx:before:request', {
       bubbles: true,
       cancelable: true,
       detail: {
         elt: el,
-        requestConfig: { verb: 'post', path: '/api/save', parameters: {} },
+        ctx: { request: { method: 'post', action: '/api/save', parameters: {} } },
       },
     });
     document.dispatchEvent(beforeReq);
@@ -84,12 +84,12 @@ describe('fx-offline: Offline Request Queue', () => {
     // No fx-offline attribute
     document.body.appendChild(el);
 
-    const beforeReq = new CustomEvent('htmx:beforeRequest', {
+    const beforeReq = new CustomEvent('htmx:before:request', {
       bubbles: true,
       cancelable: true,
       detail: {
         elt: el,
-        requestConfig: { verb: 'post', path: '/api/save', parameters: {} },
+        ctx: { request: { method: 'post', action: '/api/save', parameters: {} } },
       },
     });
     document.dispatchEvent(beforeReq);
@@ -110,12 +110,12 @@ describe('fx-offline: Offline Request Queue', () => {
     let queuedEvent: any = null;
     document.addEventListener('flux:offline:queued', (e) => { queuedEvent = e; }, { once: true });
 
-    const beforeReq = new CustomEvent('htmx:beforeRequest', {
+    const beforeReq = new CustomEvent('htmx:before:request', {
       bubbles: true,
       cancelable: true,
       detail: {
         elt: el,
-        requestConfig: { verb: 'post', path: '/api/save', parameters: { foo: 'bar' } },
+        ctx: { request: { method: 'post', action: '/api/save', parameters: { foo: 'bar' } } },
       },
     });
     beforeReq.preventDefault = () => {};
@@ -137,10 +137,10 @@ describe('fx-offline: Offline Request Queue', () => {
     document.body.appendChild(el);
 
     const makeEvt = () => {
-      const e = new CustomEvent('htmx:beforeRequest', {
+      const e = new CustomEvent('htmx:before:request', {
         bubbles: true,
         cancelable: true,
-        detail: { elt: el, requestConfig: { verb: 'post', path: '/api/x', parameters: {} } },
+        detail: { elt: el, ctx: { request: { method: 'post', action: '/api/x', parameters: {} } } },
       });
       e.preventDefault = () => {};
       return e;

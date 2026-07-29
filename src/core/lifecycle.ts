@@ -3,7 +3,7 @@
 // Dynamic Preset Registry Integration: Scans root and descendants dynamically using
 // registered preset attributes, then expands generic shorthand attributes.
 
-import { expandElement, fluxSelector } from './expand.js';
+import { expandElement, fluxSelector, applyRecipeAndScope } from './expand.js';
 import { getPresetRegistry, applyPreset } from '../presets/index.js';
 
 /** Scans `root` for unexpanded Flux shorthand and presets, writing the HTMX equivalents. */
@@ -11,6 +11,13 @@ export function expandPresets(root: Element): number {
   let count = 0;
 
   const registry = getPresetRegistry();
+  
+  // P0-7 / P1-9: Apply recipes and scopes first so that generated fx-* presets are caught by the preset registry
+  const fluxElements = matching(root, fluxSelector());
+  for (const el of fluxElements) {
+    applyRecipeAndScope(el);
+  }
+
   for (const [attr] of registry) {
     const selector = `[${attr}]`;
     for (const el of matching(root, selector)) {
@@ -22,7 +29,7 @@ export function expandPresets(root: Element): number {
     }
   }
 
-  for (const el of matching(root, fluxSelector())) {
+  for (const el of fluxElements) {
     count += expandElement(el);
   }
 

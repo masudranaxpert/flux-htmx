@@ -2,6 +2,7 @@
 // Executes declarative actions defined in fx-on-success, fx-on-error, etc.
 
 import { queryMany } from './selectors.js';
+import { showBuiltInToast } from './feedback.js';
 
 export type ActionHandler = (targetArg: string, sourceElement: Element, eventDetail?: any) => void | Promise<void>;
 
@@ -14,8 +15,9 @@ export function registerAction(name: string, handler: ActionHandler): void {
 }
 
 /** Registers a reusable pipeline of actions under a name. */
-export function defineActionPipeline(name: string, pipeline: string[]): void {
-  namedActionPipelines.set(name, pipeline);
+export function defineActionPipeline(name: string, pipeline: string[] | string): void {
+  const steps = Array.isArray(pipeline) ? pipeline : pipeline.split(';').map(s => s.trim()).filter(Boolean);
+  namedActionPipelines.set(name, steps);
 }
 
 /** Executes a named pipeline */
@@ -50,7 +52,12 @@ export async function executeAction(actionString: string, sourceElement: Element
 export async function executePipeline(pipelineString: string, sourceElement: Element, eventDetail?: any): Promise<void> {
   const actions = pipelineString.split(';').map(s => s.trim()).filter(Boolean);
   for (const action of actions) {
-    await executeAction(action, sourceElement, eventDetail);
+    try {
+      await executeAction(action, sourceElement, eventDetail);
+    } catch (err) {
+      console.warn(`[flux] Action "${action}" failed:`, err);
+      sourceElement.dispatchEvent(new CustomEvent('flux:action:error', { bubbles: true, detail: { action, error: err } }));
+    }
   }
 }
 
@@ -81,10 +88,14 @@ registerAction('reset', (targetArg, source) => {
 });
 
 registerAction('refresh', (targetArg, source) => {
-  if (!targetArg) return;
-  const targets = queryMany(targetArg, source.ownerDocument);
+  const targets = targetArg ? queryMany(targetArg, source.ownerDocument) : [source];
+  const activeHtmx = (window as any).htmx;
   targets.forEach(t => {
-    t.dispatchEvent(new CustomEvent('flux:refresh', { bubbles: true }));
+    if (typeof activeHtmx?.trigger === 'function') {
+      activeHtmx.trigger(t, 'refresh');
+    } else {
+      t.dispatchEvent(new CustomEvent('flux:refresh', { bubbles: true }));
+    }
   });
 });
 
@@ -94,7 +105,8 @@ registerAction('remove', (targetArg, source) => {
 });
 
 registerAction('toast', (targetArg, source) => {
-  // Fire a generic event that the toast plugin can listen to
+  showBuiltInToast(targetArg, 'success');
+  // Optional: still fire the event if anything else listens to it
   document.dispatchEvent(new CustomEvent('flux:toast', { detail: { message: targetArg, type: 'success' } }));
 });
 

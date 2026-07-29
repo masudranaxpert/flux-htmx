@@ -46,43 +46,11 @@ export const uploadPlugin: FluxPlugin = {
       return true;
     });
 
-    // Global XHR progress listener
-    const onProgress = (evt: Event) => {
-      const detail = (evt as CustomEvent).detail;
-      if (!detail) return;
-
-      const loaded = detail.loaded ?? 0;
-      const total = detail.total ?? 0;
-      if (total <= 0) return;
-
-      const percent = Math.min(100, Math.round((loaded / total) * 100));
-
-      const source = (evt as CustomEvent).detail?.elt ?? evt.target;
-      if (source instanceof Element) {
-        const form = source.closest('[fx-upload], [fx-progress]') ?? source;
-        const progressSelector = form.getAttribute('fx-progress');
-        if (progressSelector) {
-          try {
-            const progressEl = safeQuerySelector(progressSelector);
-            if (progressEl instanceof HTMLProgressElement) {
-              progressEl.value = percent;
-              progressEl.max = 100;
-            } else if (progressEl instanceof HTMLElement) {
-              progressEl.style.setProperty('--upload-progress', `${percent}%`);
-              progressEl.setAttribute('aria-valuenow', String(percent));
-            }
-          } catch (e) {
-            log.warn(`[flux] invalid fx-progress selector "${progressSelector}":`, e);
-          }
-        }
-      }
-    };
-
-    document.addEventListener('htmx:xhr:progress', onProgress);
+    // HTMX 4 fetch() migration: htmx:xhr:progress no longer fires.
+    // Native upload progress via fx-progress requires a custom XHR/fetch uploader implementation.
 
     return () => {
       unregisterPreset();
-      document.removeEventListener('htmx:xhr:progress', onProgress);
       // Clean teardown: dispose all active element upload controllers
       for (const cleanup of Array.from(activeUploadControllers.values())) {
         cleanup();

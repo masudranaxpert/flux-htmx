@@ -140,13 +140,11 @@ export function installStatusTargeting(): () => void {
   };
 
   document.addEventListener('htmx:before:process', onBeforeProcess);
-  document.addEventListener('htmx:before:cleanup:element', onCleanupElement);
-  document.addEventListener('htmx:beforeCleanupElement', onCleanupElement);
+  document.addEventListener('htmx:before:cleanup', onCleanupElement);
 
   return () => {
     document.removeEventListener('htmx:before:process', onBeforeProcess);
-    document.removeEventListener('htmx:before:cleanup:element', onCleanupElement);
-    document.removeEventListener('htmx:beforeCleanupElement', onCleanupElement);
+    document.removeEventListener('htmx:before:cleanup', onCleanupElement);
     disposeStatusTargeting();
   };
 }

@@ -10,7 +10,7 @@ describe('Action Pipeline (fx-on-success / fx-success-action)', () => {
     Flux.configure();
   });
 
-  it('executes inline pipeline on htmx:afterRequest if successful', async () => {
+  it('executes inline pipeline on htmx:after:request if successful', async () => {
     const el = document.createElement('form');
     el.setAttribute('fx-on-success', 'custom1:foo; custom2');
     document.body.appendChild(el);
@@ -20,7 +20,7 @@ describe('Action Pipeline (fx-on-success / fx-success-action)', () => {
     registerAction('custom1', spy1);
     registerAction('custom2', spy2);
 
-    const event = new CustomEvent('htmx:afterRequest', {
+    const event = new CustomEvent('htmx:after:request', {
       bubbles: true,
       detail: { elt: el, successful: true, failed: false }
     });
@@ -33,7 +33,7 @@ describe('Action Pipeline (fx-on-success / fx-success-action)', () => {
     expect(spy2).toHaveBeenCalledWith('', el, event.detail);
   });
 
-  it('executes named pipeline on htmx:afterRequest if successful', async () => {
+  it('executes named pipeline on htmx:after:request if successful', async () => {
     Flux.action('my-pipeline', ['custom3:bar', 'custom4']);
 
     const el = document.createElement('form');
@@ -45,7 +45,7 @@ describe('Action Pipeline (fx-on-success / fx-success-action)', () => {
     registerAction('custom3', spy3);
     registerAction('custom4', spy4);
 
-    const event = new CustomEvent('htmx:afterRequest', {
+    const event = new CustomEvent('htmx:after:request', {
       bubbles: true,
       detail: { elt: el, successful: true, failed: false }
     });
@@ -65,7 +65,7 @@ describe('Action Pipeline (fx-on-success / fx-success-action)', () => {
     const spyError = vi.fn();
     registerAction('customError', spyError);
 
-    const event = new CustomEvent('htmx:afterRequest', {
+    const event = new CustomEvent('htmx:after:request', {
       bubbles: true,
       detail: { elt: el, successful: false, failed: true }
     });
@@ -86,7 +86,7 @@ describe('Action Pipeline (fx-on-success / fx-success-action)', () => {
     el.setAttribute('fx-on-success', 'close:#my-dialog');
     document.body.appendChild(el);
 
-    const event = new CustomEvent('htmx:afterRequest', {
+    const event = new CustomEvent('htmx:after:request', {
       bubbles: true,
       detail: { elt: el, successful: true, failed: false }
     });
