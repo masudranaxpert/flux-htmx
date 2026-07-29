@@ -81,6 +81,52 @@ describe('consolidated release audit regressions', () => {
     expect(element.hasAttribute('fx-disable')).toBe(false);
   });
 
+  it('removes a recipe-generated preset in one process pass', () => {
+    Flux.configure();
+    Flux.recipe('one-pass-admin', { submit: '/recipe', target: '#result' });
+    const form = makeEl('<form fx-recipe="one-pass-admin"></form>');
+    document.body.appendChild(form);
+    Flux.process(form);
+    expect(form.getAttribute('hx-post')).toBe('/recipe');
+
+    form.removeAttribute('fx-recipe');
+    Flux.process(form);
+
+    expect(form.hasAttribute('fx-submit')).toBe(false);
+    expect(form.hasAttribute('hx-post')).toBe(false);
+    expect(form.hasAttribute('data-flux-preset')).toBe(false);
+  });
+
+  it('removes stale generated request attributes when a preset becomes empty', () => {
+    Flux.configure();
+    const form = makeEl('<form fx-submit="/ok"></form>');
+    document.body.appendChild(form);
+    Flux.process(form);
+
+    form.setAttribute('fx-submit', '');
+    Flux.process(form);
+
+    expect(form.hasAttribute('hx-post')).toBe(false);
+    expect(form.hasAttribute('data-flux-preset')).toBe(false);
+  });
+
+  it('disconnects upload listeners when the plugin preset is removed', () => {
+    Flux.configure();
+    Flux.use(uploadPlugin);
+    const form = makeEl('<form fx-upload="/upload"></form>');
+    document.body.appendChild(form);
+    Flux.process(form);
+
+    form.removeAttribute('fx-upload');
+    Flux.process(form);
+    form.dispatchEvent(new Event('dragover', { bubbles: true, cancelable: true }));
+
+    expect(form.hasAttribute('hx-post')).toBe(false);
+    expect(form.hasAttribute('data-flux-preset')).toBe(false);
+    expect(form.hasAttribute('data-flux-drag-over')).toBe(false);
+    Flux.unuse('upload');
+  });
+
   it('rebinds prefetch after URL changes and never generates hx-prefetch', async () => {
     Flux.configure();
     const fetchMock = vi.fn(async () => ({

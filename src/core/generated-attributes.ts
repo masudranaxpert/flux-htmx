@@ -146,8 +146,13 @@ export function reconcileGeneratedAttributes(root?: Element): void {
   if (typeof document === 'undefined') return;
 
   const context = root ?? document;
-  const elements = Array.from(context.querySelectorAll('[data-flux-preset], [data-flux-status]'));
-  if (root) elements.push(root);
+  const elements = new Set<Element>(
+    context.querySelectorAll('[data-flux-preset], [data-flux-status]'),
+  );
+  for (const tracked of generatedElements) {
+    if (!root || tracked === root || root.contains(tracked)) elements.add(tracked);
+  }
+  if (root) elements.add(root);
 
   for (const element of elements) {
     reconcilePresetController(element);
@@ -177,8 +182,12 @@ export function reconcileGeneratedAttributes(root?: Element): void {
       } else if (name.startsWith('hx-')) {
         const fxName = name.replace(/^hx-/, 'fx-');
         const isPresetGenerated = Boolean(currentPreset);
+        const hasSpecialSource =
+          (name === 'hx-push-url' && element.hasAttribute('fx-history')) ||
+          (name === 'hx-swap' && element.hasAttribute('fx-morph')) ||
+          (name === 'hx-confirm' && element.hasAttribute('fx-confirm-dialog'));
 
-        if (!isPresetGenerated && !element.hasAttribute(fxName)) {
+        if (!isPresetGenerated && !element.hasAttribute(fxName) && !hasSpecialSource) {
           removeGeneratedAttribute(element, name);
           element.removeAttribute(`data-flux-gen-shorthand-${name.replace(/^hx-/, '')}`);
         } else if (isPresetGenerated && !hasPresetAttr) {

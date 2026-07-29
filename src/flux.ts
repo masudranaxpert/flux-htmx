@@ -83,11 +83,14 @@ function pluginApi(): FluxPluginApi {
     registerPreset: (
       attribute: string,
       handler: (element: HTMLElement, value: string) => boolean,
-      options?: { override?: boolean },
+      options?: { override?: boolean; disconnect?: (element: HTMLElement) => void },
     ) =>
       registerPreset({
         attribute,
         connect: (el, val) => handler(el as HTMLElement, val),
+        disconnect: options?.disconnect
+          ? (el) => options.disconnect?.(el as HTMLElement)
+          : undefined,
         override: options?.override,
       }),
     setGeneratedAttribute,

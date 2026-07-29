@@ -5,6 +5,7 @@
 
 import { expandElement, fluxSelector, applyRecipeAndScope } from './expand.js';
 import { getPresetRegistry, applyPreset } from '../presets/index.js';
+import { reconcileGeneratedAttributes } from './generated-attributes.js';
 
 /** Scans `root` for unexpanded Flux shorthand and presets, writing the HTMX equivalents. */
 export function expandPresets(root: Element): number {
@@ -40,6 +41,7 @@ export function expandPresets(root: Element): number {
     count += expandElement(el);
   }
 
+  reconcileGeneratedAttributes(root);
   return count;
 }
 

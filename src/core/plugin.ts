@@ -12,7 +12,7 @@ export interface FluxPluginApi {
   registerPreset(
     attribute: string,
     handler: (element: HTMLElement, value: string) => boolean,
-    options?: { override?: boolean },
+    options?: { override?: boolean; disconnect?: (element: HTMLElement) => void },
   ): PluginCleanup;
   setGeneratedAttribute(element: Element, name: string, value: string): boolean;
   removeGeneratedAttribute(element: Element, name: string): void;

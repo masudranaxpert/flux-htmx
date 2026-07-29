@@ -100,7 +100,7 @@ test('exposes the correct global IIFE API shape without default wrapper', async 
   }));
 
   expect(result).toEqual({
-    version: '1.2.5',
+    version: '1.2.6',
     startType: 'function',
     startedType: 'boolean',
     hasDefaultWrapper: false,
@@ -136,4 +136,64 @@ test('activates pre-installed plugin once on start', async ({ page }) => {
   });
 
   expect(count).toBe(1);
+});
+
+test('cleans removed recipe presets and empty preset URLs in one process pass', async ({
+  page,
+}) => {
+  const result = await page.evaluate(() => {
+    const Flux = (window as any).Flux;
+    Flux.recipe('browser-admin', { submit: '/recipe', target: '#result1' });
+
+    const recipeForm = document.createElement('form');
+    recipeForm.setAttribute('fx-recipe', 'browser-admin');
+    document.body.appendChild(recipeForm);
+    Flux.process(recipeForm);
+    recipeForm.removeAttribute('fx-recipe');
+    Flux.process(recipeForm);
+
+    const emptyForm = document.createElement('form');
+    emptyForm.setAttribute('fx-submit', '/ok');
+    document.body.appendChild(emptyForm);
+    Flux.process(emptyForm);
+    emptyForm.setAttribute('fx-submit', '');
+    Flux.process(emptyForm);
+
+    return {
+      recipePost: recipeForm.getAttribute('hx-post'),
+      recipePreset: recipeForm.getAttribute('data-flux-preset'),
+      emptyPost: emptyForm.getAttribute('hx-post'),
+      emptyPreset: emptyForm.getAttribute('data-flux-preset'),
+    };
+  });
+
+  expect(result).toEqual({
+    recipePost: null,
+    recipePreset: null,
+    emptyPost: null,
+    emptyPreset: null,
+  });
+});
+
+test('disconnects upload listeners when fx-upload is removed', async ({ page }) => {
+  const result = await page.evaluate(() => {
+    const Flux = (window as any).Flux;
+    Flux.use(Flux.plugins.upload);
+    const form = document.createElement('form');
+    form.setAttribute('fx-upload', '/upload');
+    document.body.appendChild(form);
+    Flux.process(form);
+
+    form.removeAttribute('fx-upload');
+    Flux.process(form);
+    form.dispatchEvent(new Event('dragover', { bubbles: true, cancelable: true }));
+
+    return {
+      post: form.getAttribute('hx-post'),
+      preset: form.getAttribute('data-flux-preset'),
+      dragOver: form.getAttribute('data-flux-drag-over'),
+    };
+  });
+
+  expect(result).toEqual({ post: null, preset: null, dragOver: null });
 });

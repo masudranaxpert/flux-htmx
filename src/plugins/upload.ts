@@ -25,25 +25,33 @@ export const uploadPlugin: FluxPlugin = {
     if (typeof document === 'undefined') return;
 
     const trackedUploadElements = new Set<Element>();
+    const disconnectUpload = (element: HTMLElement) => {
+      activeUploadControllers.get(element)?.();
+      trackedUploadElements.delete(element);
+    };
 
     // Register fx-upload preset
-    const unregisterPreset = api.registerPreset('fx-upload', (element, value) => {
-      if (!(element instanceof HTMLFormElement || element instanceof HTMLElement)) return false;
-      if (!value || !value.trim()) {
-        log.error('[flux] fx-upload requires a non-empty URL');
-        return false;
-      }
+    const unregisterPreset = api.registerPreset(
+      'fx-upload',
+      (element, value) => {
+        if (!(element instanceof HTMLFormElement || element instanceof HTMLElement)) return false;
+        if (!value || !value.trim()) {
+          log.error('[flux] fx-upload requires a non-empty URL');
+          return false;
+        }
 
-      trackedUploadElements.add(element);
+        trackedUploadElements.add(element);
 
-      setGeneratedAttribute(element, 'hx-post', value.trim());
-      setGeneratedAttribute(element, 'hx-encoding', 'multipart/form-data');
-      element.setAttribute('data-flux-preset', 'upload');
+        setGeneratedAttribute(element, 'hx-post', value.trim());
+        setGeneratedAttribute(element, 'hx-encoding', 'multipart/form-data');
+        element.setAttribute('data-flux-preset', 'upload');
 
-      // Wire file validation & drag-and-drop
-      wireUploadElement(element, value.trim());
-      return true;
-    });
+        // Wire file validation & drag-and-drop
+        wireUploadElement(element, value.trim());
+        return true;
+      },
+      { disconnect: disconnectUpload },
+    );
 
     return () => {
       unregisterPreset();
