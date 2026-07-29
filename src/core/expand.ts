@@ -33,7 +33,7 @@ const OPTIONS = [
 ] as const;
 
 // One selector matching any Flux shorthand attribute, used for subtree discovery.
-const FLUX_SELECTOR = [...VERBS, ...OPTIONS, 'morph'].map((n) => `[fx-${n}]`).join(',');
+const FLUX_SELECTOR = [...VERBS, ...OPTIONS, 'morph', 'history'].map((n) => `[fx-${n}]`).join(',');
 
 /** Returns true if `element` carries any Flux shorthand verb or option attribute. */
 export function hasFluxAttributes(element: Element): boolean {
@@ -77,6 +77,17 @@ export function expandElement(element: Element): number {
   } else if (element.hasAttribute('data-flux-gen-shorthand-morph')) {
     removeGeneratedAttribute(element, 'hx-swap');
     element.removeAttribute('data-flux-gen-shorthand-morph');
+  }
+
+  if (element.hasAttribute('fx-history')) {
+    const val = element.getAttribute('fx-history') || 'true';
+    if (setGeneratedAttribute(element, 'hx-push-url', val)) {
+      element.setAttribute('data-flux-gen-shorthand-history', '1');
+      written++;
+    }
+  } else if (element.hasAttribute('data-flux-gen-shorthand-history')) {
+    removeGeneratedAttribute(element, 'hx-push-url');
+    element.removeAttribute('data-flux-gen-shorthand-history');
   }
 
   return written;

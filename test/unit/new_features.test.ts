@@ -23,7 +23,7 @@ describe('New Features: fx-prefetch and fx-toast', () => {
   it('fx-prefetch: fetches URL and populates cache on mouseenter', async () => {
     const el = makeEl('<a fx-prefetch fx-get="/test-prefetch">Hover me</a>');
     document.body.appendChild(el);
-    Flux.use(document.body);
+    Flux.process(document.body);
 
     // Mock fetch
     const mockFetch = vi.fn().mockResolvedValue({
@@ -53,7 +53,7 @@ describe('New Features: fx-prefetch and fx-toast', () => {
   it('fx-toast: shows a visible toast element when fx-toast is present', async () => {
     const el = makeEl('<button fx-post="/delete" fx-toast fx-error="Action failed">Click</button>');
     document.body.appendChild(el);
-    Flux.use(document.body);
+    Flux.process(document.body);
 
     el.dispatchEvent(new CustomEvent('htmx:after:request', {
       bubbles: true,
@@ -71,5 +71,39 @@ describe('New Features: fx-prefetch and fx-toast', () => {
     expect(toast).not.toBeNull();
     expect(toast?.textContent).toContain('Action failed');
     expect(toast?.classList.contains('flux-toast-error')).toBe(true);
+  });
+
+  it('fx-history: expands to hx-push-url="true"', () => {
+    const el = makeEl('<a fx-history>Link</a>');
+    Flux.process(el);
+    expect(el.getAttribute('hx-push-url')).toBe('true');
+  });
+
+  it('fx-validate: prevents default on invalid form submit', () => {
+    const el = makeEl(`
+      <form fx-submit="/post" fx-validate>
+        <input name="email" type="email" required>
+        <button type="submit">Submit</button>
+      </form>
+    `);
+    document.body.appendChild(el);
+    Flux.process(el);
+
+    const form = el as HTMLFormElement;
+    // JSDOM supports reportValidity
+    const spy = vi.spyOn(form, 'reportValidity').mockReturnValue(false);
+
+    let prevented = false;
+    const confirmEvent = new CustomEvent('htmx:confirm', {
+      bubbles: true,
+      cancelable: true,
+      detail: { elt: el }
+    });
+    confirmEvent.preventDefault = () => { prevented = true; };
+
+    el.dispatchEvent(confirmEvent);
+
+    expect(spy).toHaveBeenCalled();
+    expect(prevented).toBe(true);
   });
 });

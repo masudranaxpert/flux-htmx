@@ -9,6 +9,7 @@ import { resolveConfig, type FluxConfig, type ResolvedConfig } from './core/conf
 import { install, expandPresets } from './core/lifecycle.js';
 import { resolveToken, shouldAttach } from './core/csrf.js';
 import { installFeedback, resetFeedbackForTests } from './core/feedback.js';
+import { installValidation } from './core/validation.js';
 import { installStatusTargeting, disposeStatusTargeting } from './core/status.js';
 import { cache } from './cache/instance.js';
 import { installCacheIntegration } from './cache/cacheWire.js';
@@ -142,6 +143,8 @@ export function configure(userConfig?: FluxConfig): ResolvedConfig {
     teardowns.push(installStatusTargeting());
     teardowns.push(installSubmitControllers());
     teardowns.push(installDeleteControllers());
+    const validationTd = installValidation();
+    if (validationTd) teardowns.push(validationTd);
     teardowns.push(installFeedback(() => currentConfig));
     teardowns.push(installCacheIntegration(cache, activeHtmx));
     teardowns.push(installOpenController());

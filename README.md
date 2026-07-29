@@ -45,19 +45,19 @@ npm install htmx.org@4.0.0-beta6
 <script src="https://cdn.jsdelivr.net/npm/htmx.org@4.0.0-beta6/dist/htmx.iife.js"></script>
 
 <!-- Flux (IIFE, includes htmx) -->
-<script src="https://cdn.jsdelivr.net/npm/flux-htmx@1.0.3/dist/flux.full.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flux-htmx@1.1.0/dist/flux.full.iife.js"></script>
 
 <!-- CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.0.3/dist/flux.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.1.0/dist/flux.css">
 <!-- or minified -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.0.3/dist/flux.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.1.0/dist/flux.min.css">
 ```
 
 ### unpkg
 ```html
 <script src="https://unpkg.com/htmx.org@4.0.0-beta6/dist/htmx.iife.js"></script>
-<script src="https://unpkg.com/flux-htmx@1.0.3/dist/flux.full.iife.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/flux-htmx@1.0.3/dist/flux.min.css">
+<script src="https://unpkg.com/flux-htmx@1.1.0/dist/flux.full.iife.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/flux-htmx@1.1.0/dist/flux.min.css">
 ```
 
 > **Tip:** Use `flux.full.iife.js` for CDN (includes everything). Use `flux.iife.js` for bundlers where htmx is already imported separately.
@@ -104,6 +104,7 @@ npm install htmx.org@4.0.0-beta6
 | `fx-infinite="/url"` | Infinite scroll | Load more on scroll |
 | `fx-pagination="/url"` | Pagination pattern | Page-based navigation |
 | `fx-prefetch` | Hover/touch prefetch | Cache on hover before click |
+| `fx-history` | `hx-push-url="true"` | Push URL to browser history on swap |
 
 ---
 
@@ -121,6 +122,7 @@ npm install htmx.org@4.0.0-beta6
 | `fx-toast` | Show built-in success/error toast |
 | `fx-success="Done!"` | Message on success |
 | `fx-error="Failed!"` | Message on error |
+| `fx-validate` | Pre-submit HTML5 form validation |
 
 ---
 
