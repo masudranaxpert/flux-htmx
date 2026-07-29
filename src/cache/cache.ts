@@ -1,9 +1,10 @@
-// Bounded in-memory fragment cache. GET-only by default, with TTL, byte size cap, and LRU eviction.
+// Bounded in-memory fragment cache. GET-only by default, with TTL, byte size cap, dual-window SWR, and LRU eviction.
 // Complements HTTP caching rather than replacing it — see docs/caching.md.
 
 export interface CacheEntry {
   value: string;
   expiresAt: number;
+  staleUntil: number;
   // Monotonic insertion counter for LRU ordering.
   order: number;
   byteSize: number;
@@ -38,10 +39,15 @@ export class FragmentCache {
     this.defaultTtlMs = options.defaultTtlMs ?? DEFAULTS.defaultTtlMs;
   }
 
-  get(key: string): string | null {
+  get(key: string, options?: { allowStale?: boolean }): string | null {
     const entry = this.store.get(key);
     if (!entry) return null;
-    if (Date.now() >= entry.expiresAt) {
+
+    const now = Date.now();
+    const isFresh = now < entry.expiresAt;
+    const isStaleValid = options?.allowStale && now < entry.staleUntil;
+
+    if (!isFresh && !isStaleValid) {
       this.currentBytes -= entry.byteSize;
       this.store.delete(key);
       return null;
@@ -51,7 +57,7 @@ export class FragmentCache {
     return entry.value;
   }
 
-  set(key: string, value: string, ttlMs?: number): void {
+  set(key: string, value: string, ttlMs?: number, staleTtlMs?: number): void {
     const existing = this.store.get(key);
     if (existing) {
       this.currentBytes -= existing.byteSize;
@@ -61,7 +67,16 @@ export class FragmentCache {
         ? new TextEncoder().encode(value).length
         : value.length * 2;
     const ttl = ttlMs ?? this.defaultTtlMs;
-    this.store.set(key, { value, expiresAt: Date.now() + ttl, order: ++this.counter, byteSize });
+    const staleTtl = staleTtlMs ?? ttl * 5;
+    const now = Date.now();
+
+    this.store.set(key, {
+      value,
+      expiresAt: now + ttl,
+      staleUntil: now + staleTtl,
+      order: ++this.counter,
+      byteSize,
+    });
     this.currentBytes += byteSize;
     this.evict();
   }
@@ -108,7 +123,7 @@ export class FragmentCache {
     if (this.store.size > this.maxEntries || this.currentBytes > this.maxBytes) {
       const now = Date.now();
       for (const [key, entry] of Array.from(this.store.entries())) {
-        if (now >= entry.expiresAt) {
+        if (now >= entry.staleUntil) {
           this.currentBytes -= entry.byteSize;
           this.store.delete(key);
         }

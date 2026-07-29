@@ -49,7 +49,7 @@ describe('Stable v1.0.0 Release Hardening & Features Test Suite', () => {
     expect(el.getAttribute('hx-swap')).toBeNull();
   });
 
-  it('4. Upload Progress Plugin: parses byte sizes, handles drag-and-drop and cleans up on dispose', () => {
+  it('4. Upload Progress Plugin: parses byte sizes, handles drag-and-drop and cleans up on unuse', () => {
     expect(parseMaxSizeBytes('20mb')).toBe(20971520);
     expect(parseMaxSizeBytes('500kb')).toBe(512000);
     expect(parseMaxSizeBytes('100')).toBe(100);
@@ -72,7 +72,8 @@ describe('Stable v1.0.0 Release Hardening & Features Test Suite', () => {
     form.dispatchEvent(dragLeaveEvt);
     expect(form.getAttribute('data-flux-drag-over')).toBeNull();
 
-    Flux.dispose({ removeGeneratedAttributes: true });
+    Flux.unuse('upload-progress');
+    Flux.process(document.body);
     expect(form.getAttribute('hx-post')).toBeNull();
   });
 

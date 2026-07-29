@@ -117,18 +117,20 @@ function cleanElementGeneratedAttributes(element: Element, hardDispose = false):
 
 /** Reconciles all tracked elements, removing generated hx-* when source fx-* or preset was removed. */
 export function reconcileGeneratedAttributes(root?: Element): void {
+  const presetRegistry = getPresetRegistry();
+
   for (const element of Array.from(generatedElements)) {
     if (root && root !== element && !root.contains(element)) continue;
 
     const attrMap = generatedAttributes.get(element);
     if (!attrMap) continue;
 
-    // Check if preset attribute was removed from element
+    // Check if preset attribute was removed or unregistered
     const currentPreset = element.getAttribute('data-flux-preset');
     let hasPresetAttr = false;
     if (currentPreset) {
       const presetAttr = `fx-${currentPreset}`;
-      hasPresetAttr = element.hasAttribute(presetAttr);
+      hasPresetAttr = element.hasAttribute(presetAttr) && presetRegistry.has(presetAttr);
       if (!hasPresetAttr) {
         element.removeAttribute('data-flux-preset');
         element.removeAttribute('data-flux-preset-signature');
@@ -143,12 +145,12 @@ export function reconcileGeneratedAttributes(root?: Element): void {
         }
       } else if (name.startsWith('hx-')) {
         const fxName = name.replace(/^hx-/, 'fx-');
-        const isPresetGenerated = element.hasAttribute('data-flux-preset');
+        const isPresetGenerated = Boolean(currentPreset);
 
         if (!isPresetGenerated && !element.hasAttribute(fxName)) {
           removeGeneratedAttribute(element, name);
           element.removeAttribute(`data-flux-gen-shorthand-${name.replace(/^hx-/, '')}`);
-        } else if (currentPreset && !hasPresetAttr) {
+        } else if (isPresetGenerated && !hasPresetAttr) {
           removeGeneratedAttribute(element, name);
         }
       }

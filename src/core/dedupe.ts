@@ -10,6 +10,20 @@ interface PendingConsumer {
 
 const inFlightRequests = new Map<string, PendingConsumer[]>();
 
+function hasAuthorizationHeader(headers: unknown): boolean {
+  if (!headers) return false;
+  if (typeof (headers as any).get === 'function') {
+    return Boolean((headers as any).get('Authorization') ?? (headers as any).get('authorization'));
+  }
+  if (typeof headers === 'object') {
+    const record = headers as Record<string, unknown>;
+    for (const [k, v] of Object.entries(record)) {
+      if (k.toLowerCase() === 'authorization' && Boolean(v)) return true;
+    }
+  }
+  return false;
+}
+
 /** Installs the request deduplication hook. */
 export function installDeduplication(): () => void {
   if (typeof document === 'undefined') return () => {};
@@ -26,11 +40,19 @@ export function installDeduplication(): () => void {
     const method = (ctx.request?.method ?? 'GET').toUpperCase();
     if (method !== 'GET') return;
 
+    if (hasAuthorizationHeader(ctx.request?.headers)) return;
+
     const url =
       ctx.request?.action ?? element.getAttribute('hx-get') ?? element.getAttribute('fx-get');
     if (!url) return;
 
-    const key = computeDedupeKey(element, method, url, ctx.request?.parameters);
+    const key = computeDedupeKey(
+      element,
+      method,
+      url,
+      ctx.request?.parameters,
+      ctx.request?.headers,
+    );
     const consumers = inFlightRequests.get(key);
 
     if (consumers) {
@@ -52,6 +74,10 @@ export function installDeduplication(): () => void {
 
   const onResponse = (evt: Event) => {
     const ctx = getRequestContext(evt);
+
+    // Follower early return guard: aborted deduplication followers must NOT delete the leader's in-flight request group!
+    if (ctx.isDedupeHit || (ctx as any).ctx?.isDedupeHit) return;
+
     const method = (ctx.request?.method ?? 'GET').toUpperCase();
     if (method !== 'GET') return;
 
@@ -61,7 +87,13 @@ export function installDeduplication(): () => void {
       ctx.source?.getAttribute('fx-get');
     if (!url) return;
 
-    const key = computeDedupeKey(ctx.source ?? document.body, method, url, ctx.request?.parameters);
+    const key = computeDedupeKey(
+      ctx.source ?? document.body,
+      method,
+      url,
+      ctx.request?.parameters,
+      ctx.request?.headers,
+    );
     const consumers = inFlightRequests.get(key);
     if (!consumers) return;
 
@@ -98,6 +130,7 @@ function computeDedupeKey(
   method: string,
   url: string,
   params?: Record<string, unknown>,
+  headers?: unknown,
 ): string {
   const searchParams = new URLSearchParams();
 
@@ -133,7 +166,25 @@ function computeDedupeKey(
     canonicalParams.append(k, v);
   }
 
+  // Handle fx-dedupe-vary header key inclusion
+  const varyAttr = source.getAttribute('fx-dedupe-vary');
+  let headerVaryStr = '';
+  if (varyAttr && headers) {
+    const varyTokens = varyAttr.split(',').map((s) => s.trim().toLowerCase());
+    const headerParts: string[] = [];
+    for (const token of varyTokens) {
+      let val: string | null = null;
+      if (typeof (headers as any).get === 'function') {
+        val = (headers as any).get(token);
+      } else if (typeof headers === 'object') {
+        val = (headers as Record<string, any>)[token] ?? null;
+      }
+      if (val) headerParts.push(`${token}=${val}`);
+    }
+    headerVaryStr = headerParts.join(';');
+  }
+
   const basePath = url.split('?')[0] ?? url;
   const qStr = canonicalParams.toString();
-  return `${method}:${basePath}${qStr ? `?${qStr}` : ''}`;
+  return `${method}:${basePath}${qStr ? `?${qStr}` : ''}${headerVaryStr ? `#${headerVaryStr}` : ''}`;
 }

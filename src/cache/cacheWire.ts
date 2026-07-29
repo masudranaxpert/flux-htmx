@@ -106,7 +106,7 @@ export function installCacheIntegration(
     if (!isCacheableMethod(request.method ?? 'GET')) return;
 
     const key = cacheKey(source, request);
-    const cached = cache.get(key);
+    const cached = cache.get(key, { allowStale: policy.swr });
 
     if (cached === null) {
       source.dispatchEvent(new CustomEvent('flux:cache:miss', { bubbles: true, detail: { key } }));

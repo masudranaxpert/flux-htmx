@@ -81,6 +81,9 @@ export function use(plugin: FluxPlugin): void {
 
 export function unuse(pluginName: string): void {
   unregisterPlugin(pluginName);
+  if (typeof document !== 'undefined' && document.body) {
+    reconcileGeneratedAttributes(document.body);
+  }
 }
 
 export function start(element?: Element, userConfig?: FluxConfig): void {

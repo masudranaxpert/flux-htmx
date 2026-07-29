@@ -1,6 +1,7 @@
 // Flux Public Plugin System: Flux.use(plugin), Flux.unuse(pluginName)
 
 import { log } from './logger.js';
+import { removeGeneratedAttributes } from './generated-attributes.js';
 
 export type PluginCleanup = () => void;
 
@@ -99,6 +100,10 @@ function deactivatePluginInstance(name: string): void {
       log.error('Plugin cleanup failed:', e);
     }
     activePluginCleanups.delete(name);
+  }
+
+  if (typeof document !== 'undefined' && document.body) {
+    removeGeneratedAttributes(undefined, true);
   }
 }
 
