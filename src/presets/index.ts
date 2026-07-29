@@ -42,9 +42,50 @@ export interface PresetDefinition {
 }
 
 const presetRegistry = new Map<string, PresetDefinition>();
+const activePresetControllers = new WeakMap<
+  Element,
+  {
+    definition: PresetDefinition;
+    signature: string;
+    controllerOnly: boolean;
+  }
+>();
+const activePresetElements = new Set<Element>();
 
 export function getPresetRegistry(): ReadonlyMap<string, PresetDefinition> {
   return presetRegistry;
+}
+
+function disconnectActivePreset(element: Element): void {
+  const active = activePresetControllers.get(element);
+  if (!active) return;
+
+  active.definition.disconnect?.(element);
+  activePresetControllers.delete(element);
+  activePresetElements.delete(element);
+  element.removeAttribute('data-flux-preset');
+  element.removeAttribute('data-flux-preset-signature');
+}
+
+export function reconcilePresetController(element: Element): void {
+  const active = activePresetControllers.get(element);
+  if (
+    active &&
+    (!element.hasAttribute(active.definition.attribute) ||
+      presetRegistry.get(active.definition.attribute) !== active.definition)
+  ) {
+    disconnectActivePreset(element);
+  }
+}
+
+export function disconnectPresetTree(root: Element): void {
+  for (const element of Array.from(activePresetElements)) {
+    if (element === root || root.contains(element)) disconnectActivePreset(element);
+  }
+}
+
+export function disposePresetControllers(): void {
+  for (const element of Array.from(activePresetElements)) disconnectActivePreset(element);
 }
 
 export function registerPreset(
@@ -222,6 +263,8 @@ export function applyPreset(
   value: string,
   ctx: (attr: string) => string | undefined,
 ): boolean {
+  reconcilePresetController(element);
+
   const activeConflicts = checkPresetConflicts(element);
   if (activeConflicts.length > 1 && preset !== activeConflicts[0]) {
     // Single preset per element enforcement: skip secondary conflicting presets
@@ -231,6 +274,7 @@ export function applyPreset(
   const signature = computePresetSignature(element, preset, value);
   const currentSig = element.getAttribute('data-flux-preset-signature');
   const isPresetGenerated = element.getAttribute('data-flux-preset') === preset.replace(/^fx-/, '');
+  const active = activePresetControllers.get(element);
   const generatedAttrs = getGeneratedAttributes(element);
   const hasOwnedAttrs = generatedAttrs.size > 0;
 
@@ -244,16 +288,29 @@ export function applyPreset(
     }
   }
 
-  if (isPresetGenerated && currentSig === signature && hasOwnedAttrs && allAttrsPresent) {
+  if (
+    active?.definition.attribute === preset &&
+    active.signature === signature &&
+    isPresetGenerated &&
+    currentSig === signature &&
+    (active.controllerOnly || (hasOwnedAttrs && allAttrsPresent))
+  ) {
     return false;
   }
 
   const handler = presetRegistry.get(preset);
   if (handler) {
     try {
+      disconnectActivePreset(element);
       const result = handler.connect(element, value, ctx);
       if (result) {
         element.setAttribute('data-flux-preset-signature', signature);
+        activePresetControllers.set(element, {
+          definition: handler,
+          signature,
+          controllerOnly: getGeneratedAttributes(element).size === 0,
+        });
+        activePresetElements.add(element);
       }
       return result;
     } catch (error) {
@@ -300,6 +357,9 @@ function computePresetSignature(element: Element, preset: string, value: string)
     'fx-cache',
     'fx-cache-mode',
     'fx-cache-key',
+    'fx-search-clear',
+    'fx-event',
+    'fx-with-credentials',
   ];
   let opts = '';
   for (let i = 0; i < attrs.length; i++) {

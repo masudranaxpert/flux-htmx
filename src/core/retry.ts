@@ -106,6 +106,8 @@ export function installRetrySupport(): () => void {
     const ctx = getRequestContext(evt);
     const element = ctx.source;
     if (!element) return;
+    delete ctx.ctx.retryPending;
+    delete ctx.ctx.retryTerminal;
 
     // Retry skip guard: skip retries for cache hits, dedupe hits, and user aborts
     if (
@@ -116,15 +118,22 @@ export function installRetrySupport(): () => void {
       (ctx.ctx as any)?.aborted
     ) {
       cancelElementRetryTimers(element);
+      ctx.ctx.retryTerminal = true;
       return;
     }
 
     const opts = getRetryOptions(element);
-    if (!opts) return;
+    if (!opts) {
+      ctx.ctx.retryTerminal = true;
+      return;
+    }
 
     const method = (ctx.request?.method ?? 'GET').toUpperCase();
     const isSafe = method === 'GET' || method === 'HEAD' || opts.allowUnsafe;
-    if (!isSafe) return;
+    if (!isSafe) {
+      ctx.ctx.retryTerminal = true;
+      return;
+    }
 
     const isRetryableError =
       !ctx.successful &&
@@ -133,6 +142,7 @@ export function installRetrySupport(): () => void {
     if (!isRetryableError) {
       retryingElements.delete(element);
       cancelElementRetryTimers(element);
+      ctx.ctx.retryTerminal = true;
       return;
     }
 
@@ -141,11 +151,13 @@ export function installRetrySupport(): () => void {
       log.warn(`[flux] max retries (${opts.maxRetries}) reached for element:`, element);
       retryingElements.delete(element);
       cancelElementRetryTimers(element);
+      ctx.ctx.retryTerminal = true;
       return;
     }
 
     const nextAttempt = currentAttempt + 1;
     retryingElements.set(element, nextAttempt);
+    ctx.ctx.retryPending = true;
 
     const backoffDelay = Math.round(opts.delayMs * Math.pow(opts.backoffFactor, currentAttempt));
     log.info(`[flux] scheduling retry ${nextAttempt}/${opts.maxRetries} in ${backoffDelay}ms`);

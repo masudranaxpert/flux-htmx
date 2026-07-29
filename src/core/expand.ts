@@ -78,6 +78,7 @@ export function expandElement(element: Element): number {
   } else if (element.hasAttribute('data-flux-gen-confirm-dialog')) {
     removeGeneratedAttribute(element, 'hx-confirm');
     element.removeAttribute('data-flux-gen-confirm-dialog');
+    written += syncShorthand(element, 'confirm');
   }
 
   // fx-prefetch is a Flux preset, not an HTMX shorthand.
@@ -145,10 +146,12 @@ function syncShorthand(element: Element, name: string): 0 | 1 {
 
 const recipeOwnedAttributes = new WeakMap<Element, Map<string, string>>();
 const scopeOwnedAttributes = new WeakMap<Element, Map<string, string>>();
+const recipeAndScopeElements = new Set<Element>();
 
 export function applyRecipeAndScope(element: Element): void {
   clearOwnedAttributes(element, recipeOwnedAttributes, 'data-flux-recipe-owned');
   clearOwnedAttributes(element, scopeOwnedAttributes, 'data-flux-scope-owned');
+  recipeAndScopeElements.delete(element);
 
   // Apply Recipe
   if (element.hasAttribute('fx-recipe')) {
@@ -156,6 +159,7 @@ export function applyRecipeAndScope(element: Element): void {
     applyRecipe(element, element.getAttribute('fx-recipe') || '', writtenKeys);
     if (writtenKeys.size > 0) {
       recipeOwnedAttributes.set(element, writtenKeys);
+      recipeAndScopeElements.add(element);
       element.setAttribute('data-flux-recipe-owned', '1');
     }
   }
@@ -169,8 +173,18 @@ export function applyRecipeAndScope(element: Element): void {
     }
     if (writtenKeys.size > 0) {
       scopeOwnedAttributes.set(element, writtenKeys);
+      recipeAndScopeElements.add(element);
       element.setAttribute('data-flux-scope-owned', '1');
     }
+  }
+}
+
+export function removeRecipeAndScopeAttributes(root?: Element): void {
+  for (const element of Array.from(recipeAndScopeElements)) {
+    if (root && element !== root && !root.contains(element)) continue;
+    clearOwnedAttributes(element, recipeOwnedAttributes, 'data-flux-recipe-owned');
+    clearOwnedAttributes(element, scopeOwnedAttributes, 'data-flux-scope-owned');
+    recipeAndScopeElements.delete(element);
   }
 }
 

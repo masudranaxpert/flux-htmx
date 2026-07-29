@@ -1,4 +1,4 @@
-// Offline request queue. Intercepts htmx:beforeRequest when navigator is offline,
+// Experimental opt-in offline request queue. Intercepts htmx:beforeRequest when navigator is offline,
 // serialises request details to localStorage, and replays on reconnection.
 
 const STORAGE_KEY = 'flux:offline:queue';

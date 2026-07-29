@@ -52,7 +52,12 @@ export function applyRealtime(element: Element, options: RealtimeOptions): boole
     // Prefer htmx.swap for full HTMX lifecycle; fall back to direct innerHTML.
     const htmx = (window as any).htmx;
     if (typeof htmx?.swap === 'function') {
-      htmx.swap(target, html, { swapStyle });
+      void htmx.swap({
+        target,
+        text: html,
+        swap: swapStyle,
+        sourceElement: element,
+      });
     } else {
       if (swapStyle === 'outerHTML') {
         target.outerHTML = html;

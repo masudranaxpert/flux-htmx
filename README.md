@@ -166,6 +166,14 @@ Silently fetches and caches the response on `mouseenter`, `touchstart`, or `focu
 
 ---
 
+## Experimental Offline Queue
+
+`fx-offline` is opt-in and experimental. It stores plain request parameters in
+`localStorage`; it does not preserve files/FormData, headers, target/swap metadata, expiry, or
+sensitive-field filtering. Do not use it for sensitive or file-bearing requests.
+
+---
+
 ## JavaScript API
 
 ```js

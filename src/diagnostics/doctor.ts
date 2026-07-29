@@ -80,7 +80,7 @@ export function inspectElement(element: Element | null): InspectionResult {
 
   // Check arbitrary fx-on-<code> status attributes
   for (const attr of Array.from(element.attributes)) {
-    if (attr.name.startsWith('fx-on-')) {
+    if (/^fx-on-\d+$/.test(attr.name)) {
       const selector = attr.value.trim();
       if (!selector) {
         warnings.push(`empty status target selector in ${attr.name}`);
@@ -139,7 +139,7 @@ export function doctor(root?: Element): DoctorReport {
     const allCandidates = [activeRoot, ...Array.from(activeRoot.querySelectorAll('*'))];
     for (const candidate of allCandidates) {
       for (const attr of Array.from(candidate.attributes)) {
-        if (attr.name.startsWith('fx-on-')) {
+        if (/^fx-on-\d+$/.test(attr.name)) {
           elements.push(candidate);
           break;
         }

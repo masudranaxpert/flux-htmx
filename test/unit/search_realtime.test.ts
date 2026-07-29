@@ -118,6 +118,42 @@ describe('fx-search — native debounce, eval-free', () => {
     expect(el.value).toBe('');
     expect(fired).toBe(true);
   });
+
+  it('rebinds the clear button when fx-search-clear changes', () => {
+    const oldClear = makeEl('<button id="old-clear"></button>');
+    const newClear = makeEl('<button id="new-clear"></button>');
+    const el = makeEl(
+      '<input type="search" fx-search="/search" fx-search-clear="#old-clear">',
+    ) as HTMLInputElement;
+    document.body.append(oldClear, newClear, el);
+    Flux.process(el);
+
+    el.setAttribute('fx-search-clear', '#new-clear');
+    Flux.process(el);
+    el.value = 'keep';
+    oldClear.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(el.value).toBe('keep');
+
+    newClear.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(el.value).toBe('');
+  });
+
+  it('removes the input listener on Flux.dispose()', () => {
+    const el = makeEl(
+      '<input type="search" fx-search="/search" fx-delay="10">',
+    ) as HTMLInputElement;
+    document.body.appendChild(el);
+    const ready = vi.fn();
+    el.addEventListener('flux:search-ready', ready);
+    Flux.process(el);
+
+    Flux.dispose();
+    el.value = 'query';
+    el.dispatchEvent(new Event('input'));
+    vi.advanceTimersByTime(20);
+
+    expect(ready).not.toHaveBeenCalled();
+  });
 });
 
 describe('fx-realtime — SSE preset', () => {
@@ -218,6 +254,26 @@ describe('fx-realtime — SSE preset', () => {
     expect(detail?.data).toBe('<p>data</p>');
   });
 
+  it('uses the HTMX 4 context-object swap API', () => {
+    const swap = vi.fn();
+    const previousHtmx = (window as any).htmx;
+    (window as any).htmx = { swap };
+    const target = makeEl('<div id="feed"></div>');
+    const el = makeEl('<div></div>');
+    document.body.append(target, el);
+    applyRealtime(el, { url: '/events', target: '#feed', swap: 'outerHTML' });
+
+    getLastInstance().listeners.get('message')!({ data: '<p>Live</p>' });
+
+    expect(swap).toHaveBeenCalledWith({
+      target,
+      text: '<p>Live</p>',
+      swap: 'outerHTML',
+      sourceElement: el,
+    });
+    (window as any).htmx = previousHtmx;
+  });
+
   it('disconnectRealtime closes the EventSource', () => {
     const el = document.createElement('div');
     document.body.appendChild(el);
@@ -235,5 +291,43 @@ describe('fx-realtime — SSE preset', () => {
     applyRealtime(el, { url: '/events', event: 'update' });
 
     expect(getLastInstance().addEventListener).toHaveBeenCalledWith('update', expect.any(Function));
+  });
+
+  it('keeps an unchanged controller and reconnects when realtime options change', () => {
+    Flux.configure();
+    const el = makeEl('<div fx-realtime="/events"></div>');
+    document.body.appendChild(el);
+    Flux.process(el);
+    const first = getLastInstance();
+
+    Flux.process(el);
+    expect(MockEventSource).toHaveBeenCalledTimes(1);
+    expect(first.close).not.toHaveBeenCalled();
+
+    el.setAttribute('fx-event', 'update');
+    el.setAttribute('fx-with-credentials', '');
+    Flux.process(el);
+
+    expect(first.close).toHaveBeenCalledOnce();
+    expect(MockEventSource).toHaveBeenCalledTimes(2);
+    expect(MockEventSource).toHaveBeenLastCalledWith('/events', { withCredentials: true });
+    expect(getLastInstance().addEventListener).toHaveBeenCalledWith('update', expect.any(Function));
+  });
+
+  it('disconnects controller-only presets when removed or disposed', () => {
+    Flux.configure();
+    const removed = makeEl('<div fx-realtime="/removed"></div>');
+    const disposed = makeEl('<div fx-realtime="/disposed"></div>');
+    document.body.append(removed, disposed);
+    Flux.process(document.body);
+    const removedSource = MockEventSource.mock.instances[0] as unknown as MockEventSourceInstance;
+    const disposedSource = MockEventSource.mock.instances[1] as unknown as MockEventSourceInstance;
+
+    removed.removeAttribute('fx-realtime');
+    Flux.process(removed);
+    expect(removedSource.close).toHaveBeenCalledOnce();
+
+    Flux.dispose();
+    expect(disposedSource.close).toHaveBeenCalledOnce();
   });
 });

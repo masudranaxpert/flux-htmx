@@ -3,7 +3,7 @@
 // runtime fx-* attribute edits sync seamlessly, and hard/soft attribute cleanups are fully supported
 // across detached elements, external roots, and Shadow DOM trees via an iterable Set index.
 
-import { getPresetRegistry } from '../presets/index.js';
+import { getPresetRegistry, reconcilePresetController } from '../presets/index.js';
 
 const generatedAttributes = new WeakMap<Element, Map<string, string>>();
 const generatedElements = new Set<Element>();
@@ -150,6 +150,7 @@ export function reconcileGeneratedAttributes(root?: Element): void {
   if (root) elements.push(root);
 
   for (const element of elements) {
+    reconcilePresetController(element);
     const attrMap = generatedAttributes.get(element);
     if (!attrMap) continue;
 

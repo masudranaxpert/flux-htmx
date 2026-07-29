@@ -6,6 +6,7 @@ import { installDeduplication } from '../../src/core/dedupe.js';
 import { installFeedback, resetFeedbackForTests } from '../../src/core/feedback.js';
 import { canStoreResponse } from '../../src/cache/cacheWire.js';
 import { uploadPlugin } from '../../src/plugins/upload.js';
+import { installRetrySupport } from '../../src/core/retry.js';
 
 function makeEl(html: string): Element {
   const container = document.createElement('div');
@@ -103,6 +104,22 @@ describe('consolidated release audit regressions', () => {
     expect(element.getAttribute('data-flux-preset')).toBe('prefetch');
   });
 
+  it('removes prefetch listeners when the controller-only preset is removed', () => {
+    Flux.configure();
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const element = makeEl('<a fx-prefetch="/users"></a>');
+    document.body.appendChild(element);
+    Flux.process(element);
+
+    element.removeAttribute('fx-prefetch');
+    Flux.process(element);
+    element.dispatchEvent(new MouseEvent('mouseenter'));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(element.hasAttribute('data-flux-prefetch-bound')).toBe(false);
+  });
+
   it('uses the same strict cache safety policy for every response writer', () => {
     const unsafeHeaders = new Headers({
       'Content-Type': 'text/html',
@@ -169,6 +186,49 @@ describe('consolidated release audit regressions', () => {
 
     expect(button.hasAttribute('hx-get')).toBe(false);
     expect(button.hasAttribute('data-flux-gen-shorthand-get')).toBe(false);
+  });
+
+  it('hard dispose removes unchanged recipe and scope fx-* output', () => {
+    Flux.configure();
+    Flux.recipe('dispose-owned', { target: '#result', disable: true });
+    const scope = makeEl(`
+      <section fx-scope fx-default-indicator="#spinner">
+        <form fx-submit="/users" fx-recipe="dispose-owned"></form>
+      </section>
+    `);
+    document.body.appendChild(scope);
+    const form = scope.querySelector('form')!;
+    Flux.process(scope);
+
+    Flux.dispose({ removeGeneratedAttributes: true });
+
+    expect(form.hasAttribute('fx-target')).toBe(false);
+    expect(form.hasAttribute('fx-disable')).toBe(false);
+    expect(form.hasAttribute('fx-indicator')).toBe(false);
+  });
+
+  it('restores fx-confirm in the same pass after fx-confirm-dialog is removed', () => {
+    Flux.configure();
+    const button = makeEl(
+      '<button fx-delete="/users/1" fx-confirm="Sure?" fx-confirm-dialog="#dialog"></button>',
+    );
+    document.body.appendChild(button);
+    Flux.process(button);
+    expect(button.getAttribute('hx-confirm')).toBe('flux-confirm-dialog');
+
+    button.removeAttribute('fx-confirm-dialog');
+    Flux.process(button);
+
+    expect(button.getAttribute('hx-confirm')).toBe('Sure?');
+  });
+
+  it('does not treat action pipelines as status selectors in doctor()', () => {
+    const form = makeEl('<form fx-post="/users" fx-on-success="toast:Saved; close:#modal"></form>');
+    document.body.appendChild(form);
+
+    const report = Flux.doctor(document.body);
+
+    expect(report.warnings.some((warning) => warning.includes('toast:Saved'))).toBe(false);
   });
 
   it('exposes upload honestly without claiming native progress support', () => {
@@ -266,5 +326,102 @@ describe('consolidated release audit regressions', () => {
     expect(event.detail.ctx.sourceElement).toBe(follower);
     expect(event.detail.ctx.response.status).toBe(500);
     teardown();
+  });
+
+  it('releases dedupe followers when the final retry fails', () => {
+    vi.useFakeTimers();
+    const retryTeardown = installRetrySupport();
+    const dedupeTeardown = installDeduplication();
+    const ajax = vi.fn();
+    const previousHtmx = (window as any).htmx;
+    (window as any).htmx = { ajax };
+    const leader = makeEl(
+      '<button fx-dedupe="true" fx-retry="1" fx-retry-delay="1" fx-get="/users"></button>',
+    );
+    const follower = makeEl(
+      '<button fx-dedupe="true" fx-retry="1" fx-retry-delay="1" fx-get="/users"></button>',
+    );
+    document.body.append(leader, follower);
+
+    for (const element of [leader, follower]) {
+      element.dispatchEvent(
+        new CustomEvent('htmx:config:request', {
+          bubbles: true,
+          detail: {
+            ctx: {
+              sourceElement: element,
+              target: element,
+              request: { method: 'GET', action: '/users', headers: {}, abort: vi.fn() },
+            },
+          },
+        }),
+      );
+    }
+
+    const firstFailureCtx: Record<string, any> = {
+      sourceElement: leader,
+      target: leader,
+      request: { method: 'GET', action: '/users', headers: {} },
+      response: { status: 503 },
+      text: 'retrying',
+    };
+    leader.dispatchEvent(
+      new CustomEvent('htmx:after:request', {
+        bubbles: true,
+        detail: { ctx: firstFailureCtx },
+      }),
+    );
+    expect(firstFailureCtx.retryPending).toBe(true);
+    vi.runAllTimers();
+    expect(ajax).toHaveBeenCalledOnce();
+
+    const retryHeaders = { 'X-Flux-Retry': 'true' };
+    leader.dispatchEvent(
+      new CustomEvent('htmx:before:request', {
+        bubbles: true,
+        detail: {
+          ctx: {
+            sourceElement: leader,
+            request: { method: 'GET', action: '/users', headers: retryHeaders },
+          },
+        },
+      }),
+    );
+    leader.dispatchEvent(
+      new CustomEvent('htmx:config:request', {
+        bubbles: true,
+        detail: {
+          ctx: {
+            sourceElement: leader,
+            target: leader,
+            request: { method: 'GET', action: '/users', headers: retryHeaders },
+          },
+        },
+      }),
+    );
+
+    const followerError = vi.fn();
+    follower.addEventListener('flux:dedupe:error', followerError);
+    const finalFailureCtx: Record<string, any> = {
+      sourceElement: leader,
+      target: leader,
+      request: { method: 'GET', action: '/users', headers: retryHeaders },
+      response: { status: 503 },
+      text: 'failed',
+    };
+    leader.dispatchEvent(
+      new CustomEvent('htmx:after:request', {
+        bubbles: true,
+        detail: { ctx: finalFailureCtx },
+      }),
+    );
+
+    expect(finalFailureCtx.retryTerminal).toBe(true);
+    expect(followerError).toHaveBeenCalledOnce();
+
+    (window as any).htmx = previousHtmx;
+    dedupeTeardown();
+    retryTeardown();
+    vi.useRealTimers();
   });
 });

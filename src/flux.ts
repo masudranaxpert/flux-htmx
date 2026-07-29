@@ -30,7 +30,7 @@ import { FLUX_VERSION } from './core/version.js';
 import { readFluxMetaConfig, reportDependencies, verifyHtmxVersion } from './core/startup.js';
 import { disposeDeleteControllers, installDeleteControllers } from './presets/delete.js';
 import { disposeSubmitControllers, installSubmitControllers } from './presets/submit.js';
-import { disposePrefetchControllers } from './presets/index.js';
+import { disconnectPresetTree, disposePresetControllers } from './presets/index.js';
 import { inspectElement, doctor } from './diagnostics/doctor.js';
 import { getRequestContext } from './core/events.js';
 import { safeQuerySelector } from './core/selectors.js';
@@ -53,6 +53,7 @@ import { installRetrySupport, disposeRetrySupport } from './core/retry.js';
 import { installDeduplication } from './core/dedupe.js';
 import { uploadPlugin } from './plugins/upload.js';
 import { optimisticPlugin } from './plugins/optimistic.js';
+import { removeRecipeAndScopeAttributes } from './core/expand.js';
 
 export { type FluxConfig } from './core/config.js';
 export { default as htmx } from 'htmx.org';
@@ -197,7 +198,10 @@ export interface DisposeOptions {
 
 /** Removes Flux listeners and resets runtime state. Performs soft or hard disposal. */
 export function dispose(options?: DisposeOptions): void {
+  disposePresetControllers();
+
   if (options?.removeGeneratedAttributes) {
+    removeRecipeAndScopeAttributes();
     removeGeneratedAttributes(undefined, true);
   }
 
@@ -206,7 +210,6 @@ export function dispose(options?: DisposeOptions): void {
   disposeStatusTargeting();
   disposeDeleteControllers();
   disposeSubmitControllers();
-  disposePrefetchControllers();
   disposeDialogControllers();
   deactivatePlugins();
   resetFeedbackForTests();
@@ -274,6 +277,8 @@ function installCleanupHook(): () => void {
   const onCleanup = (evt: Event) => {
     const target = (evt as CustomEvent).detail?.ctx?.targetElement ?? evt.target;
     if (target instanceof Element) {
+      disconnectPresetTree(target);
+      removeRecipeAndScopeAttributes(target);
       removeGeneratedAttributes(target);
       const children = Array.from(target.querySelectorAll('*'));
       for (const child of children) {

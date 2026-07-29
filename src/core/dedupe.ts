@@ -1,7 +1,6 @@
 // Concurrent Request Deduplication. Coalesces duplicate in-flight GET requests to the same URL into a single network call.
 
 import { getRequestContext } from './events.js';
-import { getRetryOptions } from './retry.js';
 
 interface PendingConsumer {
   element: Element;
@@ -116,15 +115,8 @@ export function installDeduplication(): () => void {
     if (!consumers) return;
 
     if (!ctx.successful) {
-      const isRetryableError =
-        ctx.status === 0 || ctx.status === 502 || ctx.status === 503 || ctx.status === 504;
-      if (isRetryableError && ctx.source) {
-        const opts = getRetryOptions(ctx.source);
-        if (opts) {
-          // Leader will retry. Do not delete group, keep followers suspended.
-          return;
-        }
-      }
+      // Keep followers suspended only when retry support actually scheduled another attempt.
+      if (ctx.ctx.retryPending === true) return;
     }
 
     inFlightRequests.delete(key);
