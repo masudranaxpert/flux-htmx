@@ -50,10 +50,10 @@ expands to:
 
 Status-specific targeting directs response HTML to a different container based on the HTTP status code:
 
-| Flux Attribute           | Compiled HTMX Attribute      | Effect                                                 |
-| ------------------------ | ---------------------------- | ------------------------------------------------------ |
-| `fx-on-422="#errors"`    | `hx-target-422="#errors"`    | Swaps 422 Unprocessable Entity response into `#errors` |
-| `fx-on-404="#not-found"` | `hx-target-404="#not-found"` | Swaps 404 response into `#not-found`                   |
+| Flux Attribute           | Compiled HTMX Attribute                   | Effect                                                 |
+| ------------------------ | ----------------------------------------- | ------------------------------------------------------ |
+| `fx-on-422="#errors"`    | `hx-status:422='{"target":"#errors"}'`    | Swaps 422 Unprocessable Entity response into `#errors` |
+| `fx-on-404="#not-found"` | `hx-status:404='{"target":"#not-found"}'` | Swaps 404 response into `#not-found`                   |
 
 ## Component & Dialog Attributes
 
@@ -65,13 +65,31 @@ Native HTML component controllers provide declarative modal & popover management
 | `fx-close="#dialog-id"` | `<dialog>` / Popover | Closes target `<dialog>` (`close()`) or popover                                                    |
 | `fx-close`              | Parent `<dialog>`    | Closes enclosing `<dialog>` element                                                                |
 
-## Feedback & Lifecycle Attributes
+## Retry, Deduplication & Cache Attributes
 
-| Attribute                                     | Scope                  | Behavior                                                       |
-| --------------------------------------------- | ---------------------- | -------------------------------------------------------------- |
-| `fx-success="Message"`                        | Elements with requests | Screen reader announcement & Alpine toast push on HTTP 2xx     |
-| `fx-error="Message"`                          | Elements with requests | Screen reader announcement & Alpine toast push on HTTP 4xx/5xx |
-| `fx-reset`                                    | `<form>` elements      | Resets form inputs upon HTTP 2xx success                       |
-| `fx-remove="this"` / `fx-remove="closest tr"` | Elements with requests | Removes element/ancestor from DOM upon HTTP 2xx success        |
-| `fx-cache="60s"`                              | GET requests           | Enables client fragment caching with TTL                       |
-| `fx-invalidate="key"`                         | Mutation requests      | Invalidates matching cache entries upon HTTP 2xx success       |
+| Attribute                                | Scope             | Behavior                                                                               |
+| ---------------------------------------- | ----------------- | -------------------------------------------------------------------------------------- |
+| `fx-retry="3"`                           | GET/Safe requests | Automatically retries request up to 3 times on network failure or 502/503/504 errors   |
+| `fx-retry-delay="500ms"`                 | Retry requests    | Sets base initial delay for retries (default `500ms`)                                  |
+| `fx-retry-backoff="2"`                   | Retry requests    | Sets backoff multiplier (`delay * backoff ^ retryCount`)                               |
+| `fx-retry-safe="true"`                   | Non-GET requests  | Explicitly enables automatic retry for non-GET requests                                |
+| `fx-dedupe="true"`                       | GET requests      | Coalesces simultaneous identical in-flight GET requests into a single network call     |
+| `fx-cache="5m"`                          | GET requests      | Enables fragment caching for 5 minutes                                                 |
+| `fx-cache-mode="stale-while-revalidate"` | GET requests      | Instantly renders cached content, revalidates in background, and updates UI on changes |
+| `fx-invalidate="key"`                    | Mutation requests | Invalidates matching cache entries upon HTTP 2xx success                               |
+
+## Plugin & Feedback Attributes
+
+| Attribute                                     | Plugin                 | Behavior                                                               |
+| --------------------------------------------- | ---------------------- | ---------------------------------------------------------------------- |
+| `fx-upload="/files"`                          | Upload Progress Plugin | Configures multipart upload with progress tracking and file validation |
+| `fx-progress="#progress-bar"`                 | Upload Progress Plugin | Updates `<progress>` value or `--upload-progress` CSS custom property  |
+| `fx-max-size="20mb"`                          | Upload Progress Plugin | Validates maximum file size limit before issuing upload request        |
+| `fx-allowed-types="image/*,.pdf"`             | Upload Progress Plugin | Validates allowed file MIME types or extensions before upload          |
+| `fx-optimistic-remove="closest li"`           | Optimistic UI Plugin   | Instantly removes element on click before request completes            |
+| `fx-optimistic-class="hidden"`                | Optimistic UI Plugin   | Instantly adds class to element on click before request completes      |
+| `fx-rollback`                                 | Optimistic UI Plugin   | Automatically restores original element DOM state if request fails     |
+| `fx-success="Message"`                        | Feedback               | Screen reader announcement & Alpine toast push on HTTP 2xx             |
+| `fx-error="Message"`                          | Feedback               | Screen reader announcement & Alpine toast push on HTTP 4xx/5xx         |
+| `fx-reset`                                    | `<form>` elements      | Resets form inputs upon HTTP 2xx success                               |
+| `fx-remove="this"` / `fx-remove="closest tr"` | Delete preset          | Removes element/ancestor from DOM upon HTTP 2xx success                |

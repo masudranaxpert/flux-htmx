@@ -14,11 +14,11 @@ Debounced, race-safe live search on an `<input>`.
 **Expansion**
 
 ```html
-hx-get="<url
-  >" hx-trigger="input changed delay:<delay
-    >[event.target.value.trim().length >= <n>]" hx-sync="this:replace"</n></delay
-  ></url
->
+<input
+  hx-get="<url>"
+  hx-trigger="input changed delay:<delay>[event.target.value.trim().length >= <n>]"
+  hx-sync="this:replace"
+/>
 ```
 
 `fx-delay` defaults to `300ms`; `fx-min-length` defaults to `0`. `hx-sync="this:replace"`
@@ -37,11 +37,7 @@ High-level form submit preset. Configures debounced submission, reset on success
 **Expansion**
 
 ```html
-hx-post="<url
-  >" (or fx-method) hx-target="<target
-    >" hx-swap="<swap>" hx-indicator="<indicator>"</indicator></swap></target
-  ></url
->
+<form hx-post="<url>" hx-target="<target>" hx-swap="<swap>" hx-indicator="<indicator>"></form>
 ```
 
 Optionally handles `fx-reset` (resets form on 2xx response), `fx-success="Message"`, `fx-error="Message"`, and `fx-invalidate="key"`.
@@ -68,9 +64,7 @@ High-level delete preset. Expands to `hx-delete` with item removal, confirmation
 **Expansion**
 
 ```html
-hx-delete="<url
-  >" hx-confirm="<msg>" hx-target="<target>"</target></msg></url
->
+<button hx-delete="<url>" hx-confirm="<msg>" hx-target="<target>"></button>
 ```
 
 Optionally handles `fx-remove="this"` (or `fx-remove="closest tr"`) to remove the target DOM element upon HTTP 2xx success.
@@ -89,6 +83,22 @@ Optionally handles `fx-remove="this"` (or `fx-remove="closest tr"`) to remove th
 </button>
 ```
 
+## fx-page (Pagination & Load More)
+
+High-level pagination and load-more preset with configurable swap strategies (`fx-append` for `beforeend`, `fx-prepend` for `afterbegin`).
+
+**Expansion**
+
+```html
+<button hx-get="<url>" hx-target="<target>" hx-swap="beforeend|afterbegin"></button>
+```
+
+**Example**
+
+```html
+<button fx-page="/products?page=2" fx-target="#products" fx-append>Load more</button>
+```
+
 ## fx-autosave
 
 Automatic background form save preset.
@@ -96,11 +106,11 @@ Automatic background form save preset.
 **Expansion**
 
 ```html
-hx-post="<url
-  >" (or fx-method) hx-trigger="input changed delay:<delay
-    >, change changed" hx-sync="this:replace"</delay
-  ></url
->
+<form
+  hx-post="<url>"
+  hx-trigger="input changed delay:<delay>, change changed"
+  hx-sync="this:replace"
+></form>
 ```
 
 `fx-delay` defaults to `500ms`. `hx-sync="this:replace"` aborts older pending saves when new input is entered.
@@ -191,6 +201,24 @@ Load more content when an element scrolls into view with overlap prevention — 
 
 ```html
 <div fx-infinite="/items?page=2" fx-target="#list" fx-swap="beforeend"></div>
+```
+
+## Plugin Presets
+
+Decoupled plugin presets registered via `Flux.use(plugin)`:
+
+### Upload Progress Plugin (`fx-upload`)
+
+```html
+<form fx-upload="/api/files" fx-progress="#bar" fx-max-size="20mb">
+  <input type="file" multiple />
+</form>
+```
+
+### Optimistic UI Plugin (`fx-optimistic-remove`)
+
+```html
+<button fx-delete="/tasks/1" fx-optimistic-remove="closest li" fx-rollback>Delete</button>
 ```
 
 ## Notes

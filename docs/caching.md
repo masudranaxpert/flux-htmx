@@ -1,8 +1,6 @@
-# Caching
+# Caching & Deduplication
 
-Flux has two caching layers. The first is the normal HTTP cache, which Flux never bypasses.
-The second is an optional in-memory client cache for GET responses. The two are complementary,
-not redundant.
+Flux has two caching layers plus an automatic request deduplication system. The first is the normal HTTP cache, which Flux never bypasses. The second is an optional in-memory client LRU cache with Stale-While-Revalidate (SWR) support for GET responses.
 
 ## Layer 1: HTTP caching
 
@@ -21,7 +19,7 @@ resource:
 Flux complements the HTTP cache; it does not replace it. A correct `Cache-Control` plus
 `ETag` policy is the primary cache for any Flux request.
 
-## Layer 2: client LRU cache (optional)
+## Layer 2: Client LRU cache & SWR Mode
 
 For GET requests, Flux can memoize responses in a bounded in-memory LRU cache so that
 repeated identical requests are served without a network round-trip. The cache is **GET-only**,
@@ -32,21 +30,28 @@ Defaults: 128 entries, 60-second TTL.
 
 ### Attributes
 
-| Attribute       | Effect                                                                  |
-| --------------- | ----------------------------------------------------------------------- |
-| `fx-cache`      | Enable caching for this element. Value is a TTL, e.g. `fx-cache="60s"`. |
-| `fx-cache-key`  | Override the cache key (default is the request URL + `GET` method).     |
-| `fx-invalidate` | Invalidate cache entries matching a key pattern when this fires.        |
+| Attribute                                | Effect                                                                                  |
+| ---------------------------------------- | --------------------------------------------------------------------------------------- |
+| `fx-cache`                               | Enable caching for this element. Value is a TTL, e.g. `fx-cache="60s"`.                 |
+| `fx-cache-mode="stale-while-revalidate"` | Instantly renders cached content, revalidates in background, and updates UI on changes. |
+| `fx-cache-key`                           | Override the cache key (default is the request URL + `GET` method).                     |
+| `fx-invalidate`                          | Invalidate cache entries matching a key pattern when a mutation fires.                  |
 
-**Example**
+**Example (Stale-While-Revalidate)**
 
 ```html
-<button fx-get="/dashboard" fx-target="#dash" fx-cache="60s">Refresh</button>
-<button fx-post="/dashboard/reset" fx-invalidate="/dashboard">Reset</button>
+<div fx-get="/dashboard/summary" fx-cache="5m" fx-cache-mode="stale-while-revalidate">
+  <!-- Content renders instantly from cache, then updates silently if background fetch changed -->
+</div>
 ```
 
-The GET response is cached for 60 seconds; the POST invalidates any cached entry whose key
-matches `/dashboard`.
+## Request Deduplication
+
+When multiple elements on a page issue simultaneous identical `GET` requests (e.g. 3 components loading `GET /api/user/profile`), Flux automatically coalesces them into a single HTTP network call and shares the response HTML across all requesting elements.
+
+```html
+<div fx-get="/api/user/profile" fx-dedupe="true"></div>
+```
 
 ### JavaScript API
 
@@ -71,12 +76,4 @@ interface FluxCache {
 }
 ```
 
-`CacheEntry` carries the cached response body and metadata (status, headers) sufficient to
-replay the swap without a network request.
-
-### When to use it
-
-Use the client cache for GET endpoints that are expensive to compute and tolerate short-term
-staleness (dashboards, typeahead option lists, reference data). Do not use it for
-mutating endpoints, for personalised data that changes per request, or as a substitute for a
-correct HTTP cache policy.
+`CacheEntry` carries the cached response body and metadata (status, headers) sufficient to replay the swap without a network request.

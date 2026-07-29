@@ -25,7 +25,8 @@ export function installDeduplication(): () => void {
     const method = (ctx.request?.method ?? 'GET').toUpperCase();
     if (method !== 'GET') return;
 
-    const url = ctx.request?.action ?? element.getAttribute('hx-get') ?? element.getAttribute('fx-get');
+    const url =
+      ctx.request?.action ?? element.getAttribute('hx-get') ?? element.getAttribute('fx-get');
     if (!url) return;
 
     const key = `GET:${url}`;
@@ -50,7 +51,10 @@ export function installDeduplication(): () => void {
     const method = (ctx.request?.method ?? 'GET').toUpperCase();
     if (method !== 'GET') return;
 
-    const url = ctx.request?.action ?? ctx.source?.getAttribute('hx-get') ?? ctx.source?.getAttribute('fx-get');
+    const url =
+      ctx.request?.action ??
+      ctx.source?.getAttribute('hx-get') ??
+      ctx.source?.getAttribute('fx-get');
     if (!url) return;
 
     const key = `GET:${url}`;

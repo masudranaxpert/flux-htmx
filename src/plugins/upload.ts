@@ -11,7 +11,8 @@ export function parseMaxSizeBytes(sizeStr?: string | null): number | null {
   const num = parseFloat(match[1]);
   const rawUnit = match[2] ?? 'b';
   const unit = rawUnit.toLowerCase();
-  const multiplier = unit === 'gb' ? 1073741824 : unit === 'mb' ? 1048576 : unit === 'kb' ? 1024 : 1;
+  const multiplier =
+    unit === 'gb' ? 1073741824 : unit === 'mb' ? 1048576 : unit === 'kb' ? 1024 : 1;
   return Math.round(num * multiplier);
 }
 
@@ -73,12 +74,17 @@ export const uploadPlugin: FluxPlugin = {
 function wireUploadElement(element: Element): void {
   const maxSizeStr = element.getAttribute('fx-max-size');
   const maxSizeBytes = parseMaxSizeBytes(maxSizeStr);
-  const allowedTypes = element.getAttribute('fx-allowed-types')?.split(',').map((s) => s.trim().toLowerCase());
+  const allowedTypes = element
+    .getAttribute('fx-allowed-types')
+    ?.split(',')
+    .map((s) => s.trim().toLowerCase());
 
   const validateFiles = (files: FileList | File[]): boolean => {
     for (const file of Array.from(files)) {
       if (maxSizeBytes !== null && file.size > maxSizeBytes) {
-        log.warn(`File "${file.name}" (${file.size} bytes) exceeds fx-max-size limit (${maxSizeBytes} bytes)`);
+        log.warn(
+          `File "${file.name}" (${file.size} bytes) exceeds fx-max-size limit (${maxSizeBytes} bytes)`,
+        );
         element.dispatchEvent(
           new CustomEvent('flux:upload:error', {
             bubbles: true,
