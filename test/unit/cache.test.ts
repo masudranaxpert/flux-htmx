@@ -31,15 +31,24 @@ describe('FragmentCache — basic', () => {
 });
 
 describe('FragmentCache — TTL', () => {
-  it('expires entries after the TTL', () => {
+  it('expires fresh entries after the TTL and serves stale during stale grace window', () => {
     vi.useFakeTimers();
     const now = Date.now();
     vi.setSystemTime(now);
     const cache = new FragmentCache();
-    cache.set('k', 'v', 1000);
+    cache.set('k', 'v', 1000, 5000);
     expect(cache.get('k')).toBe('v');
+    expect(cache.get('k', { returnMeta: true })).toEqual({ value: 'v', isStale: false });
+
     vi.setSystemTime(now + 1001);
     expect(cache.get('k')).toBeNull();
+    expect(cache.get('k', { allowStale: true, returnMeta: true })).toEqual({
+      value: 'v',
+      isStale: true,
+    });
+
+    vi.setSystemTime(now + 5001);
+    expect(cache.get('k', { allowStale: true })).toBeNull();
     vi.useRealTimers();
   });
 });

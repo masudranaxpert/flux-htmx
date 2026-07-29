@@ -3,7 +3,7 @@
 
 import type { FluxPlugin, FluxPluginApi } from '../core/plugin.js';
 import { log } from '../core/logger.js';
-import { setGeneratedAttribute } from '../core/generated-attributes.js';
+import { removeGeneratedAttribute, setGeneratedAttribute } from '../core/generated-attributes.js';
 
 const activeUploadControllers = new Map<Element, () => void>();
 
@@ -24,6 +24,8 @@ export const uploadPlugin: FluxPlugin = {
   setup(api: FluxPluginApi) {
     if (typeof document === 'undefined') return;
 
+    const trackedUploadElements = new Set<Element>();
+
     // Register fx-upload preset
     const unregisterPreset = api.registerPreset('fx-upload', (element, value) => {
       if (!(element instanceof HTMLFormElement || element instanceof HTMLElement)) return false;
@@ -31,6 +33,8 @@ export const uploadPlugin: FluxPlugin = {
         log.error('[flux] fx-upload requires a non-empty URL');
         return false;
       }
+
+      trackedUploadElements.add(element);
 
       setGeneratedAttribute(element, 'hx-post', value.trim());
       setGeneratedAttribute(element, 'hx-encoding', 'multipart/form-data');
@@ -79,19 +83,35 @@ export const uploadPlugin: FluxPlugin = {
         cleanup();
       }
       activeUploadControllers.clear();
+
+      // Plugin-scoped attribute teardown: clean up only elements managed by upload plugin
+      for (const element of Array.from(trackedUploadElements)) {
+        removeGeneratedAttribute(element, 'hx-post');
+        removeGeneratedAttribute(element, 'hx-encoding');
+        element.removeAttribute('data-flux-preset');
+        element.removeAttribute('data-flux-preset-signature');
+      }
+      trackedUploadElements.clear();
     };
   },
 };
 
 function wireUploadElement(element: Element, uploadUrl: string): void {
-  activeUploadControllers.get(element)?.();
-
   const maxSizeStr = element.getAttribute('fx-max-size');
   const maxSizeBytes = parseMaxSizeBytes(maxSizeStr);
+  const progressAttr = element.getAttribute('fx-progress') ?? '';
   const allowedTypes = element
     .getAttribute('fx-allowed-types')
     ?.split(',')
     .map((s) => s.trim().toLowerCase());
+
+  // Signature check including runtime options
+  const signature = `${uploadUrl}|${progressAttr}|${maxSizeStr ?? ''}|${allowedTypes?.join(',') ?? ''}`;
+  const currentSig = element.getAttribute('data-flux-preset-signature');
+  if (currentSig === signature) return;
+  element.setAttribute('data-flux-preset-signature', signature);
+
+  activeUploadControllers.get(element)?.();
 
   const validateFiles = (files: FileList | File[]): boolean => {
     for (const file of Array.from(files)) {
@@ -172,7 +192,7 @@ function wireUploadElement(element: Element, uploadUrl: string): void {
         }),
       );
 
-      // Automatic dropped-file binding & upload
+      // Automatic dropped-file binding & upload submission
       const fileInput = element.querySelector('input[type="file"]') as HTMLInputElement | null;
       if (fileInput) {
         try {
@@ -182,6 +202,13 @@ function wireUploadElement(element: Element, uploadUrl: string): void {
           }
           fileInput.files = dataTransfer.files;
           fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+          // Auto-submit form on file drop if form element or fileInput form exists
+          if (element instanceof HTMLFormElement && typeof element.requestSubmit === 'function') {
+            element.requestSubmit();
+          } else if (fileInput.form && typeof fileInput.form.requestSubmit === 'function') {
+            fileInput.form.requestSubmit();
+          }
         } catch (e) {
           log.warn('[flux] DataTransfer file binding unsupported:', e);
         }

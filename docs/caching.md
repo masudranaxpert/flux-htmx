@@ -1,6 +1,6 @@
 # Caching & Deduplication
 
-Flux has two caching layers plus an automatic request deduplication system. The first is the normal HTTP cache, which Flux never bypasses. The second is an optional in-memory client LRU cache with Stale-While-Revalidate (SWR) support for GET responses.
+Flux has two caching layers plus an explicit request deduplication system. The first is the normal HTTP cache, which Flux never bypasses. The second is an optional in-memory client LRU cache with Stale-While-Revalidate (SWR) support for GET responses.
 
 ## Layer 1: HTTP caching
 
@@ -24,24 +24,24 @@ Flux complements the HTTP cache; it does not replace it. A correct `Cache-Contro
 For GET requests, Flux can memoize responses in a bounded in-memory LRU cache so that
 repeated identical requests are served without a network round-trip. The cache is **GET-only**,
 **in-memory** (it is not written to `localStorage` or `sessionStorage`), and **bounded** to a
-fixed number of entries with a per-entry TTL.
+fixed number of entries with dual-window freshness (fresh TTL vs stale grace window).
 
 Defaults: 128 entries, 60-second TTL.
 
 ### Attributes
 
-| Attribute                                | Effect                                                                                  |
-| ---------------------------------------- | --------------------------------------------------------------------------------------- |
-| `fx-cache`                               | Enable caching for this element. Value is a TTL, e.g. `fx-cache="60s"`.                 |
-| `fx-cache-mode="stale-while-revalidate"` | Instantly renders cached content, revalidates in background, and updates UI on changes. |
-| `fx-cache-key`                           | Override the cache key (default is the request URL + `GET` method).                     |
-| `fx-invalidate`                          | Invalidate cache entries matching a key pattern when a mutation fires.                  |
+| Attribute                                | Effect                                                                                 |
+| ---------------------------------------- | -------------------------------------------------------------------------------------- |
+| `fx-cache`                               | Enable caching for this element. Value is a TTL, e.g. `fx-cache="60s"`.                |
+| `fx-cache-mode="stale-while-revalidate"` | Instantly renders cached content during stale grace window, revalidates in background. |
+| `fx-cache-key`                           | Override the cache key (default is canonical URL + `GET` method).                      |
+| `fx-invalidate`                          | Invalidate cache entries matching a key pattern when a mutation fires.                 |
 
-**Example (Stale-While-Revalidate)**
+**Example (Stale-While-Revalidate Dual-Window)**
 
 ```html
 <div fx-get="/dashboard/summary" fx-cache="5m" fx-cache-mode="stale-while-revalidate">
-  <!-- Content renders instantly from cache, then updates silently if background fetch changed -->
+  <!-- Content renders instantly from cache during fresh (0-5m) and stale window, then updates silently if background fetch changed -->
 </div>
 ```
 
@@ -53,17 +53,26 @@ When multiple elements on a page issue simultaneous identical `GET` requests (e.
 <div fx-get="/api/user/profile" fx-dedupe="true"></div>
 ```
 
+### Safety & Header Isolation (`fx-dedupe-vary`)
+
+- **Authorization Isolation**: Any request containing an `Authorization` header automatically bypasses deduplication to prevent cross-account response sharing.
+- **Custom Header Isolation**: Specify headers that vary the deduplication key via `fx-dedupe-vary`:
+
+```html
+<div fx-get="/api/user/profile" fx-dedupe="true" fx-dedupe-vary="Accept-Language,X-Tenant-ID"></div>
+```
+
 ### JavaScript API
 
 The cache is exposed as `Flux.cache`. All methods are synchronous.
 
 ```ts
 interface FluxCache {
-  // Read an entry. Returns undefined on miss or expiry.
-  get(key: string): CacheEntry | undefined;
+  // Read an entry. Options permit allowStale: true for SWR mode.
+  get(key: string, options?: { allowStale?: boolean }): string | null;
 
-  // Write an entry. TTL defaults to the configured default (60s).
-  set(key: string, value: CacheEntry, ttlMs?: number): void;
+  // Write an entry with optional TTL and extended stale TTL.
+  set(key: string, value: string, ttlMs?: number, staleTtlMs?: number): void;
 
   // Remove one entry. Returns true if an entry was removed.
   invalidate(key: string): boolean;
@@ -75,5 +84,3 @@ interface FluxCache {
   clear(): void;
 }
 ```
-
-`CacheEntry` carries the cached response body and metadata (status, headers) sufficient to replay the swap without a network request.

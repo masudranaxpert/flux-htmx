@@ -10,18 +10,24 @@ interface PendingConsumer {
 
 const inFlightRequests = new Map<string, PendingConsumer[]>();
 
-function hasAuthorizationHeader(headers: unknown): boolean {
-  if (!headers) return false;
+function readHeader(headers: unknown, name: string): string | null {
+  if (!headers) return null;
   if (typeof (headers as any).get === 'function') {
-    return Boolean((headers as any).get('Authorization') ?? (headers as any).get('authorization'));
+    return (headers as any).get(name) ?? (headers as any).get(name.toLowerCase()) ?? null;
   }
   if (typeof headers === 'object') {
     const record = headers as Record<string, unknown>;
     for (const [k, v] of Object.entries(record)) {
-      if (k.toLowerCase() === 'authorization' && Boolean(v)) return true;
+      if (k.toLowerCase() === name.toLowerCase() && v !== undefined && v !== null) {
+        return String(v);
+      }
     }
   }
-  return false;
+  return null;
+}
+
+function hasAuthorizationHeader(headers: unknown): boolean {
+  return Boolean(readHeader(headers, 'authorization'));
 }
 
 /** Installs the request deduplication hook. */
@@ -166,19 +172,14 @@ function computeDedupeKey(
     canonicalParams.append(k, v);
   }
 
-  // Handle fx-dedupe-vary header key inclusion
+  // Handle fx-dedupe-vary header key inclusion with case-insensitive lookup
   const varyAttr = source.getAttribute('fx-dedupe-vary');
   let headerVaryStr = '';
   if (varyAttr && headers) {
     const varyTokens = varyAttr.split(',').map((s) => s.trim().toLowerCase());
     const headerParts: string[] = [];
     for (const token of varyTokens) {
-      let val: string | null = null;
-      if (typeof (headers as any).get === 'function') {
-        val = (headers as any).get(token);
-      } else if (typeof headers === 'object') {
-        val = (headers as Record<string, any>)[token] ?? null;
-      }
+      const val = readHeader(headers, token);
       if (val) headerParts.push(`${token}=${val}`);
     }
     headerVaryStr = headerParts.join(';');

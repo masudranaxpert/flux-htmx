@@ -74,6 +74,7 @@ Native HTML component controllers provide declarative modal & popover management
 | `fx-retry-backoff="2"`                   | Retry requests    | Sets backoff multiplier (`delay * backoff ^ retryCount`)                               |
 | `fx-retry-safe="true"`                   | Non-GET requests  | Explicitly enables automatic retry for non-GET requests                                |
 | `fx-dedupe="true"`                       | GET requests      | Coalesces simultaneous identical in-flight GET requests into a single network call     |
+| `fx-dedupe-vary="Accept-Language"`       | Dedupe requests   | Includes specified request headers in canonical deduplication key computation          |
 | `fx-cache="5m"`                          | GET requests      | Enables fragment caching for 5 minutes                                                 |
 | `fx-cache-mode="stale-while-revalidate"` | GET requests      | Instantly renders cached content, revalidates in background, and updates UI on changes |
 | `fx-invalidate="key"`                    | Mutation requests | Invalidates matching cache entries upon HTTP 2xx success                               |

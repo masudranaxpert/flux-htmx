@@ -49,7 +49,7 @@ describe('Stable v1.0.0 Release Hardening & Features Test Suite', () => {
     expect(el.getAttribute('hx-swap')).toBeNull();
   });
 
-  it('4. Upload Progress Plugin: parses byte sizes, handles drag-and-drop and cleans up on unuse', () => {
+  it('4. Upload Progress Plugin: handles drag-and-drop, scoped unuse cleanup, and preserves other page elements', () => {
     expect(parseMaxSizeBytes('20mb')).toBe(20971520);
     expect(parseMaxSizeBytes('500kb')).toBe(512000);
     expect(parseMaxSizeBytes('100')).toBe(100);
@@ -58,11 +58,17 @@ describe('Stable v1.0.0 Release Hardening & Features Test Suite', () => {
     Flux.configure();
     Flux.use(uploadPlugin);
 
+    const normalBtn = makeEl('<button fx-get="/users" fx-target="#users">Load Users</button>');
+    document.body.appendChild(normalBtn);
+
     const form = makeEl(
       '<form fx-upload="/files" fx-max-size="10mb"><input type="file" name="doc"/></form>',
     );
     document.body.appendChild(form);
     Flux.process(document.body);
+
+    expect(normalBtn.getAttribute('hx-get')).toBe('/users');
+    expect(form.getAttribute('hx-post')).toBe('/files');
 
     const dragOverEvt = new CustomEvent('dragover', { bubbles: true, cancelable: true });
     form.dispatchEvent(dragOverEvt);
@@ -73,8 +79,10 @@ describe('Stable v1.0.0 Release Hardening & Features Test Suite', () => {
     expect(form.getAttribute('data-flux-drag-over')).toBeNull();
 
     Flux.unuse('upload-progress');
-    Flux.process(document.body);
+
+    // Scoped cleanup: form's hx-post is cleaned up, but normalBtn's hx-get remains untouched!
     expect(form.getAttribute('hx-post')).toBeNull();
+    expect(normalBtn.getAttribute('hx-get')).toBe('/users');
   });
 
   it('5. Optimistic UI Plugin: requires explicit fx-rollback for DOM rollback', () => {

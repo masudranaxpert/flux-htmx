@@ -10,6 +10,11 @@ export interface CacheEntry {
   byteSize: number;
 }
 
+export interface CacheResult {
+  value: string;
+  isStale: boolean;
+}
+
 export interface CacheOptions {
   /** Maximum number of entries. Default 128. */
   maxEntries?: number;
@@ -39,21 +44,35 @@ export class FragmentCache {
     this.defaultTtlMs = options.defaultTtlMs ?? DEFAULTS.defaultTtlMs;
   }
 
-  get(key: string, options?: { allowStale?: boolean }): string | null {
+  get(key: string, options: { allowStale?: boolean; returnMeta: true }): CacheResult | null;
+  get(key: string, options?: { allowStale?: boolean; returnMeta?: false }): string | null;
+  get(
+    key: string,
+    options?: { allowStale?: boolean; returnMeta?: boolean },
+  ): string | CacheResult | null {
     const entry = this.store.get(key);
     if (!entry) return null;
 
     const now = Date.now();
-    const isFresh = now < entry.expiresAt;
-    const isStaleValid = options?.allowStale && now < entry.staleUntil;
-
-    if (!isFresh && !isStaleValid) {
+    if (now >= entry.staleUntil) {
       this.currentBytes -= entry.byteSize;
       this.store.delete(key);
       return null;
     }
+
+    const isFresh = now < entry.expiresAt;
+    if (!isFresh && !options?.allowStale) {
+      return null;
+    }
+
     // LRU: refresh recency on access.
     entry.order = ++this.counter;
+    if (options?.returnMeta) {
+      return {
+        value: entry.value,
+        isStale: !isFresh,
+      };
+    }
     return entry.value;
   }
 

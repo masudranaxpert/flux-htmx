@@ -106,7 +106,7 @@ export function installCacheIntegration(
     if (!isCacheableMethod(request.method ?? 'GET')) return;
 
     const key = cacheKey(source, request);
-    const cached = cache.get(key, { allowStale: policy.swr });
+    const cached = cache.get(key, { allowStale: policy.swr, returnMeta: true });
 
     if (cached === null) {
       source.dispatchEvent(new CustomEvent('flux:cache:miss', { bubbles: true, detail: { key } }));
@@ -118,7 +118,10 @@ export function installCacheIntegration(
     }
 
     source.dispatchEvent(
-      new CustomEvent('flux:cache:hit', { bubbles: true, detail: { key, text: cached } }),
+      new CustomEvent('flux:cache:hit', {
+        bubbles: true,
+        detail: { key, text: cached.value, isStale: cached.isStale },
+      }),
     );
 
     // Serve from cache: use injected htmx instance or fallback to window.htmx
@@ -126,10 +129,10 @@ export function installCacheIntegration(
     const target = ctx.target;
     if (htmx?.swap && target) {
       const swap = source.getAttribute('hx-swap') ?? source.getAttribute('fx-swap') ?? 'innerHTML';
-      htmx.swap({ target, text: cached, swap });
+      htmx.swap({ target, text: cached.value, swap });
 
-      // In standard mode, abort network fetch. In SWR mode, let background revalidation fetch proceed.
-      if (!policy.swr) {
+      // In fresh cache hit or non-SWR mode, abort network fetch. Allow background revalidation fetch ONLY when entry is stale in SWR mode.
+      if (!cached.isStale || !policy.swr) {
         request.abort?.();
       }
     }
