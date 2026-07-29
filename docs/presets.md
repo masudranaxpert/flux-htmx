@@ -16,12 +16,12 @@ Debounced, race-safe live search on an `<input>`.
 ```html
 <input
   hx-get="<url>"
-  hx-trigger="input changed delay:<delay>[event.target.value.trim().length >= <n>]"
+  hx-trigger="flux:search-ready"
   hx-sync="this:replace"
 />
 ```
 
-`fx-delay` defaults to `300ms`; `fx-min-length` defaults to `0`. `hx-sync="this:replace"`
+`fx-search` uses a native event listener to debounce input and enforce `fx-min-length` (eval-free). `fx-delay` defaults to `300ms`; `fx-min-length` defaults to `0`. `hx-sync="this:replace"`
 aborts an in-flight request when a newer search fires, preventing stale responses.
 
 **Example**
@@ -201,6 +201,27 @@ Load more content when an element scrolls into view with overlap prevention — 
 
 ```html
 <div fx-infinite="/items?page=2" fx-target="#list" fx-swap="beforeend"></div>
+```
+
+## fx-realtime
+
+Server-Sent Events (SSE) preset that automatically connects to an event stream and swaps incoming messages into the DOM. Zero dependencies, fully native `EventSource`.
+
+**Syntax**
+
+```html
+<div
+  fx-realtime="<url>"
+  fx-target="<selector>"
+  fx-swap="<strategy>"
+  fx-event="<event-name>"
+></div>
+```
+
+**Example**
+
+```html
+<div fx-realtime="/events/live" fx-target="#feed" fx-swap="afterbegin" fx-event="new_order"></div>
 ```
 
 ## Plugin Presets

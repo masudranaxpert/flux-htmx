@@ -98,10 +98,11 @@ npm install htmx.org@4.0.0-beta6
 | `fx-delete="/url"` | `hx-delete` + confirm dialog | DELETE with confirmation |
 | `fx-load="/url"` | `hx-get` + `hx-trigger="load"` | Fetch on page load |
 | `fx-poll="/url"` | `hx-get` + polling trigger | Periodic polling |
-| `fx-search="/url"` | `hx-get` + debounce | Debounced search input |
+| `fx-search="/url"` | `hx-get` + native debounce | Debounced search input (eval-free) |
 | `fx-submit="/url"` | `hx-post` on form | Form submission |
 | `fx-autosave="/url"` | `hx-post` + auto-save on input | Auto-save on change |
 | `fx-infinite="/url"` | Infinite scroll | Load more on scroll |
+| `fx-realtime="/url"` | `EventSource` (SSE) | Server-Sent Events stream |
 | `fx-pagination="/url"` | Pagination pattern | Page-based navigation |
 | `fx-prefetch` | Hover/touch prefetch | Cache on hover before click |
 | `fx-history` | `hx-push-url="true"` | Push URL to browser history on swap |
@@ -123,6 +124,7 @@ npm install htmx.org@4.0.0-beta6
 | `fx-success="Done!"` | Message on success |
 | `fx-error="Failed!"` | Message on error |
 | `fx-validate` | Pre-submit HTML5 form validation |
+| `fx-event="message"` | SSE event name (for `fx-realtime`) |
 
 ---
 

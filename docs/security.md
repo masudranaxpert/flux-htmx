@@ -35,19 +35,16 @@ Tokens are never logged.
 ## CSP
 
 Flux itself contains no `eval`, no `new Function`, and no dynamic string compilation. However,
-two Flux features rely on HTMX's `allowEval`, which is on by default but blocked under a strict
+one HTMX feature relies on HTMX's `allowEval`, which is on by default but blocked under a strict
 CSP:
 
-- `fx-search` with `fx-min-length` — the minimum-length filter is a trigger-condition string.
 - `fx-trigger` with a value that includes a filter expression `[...]`.
 
-Under a strict CSP (`script-src` without `'unsafe-eval'`), these will not work. Two escape
-hatches:
+(Note: `fx-search` and `fx-min-length` are fully native and do **not** require eval).
 
-1. Drop `fx-min-length` and enforce a minimum length on the server, or via a custom
-   `htmx:beforeRequest` handler that aborts short queries.
-2. Write the trigger by hand using raw `hx-trigger`, which keeps full control of the trigger
-   expression (the same CSP constraint still applies to hand-written filters).
+Under a strict CSP (`script-src` without `'unsafe-eval'`), custom trigger filters will not work. To work around this:
+
+Write the trigger by hand using raw `hx-trigger` without filters, and enforce conditions on the server, or via a custom `htmx:beforeRequest` handler.
 
 In either case, Flux never silently weakens CSP. If `allowEval` is disabled, the affected
 triggers simply do not fire.
@@ -70,5 +67,5 @@ other client request. The server must:
 | Request origin          | Same-origin by default; cross-origin is per-element opt-in |
 | CSRF token              | Same-origin mutations only; never sent cross-origin        |
 | `eval` / `new Function` | None in Flux; only HTMX trigger filters need `allowEval`   |
-| Strict CSP              | Supported; `fx-min-length` and trigger filters drop back   |
+| Strict CSP              | Supported; custom trigger filters drop back   |
 | Response sanitisation   | Server responsibility; Flux does not escape bodies         |
