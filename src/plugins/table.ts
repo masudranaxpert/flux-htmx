@@ -14,7 +14,7 @@ function handleTableChange(e: Event) {
 
     const isChecked = target.checked;
     const checkboxes = queryAllSafely('[fx-select]', table) as Element[] as HTMLInputElement[];
-    
+
     for (const cb of checkboxes) {
       if (cb.checked !== isChecked) {
         cb.checked = isChecked;
@@ -28,13 +28,13 @@ function handleTableChange(e: Event) {
     const selectAll = table.querySelector('[fx-select-all]') as HTMLInputElement;
     if (selectAll) {
       const checkboxes = queryAllSafely('[fx-select]', table) as Element[] as HTMLInputElement[];
-      const allChecked = checkboxes.every(cb => cb.checked);
-      const someChecked = checkboxes.some(cb => cb.checked);
-      
+      const allChecked = checkboxes.every((cb) => cb.checked);
+      const someChecked = checkboxes.some((cb) => cb.checked);
+
       selectAll.checked = allChecked;
       selectAll.indeterminate = someChecked && !allChecked;
     }
-    
+
     // Highlight row
     const row = target.closest('tr');
     if (row) {

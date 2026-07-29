@@ -16,7 +16,7 @@ function handleAccordionClick(e: MouseEvent) {
     }
 
     const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
-    
+
     const accordion = disclosure.closest('[fx-accordion]');
     const isMultiple = accordion && accordion.getAttribute('fx-accordion') === 'multiple';
 

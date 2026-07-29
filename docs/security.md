@@ -67,5 +67,5 @@ other client request. The server must:
 | Request origin          | Same-origin by default; cross-origin is per-element opt-in |
 | CSRF token              | Same-origin mutations only; never sent cross-origin        |
 | `eval` / `new Function` | None in Flux; only HTMX trigger filters need `allowEval`   |
-| Strict CSP              | Supported; custom trigger filters drop back   |
+| Strict CSP              | Supported; custom trigger filters drop back                |
 | Response sanitisation   | Server responsibility; Flux does not escape bodies         |

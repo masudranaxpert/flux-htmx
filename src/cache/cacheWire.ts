@@ -252,7 +252,7 @@ export function cacheKey(
   const formElement = isFormSource ? (source as HTMLFormElement) : null;
 
   const params = new URLSearchParams();
-  let basePath = canonicalPath;
+  const basePath = canonicalPath;
 
   if (rawAction.includes('?')) {
     const qIndex = rawAction.indexOf('?');

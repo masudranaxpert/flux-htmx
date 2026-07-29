@@ -2,13 +2,8 @@ import './setup.js';
 import { describe, expect, it, vi } from 'vitest';
 import * as Flux from '../../src/flux.js';
 import { registerPreset } from '../../src/presets/index.js';
-import { applySubmit } from '../../src/presets/submit.ts';
-import { applyDelete } from '../../src/presets/delete.ts';
 import { getCachePolicy } from '../../src/cache/cacheWire.ts';
-import {
-  reconcileGeneratedAttributes,
-  getGeneratedAttributes,
-} from '../../src/core/generated-attributes.ts';
+import { reconcileGeneratedAttributes } from '../../src/core/generated-attributes.ts';
 import { wireStatusTargeting } from '../../src/core/status.ts';
 
 function makeEl(html: string): Element {

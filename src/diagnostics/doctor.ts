@@ -55,7 +55,9 @@ export function inspectElement(element: Element | null): InspectionResult {
   }
 
   if (element.hasAttribute('fx-append') && element.hasAttribute('fx-prepend')) {
-    warnings.push('conflicting pagination swap attributes fx-append and fx-prepend declared on same element');
+    warnings.push(
+      'conflicting pagination swap attributes fx-append and fx-prepend declared on same element',
+    );
   }
 
   // Check raw hx-* vs fx-* method conflicts
@@ -79,7 +81,6 @@ export function inspectElement(element: Element | null): InspectionResult {
   // Check arbitrary fx-on-<code> status attributes
   for (const attr of Array.from(element.attributes)) {
     if (attr.name.startsWith('fx-on-')) {
-      const codeStr = attr.name.slice('fx-on-'.length);
       const selector = attr.value.trim();
       if (!selector) {
         warnings.push(`empty status target selector in ${attr.name}`);

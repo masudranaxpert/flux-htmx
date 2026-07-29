@@ -38,7 +38,9 @@ describe('fx-search — native debounce, eval-free', () => {
     applySearch(el, { url: '/search', delay: '200' });
 
     let fired = false;
-    el.addEventListener('flux:search-ready', () => { fired = true; });
+    el.addEventListener('flux:search-ready', () => {
+      fired = true;
+    });
 
     el.value = 'hello';
     el.dispatchEvent(new Event('input'));
@@ -54,7 +56,9 @@ describe('fx-search — native debounce, eval-free', () => {
     applySearch(el, { url: '/search', delay: '100', minLength: '3' });
 
     let fired = false;
-    el.addEventListener('flux:search-ready', () => { fired = true; });
+    el.addEventListener('flux:search-ready', () => {
+      fired = true;
+    });
 
     el.value = 'ab'; // only 2 chars
     el.dispatchEvent(new Event('input'));
@@ -68,7 +72,9 @@ describe('fx-search — native debounce, eval-free', () => {
     applySearch(el, { url: '/search', delay: '100', minLength: '2' });
 
     let fired = false;
-    el.addEventListener('flux:search-ready', () => { fired = true; });
+    el.addEventListener('flux:search-ready', () => {
+      fired = true;
+    });
 
     el.value = 'ab'; // exactly 2
     el.dispatchEvent(new Event('input'));
@@ -82,7 +88,9 @@ describe('fx-search — native debounce, eval-free', () => {
     applySearch(el, { url: '/search', delay: '100' });
 
     let fired = false;
-    el.addEventListener('flux:search-ready', () => { fired = true; });
+    el.addEventListener('flux:search-ready', () => {
+      fired = true;
+    });
 
     disconnectSearch(el);
     el.value = 'test';
@@ -102,7 +110,9 @@ describe('fx-search — native debounce, eval-free', () => {
     applySearch(el, { url: '/search', clearSelector: '#clear' });
 
     let fired = false;
-    el.addEventListener('flux:search-ready', () => { fired = true; });
+    el.addEventListener('flux:search-ready', () => {
+      fired = true;
+    });
 
     clearBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(el.value).toBe('');
@@ -111,25 +121,37 @@ describe('fx-search — native debounce, eval-free', () => {
 });
 
 describe('fx-realtime — SSE preset', () => {
-  let MockEventSource: any;
-  let lastInstance: any;
+  type RealtimeListener = (event: { data: string }) => void;
+  interface MockEventSourceInstance {
+    url: string;
+    opts: { withCredentials?: boolean };
+    listeners: Map<string, RealtimeListener>;
+    addEventListener: ReturnType<typeof vi.fn>;
+    close: ReturnType<typeof vi.fn>;
+  }
+
+  let MockEventSource: ReturnType<typeof vi.fn>;
+  const getLastInstance = () =>
+    MockEventSource.mock.instances.at(-1) as unknown as MockEventSourceInstance;
 
   beforeEach(() => {
     Flux.dispose({ removeGeneratedAttributes: true });
     document.body.innerHTML = '';
 
     // Mock native EventSource
-    lastInstance = null;
-    MockEventSource = vi.fn().mockImplementation(function (url: string, opts: any) {
-      this.url = url;
-      this.opts = opts;
-      this.listeners = new Map<string, Function>();
-      this.addEventListener = vi.fn((event: string, cb: Function) => {
+    class EventSourceMock implements MockEventSourceInstance {
+      listeners = new Map<string, RealtimeListener>();
+      addEventListener = vi.fn((event: string, cb: RealtimeListener) => {
         this.listeners.set(event, cb);
       });
-      this.close = vi.fn();
-      lastInstance = this;
-    });
+      close = vi.fn();
+
+      constructor(
+        public url: string,
+        public opts: { withCredentials?: boolean },
+      ) {}
+    }
+    MockEventSource = vi.fn(EventSourceMock);
     (global as any).EventSource = MockEventSource;
   });
 
@@ -149,7 +171,10 @@ describe('fx-realtime — SSE preset', () => {
     document.body.appendChild(el);
     const ok = applyRealtime(el, { url: '/events/live' });
     expect(ok).toBe(true);
-    expect(MockEventSource).toHaveBeenCalledWith('/events/live', expect.objectContaining({ withCredentials: false }));
+    expect(MockEventSource).toHaveBeenCalledWith(
+      '/events/live',
+      expect.objectContaining({ withCredentials: false }),
+    );
   });
 
   it('sets data-flux-preset=realtime on element', () => {
@@ -169,7 +194,7 @@ describe('fx-realtime — SSE preset', () => {
 
     applyRealtime(el, { url: '/events', target: '#feed' });
 
-    const cb = lastInstance.listeners.get('message') as Function;
+    const cb = getLastInstance().listeners.get('message')!;
     cb({ data: '<p>Hello live!</p>' });
 
     expect(target.innerHTML).toBe('<p>Hello live!</p>');
@@ -182,9 +207,11 @@ describe('fx-realtime — SSE preset', () => {
     applyRealtime(el, { url: '/events' });
 
     let detail: any = null;
-    el.addEventListener('flux:realtime:message', (e) => { detail = (e as CustomEvent).detail; });
+    el.addEventListener('flux:realtime:message', (e) => {
+      detail = (e as CustomEvent).detail;
+    });
 
-    const cb = lastInstance.listeners.get('message') as Function;
+    const cb = getLastInstance().listeners.get('message')!;
     cb({ data: '<p>data</p>' });
 
     expect(detail?.url).toBe('/events');
@@ -198,7 +225,7 @@ describe('fx-realtime — SSE preset', () => {
     applyRealtime(el, { url: '/events' });
     disconnectRealtime(el);
 
-    expect(lastInstance.close).toHaveBeenCalled();
+    expect(getLastInstance().close).toHaveBeenCalled();
   });
 
   it('listens to custom event name when fx-event is provided', () => {
@@ -207,6 +234,6 @@ describe('fx-realtime — SSE preset', () => {
 
     applyRealtime(el, { url: '/events', event: 'update' });
 
-    expect(lastInstance.addEventListener).toHaveBeenCalledWith('update', expect.any(Function));
+    expect(getLastInstance().addEventListener).toHaveBeenCalledWith('update', expect.any(Function));
   });
 });

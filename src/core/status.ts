@@ -35,7 +35,7 @@ export function wireStatusTargeting(element: Element): OnStatusHandler | null {
   if (existingSig === signature && existingHandler) {
     return existingHandler;
   }
-  
+
   if (existingHandler) {
     existingHandler.disconnect();
   }

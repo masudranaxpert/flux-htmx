@@ -44,10 +44,7 @@ function dequeueAll(): OfflineEntry[] {
 
 // --- Replay ---
 
-async function replayEntry(
-  entry: OfflineEntry,
-  activeHtmx: any,
-): Promise<void> {
+async function replayEntry(entry: OfflineEntry, activeHtmx: any): Promise<void> {
   const method = entry.method.toLowerCase();
   const url = entry.url;
 
@@ -63,9 +60,7 @@ async function replayEntry(
       body: method === 'get' ? undefined : body,
     });
   }
-  document.dispatchEvent(
-    new CustomEvent('flux:offline:replayed', { detail: entry }),
-  );
+  document.dispatchEvent(new CustomEvent('flux:offline:replayed', { detail: entry }));
 }
 
 export async function flush(activeHtmx: any): Promise<void> {
@@ -92,9 +87,7 @@ export function clearOfflineQueue(): void {
 
 // --- Lifecycle ---
 
-export function installOfflineSupport(
-  getHtmx: () => any,
-): () => void {
+export function installOfflineSupport(getHtmx: () => any): () => void {
   if (typeof document === 'undefined') return () => {};
 
   const onBeforeRequest = (evt: Event): void => {

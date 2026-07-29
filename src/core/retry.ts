@@ -66,7 +66,7 @@ export function installRetrySupport(): () => void {
     if (ctx.source && ctx.request) {
       // Cancel pending retry timers when a fresh request is initiated
       cancelElementRetryTimers(ctx.source);
-      
+
       const isRetry = readHeader(ctx.request.headers, 'X-Flux-Retry') === 'true';
       if (!isRetry) {
         retryingElements.delete(ctx.source);

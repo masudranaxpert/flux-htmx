@@ -39,12 +39,15 @@ describe('New Features: fx-prefetch and fx-toast', () => {
     // Wait for fetch to complete
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    expect(mockFetch).toHaveBeenCalledWith('/test-prefetch', expect.objectContaining({
-      headers: expect.objectContaining({
-        'HX-Request': 'true',
-        'X-Flux-Prefetch': 'true',
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/test-prefetch',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'HX-Request': 'true',
+          'X-Flux-Prefetch': 'true',
+        }),
       }),
-    }));
+    );
 
     const key = cacheKey(el, { method: 'GET', action: '/test-prefetch' });
     const cached = cache.get(key);
@@ -56,16 +59,18 @@ describe('New Features: fx-prefetch and fx-toast', () => {
     document.body.appendChild(el);
     Flux.process(document.body);
 
-    el.dispatchEvent(new CustomEvent('htmx:after:request', {
-      bubbles: true,
-      detail: {
-        xhr: {},
-        successful: false,
-        isError: true,
-        elt: el,
-        requestConfig: { verb: 'post' }
-      }
-    }));
+    el.dispatchEvent(
+      new CustomEvent('htmx:after:request', {
+        bubbles: true,
+        detail: {
+          xhr: {},
+          successful: false,
+          isError: true,
+          elt: el,
+          requestConfig: { verb: 'post' },
+        },
+      }),
+    );
 
     // Toast should be appended to body
     const toast = document.querySelector('.flux-toast');
@@ -98,9 +103,11 @@ describe('New Features: fx-prefetch and fx-toast', () => {
     const confirmEvent = new CustomEvent('htmx:confirm', {
       bubbles: true,
       cancelable: true,
-      detail: { elt: el }
+      detail: { elt: el },
     });
-    confirmEvent.preventDefault = () => { prevented = true; };
+    confirmEvent.preventDefault = () => {
+      prevented = true;
+    };
 
     el.dispatchEvent(confirmEvent);
 

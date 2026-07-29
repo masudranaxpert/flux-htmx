@@ -17,16 +17,16 @@ stable release.
 
 ## Development dependencies
 
-| Package             | Version              | Notes                                                                                                                    |
-| ------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `typescript`        | `5.9.3`              | `latest` is `7.0.2`, but no `typescript-eslint` release supports TS 7 yet (peer cap `<6.1.0`). Pinned to the latest 5.x. |
-| `vite`              | `8.1.5`              | Uses the rolldown/`oxc` minifier; esbuild is no longer a dependency.                                                     |
-| `vitest`            | `4.1.10`             | Unit tests in jsdom.                                                                                                     |
-| `@playwright/test`  | `1.62.0`             | Browser integration tests in real Chromium.                                                                              |
-| `eslint`            | `9.15.0`             | Flat config.                                                                                                             |
-| `typescript-eslint` | `8.15.0`             |                                                                                                                          |
-| `prettier`          | `3.4.2`              |                                                                                                                          |
-| `jsdom`             | `25.0.1`             |                                                                                                                          |
+| Package             | Version  | Notes                                                                                                                    |
+| ------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `typescript`        | `5.9.3`  | `latest` is `7.0.2`, but no `typescript-eslint` release supports TS 7 yet (peer cap `<6.1.0`). Pinned to the latest 5.x. |
+| `vite`              | `8.1.5`  | Uses the rolldown/`oxc` minifier; esbuild is no longer a dependency.                                                     |
+| `vitest`            | `4.1.10` | Unit tests in jsdom.                                                                                                     |
+| `@playwright/test`  | `1.62.0` | Browser integration tests in real Chromium.                                                                              |
+| `eslint`            | `9.15.0` | Flat config.                                                                                                             |
+| `typescript-eslint` | `8.15.0` |                                                                                                                          |
+| `prettier`          | `3.4.2`  |                                                                                                                          |
+| `jsdom`             | `25.0.1` |                                                                                                                          |
 
 ## Node
 

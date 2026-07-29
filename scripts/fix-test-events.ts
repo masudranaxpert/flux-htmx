@@ -25,7 +25,7 @@ for (const file of files) {
 
   // htmx:beforeRequest -> htmx:before:request
   content = content.replace(/htmx:beforeRequest/g, 'htmx:before:request');
-  
+
   // htmx:afterRequest -> htmx:after:request
   content = content.replace(/htmx:afterRequest/g, 'htmx:after:request');
 

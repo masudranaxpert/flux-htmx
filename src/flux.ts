@@ -10,7 +10,12 @@ import { install, expandPresets } from './core/lifecycle.js';
 import { resolveToken, shouldAttach } from './core/csrf.js';
 import { installFeedback, resetFeedbackForTests } from './core/feedback.js';
 import { installValidation } from './core/validation.js';
-import { installOfflineSupport, pendingCount, clearOfflineQueue, flush as flushOffline } from './core/offline.js';
+import {
+  installOfflineSupport,
+  pendingCount,
+  clearOfflineQueue,
+  flush as flushOffline,
+} from './core/offline.js';
 import { installStatusTargeting, disposeStatusTargeting } from './core/status.js';
 import { registerRecipe } from './core/recipes.js';
 import { installActionPipeline } from './core/action-lifecycle.js';
@@ -149,7 +154,7 @@ export function configure(userConfig?: FluxConfig): ResolvedConfig {
   if (!configured) {
     const lifecycle = install();
     if (lifecycle) teardowns.push(lifecycle);
-    teardowns.push(installRequestHooks(() => currentConfig));
+    teardowns.push(installRequestHooks(() => currentConfig, activeHtmx));
     teardowns.push(installStatusTargeting());
     teardowns.push(installSubmitControllers());
     teardowns.push(installDeleteControllers());
@@ -218,10 +223,14 @@ interface RequestState {
   action: string;
   headers: Record<string, string> | Headers;
   timeout?: number;
+  signal?: AbortSignal;
   credentials: RequestCredentials;
 }
 
-function installRequestHooks(getConfig: () => ResolvedConfig | null): () => void {
+function installRequestHooks(
+  getConfig: () => ResolvedConfig | null,
+  htmxInstance?: { config?: { defaultTimeout?: number } },
+): () => void {
   if (typeof document === 'undefined') return () => {};
 
   const handler = (evt: Event) => {
@@ -232,7 +241,15 @@ function installRequestHooks(getConfig: () => ResolvedConfig | null): () => void
     const request = detail?.ctx?.request;
     if (!request) return;
 
-    if (cfg.requests.timeoutMs > 0) {
+    const timeoutMs = cfg.requests.timeoutMs || htmxInstance?.config?.defaultTimeout || 0;
+    const signals = AbortSignal as typeof AbortSignal & {
+      any?: (signals: AbortSignal[]) => AbortSignal;
+      timeout?: (milliseconds: number) => AbortSignal;
+    };
+    if (timeoutMs > 0 && request.signal && signals.any && signals.timeout) {
+      request.signal = signals.any([request.signal, signals.timeout(timeoutMs)]);
+      request.timeout = 0;
+    } else if (cfg.requests.timeoutMs > 0) {
       request.timeout = cfg.requests.timeoutMs;
     }
     request.credentials = cfg.requests.credentials;
@@ -306,7 +323,9 @@ function createFluxApi() {
     use,
     unuse,
     offline: {
-      get pending() { return pendingCount(); },
+      get pending() {
+        return pendingCount();
+      },
       flush: () => flushOffline(activeHtmx),
       clear: clearOfflineQueue,
     },

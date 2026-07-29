@@ -143,8 +143,6 @@ export function installOpenController(): () => void {
       }
 
       let isConfirmed = false;
-      let state: ActiveConfirmationState;
-
       const cleanup = () => {
         dialog.removeEventListener('click', onConfirmClick);
         dialog.removeEventListener('close', onClose);
@@ -156,7 +154,7 @@ export function installOpenController(): () => void {
           }
         }
         activeConfirmations.delete(dialog);
-        if (state) activeConfirmationsList.delete(state);
+        activeConfirmationsList.delete(state);
       };
 
       const onConfirmClick = (clickEvt: Event) => {
@@ -186,7 +184,7 @@ export function installOpenController(): () => void {
         }
       };
 
-      state = { dialog, cleanup, dropRequest: detail.dropRequest };
+      const state = { dialog, cleanup, dropRequest: detail.dropRequest };
       activeConfirmations.set(dialog, state);
       activeConfirmationsList.add(state);
 

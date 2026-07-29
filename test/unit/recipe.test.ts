@@ -29,7 +29,7 @@ describe('Recipe System (fx-recipe)', () => {
     expect(el.hasAttribute('fx-toast')).toBe(true);
     // Should convert camelCase to kebab-case
     expect(el.hasAttribute('fx-focus-error')).toBe(true);
-    
+
     // Explicit attribute should NOT be overwritten
     expect(el.getAttribute('fx-retry')).toBe('1');
   });

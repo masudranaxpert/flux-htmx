@@ -8,7 +8,6 @@ export interface PrefetchOptions {
 
 let PREFETCHED = new WeakSet<Element>();
 const prefetchControllers = new WeakMap<Element, { signature: string; cleanup: () => void }>();
-const activePrefetchCleanups = new Set<() => void>();
 
 export function applyPrefetch(element: Element, options: PrefetchOptions): boolean {
   const marker = 'data-flux-prefetch-bound';
@@ -69,10 +68,8 @@ export function applyPrefetch(element: Element, options: PrefetchOptions): boole
     element.removeAttribute(marker);
     PREFETCHED.delete(element);
     prefetchControllers.delete(element);
-    activePrefetchCleanups.delete(cleanup);
   };
   prefetchControllers.set(element, { signature, cleanup });
-  activePrefetchCleanups.add(cleanup);
 
   return true;
 }
@@ -84,7 +81,10 @@ export function disconnectPrefetch(element: Element): void {
 }
 
 export function disposePrefetchControllers(): void {
-  for (const cleanup of Array.from(activePrefetchCleanups)) cleanup();
-  activePrefetchCleanups.clear();
+  if (typeof document !== 'undefined') {
+    for (const element of document.querySelectorAll('[data-flux-prefetch-bound]')) {
+      prefetchControllers.get(element)?.cleanup();
+    }
+  }
   PREFETCHED = new WeakSet();
 }

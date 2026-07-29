@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 import * as Flux from '../../src/flux.js';
 import { installOpenController } from '../../src/components/components.js';
 import { applySubmit } from '../../src/presets/submit.js';
-import { applyDelete } from '../../src/presets/delete.js';
 import { wireStatusTargeting } from '../../src/core/status.js';
 import { installFeedback, resetFeedbackForTests } from '../../src/core/feedback.js';
 import { installCacheIntegration } from '../../src/cache/cacheWire.js';
@@ -205,6 +204,6 @@ describe('0.1.0-Alpha Release E2E Acceptance Test Suite', () => {
     expect(typeof Flux.reconfigure).toBe('function');
     expect(typeof Flux.isStarted).toBe('function');
     expect(typeof Flux.config).toBe('function');
-    expect(Flux.FLUX_VERSION).toBe('1.0.0');
+    expect(Flux.FLUX_VERSION).toBe('1.2.3');
   });
 });

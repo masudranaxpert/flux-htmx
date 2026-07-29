@@ -9,7 +9,7 @@ import { applySubmit, disconnectSubmit } from './submit.js';
 import { applyDelete, disconnectDelete } from './delete.js';
 import { applyAutosave } from './autosave.js';
 import { applyPagination } from './pagination.js';
-import { applyPrefetch, disconnectPrefetch, disposePrefetchControllers } from './prefetch.js';
+import { applyPrefetch, disconnectPrefetch } from './prefetch.js';
 import { applyRealtime, disconnectRealtime } from './realtime.js';
 import { getGeneratedAttributes } from '../core/generated-attributes.js';
 
@@ -195,7 +195,7 @@ registerPreset({
 
 registerPreset({
   attribute: 'fx-prefetch',
-  connect: (element, value, ctx) =>
+  connect: (element, value, _ctx) =>
     applyPrefetch(element, {
       url: value,
     }),

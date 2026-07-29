@@ -148,7 +148,7 @@ registerAction('remove', (targetArg, source) => {
   targets.forEach((t) => t.remove());
 });
 
-registerAction('toast', (targetArg, source) => {
+registerAction('toast', (targetArg, _source) => {
   showBuiltInToast(targetArg, 'success');
   // Optional: still fire the event if anything else listens to it
   document.dispatchEvent(

@@ -219,7 +219,7 @@ Server-Sent Events (SSE) preset that automatically connects to an event stream a
 
 Decoupled plugin presets registered via `Flux.use(plugin)`:
 
-### Upload Progress Plugin (`fx-upload`)
+### Upload Plugin (`fx-upload`)
 
 ```html
 <form fx-upload="/api/files" fx-max-size="20mb">

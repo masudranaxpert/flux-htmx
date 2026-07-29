@@ -3,25 +3,20 @@
 Server-Sent Events (SSE) preset that automatically connects to an event stream and swaps incoming messages into the DOM. Zero dependencies, fully native `EventSource`.
 
 ```html
-<div
-  fx-realtime="/events/live"
-  fx-target="#feed"
-  fx-swap="afterbegin"
-  fx-event="new_order"
->
+<div fx-realtime="/events/live" fx-target="#feed" fx-swap="afterbegin" fx-event="new_order">
   Waiting for events...
 </div>
 ```
 
 ## Supported Attributes
 
-| Attribute             | Description                                                                                             | Default       |
-| --------------------- | ------------------------------------------------------------------------------------------------------- | ------------- |
-| `fx-realtime`         | **Required**. The URL of the SSE endpoint to connect to.                                                | -             |
-| `fx-target`           | The CSS selector of the element to swap into.                                                           | Element itself|
-| `fx-swap`             | How to swap the incoming HTML (`innerHTML`, `outerHTML`, `afterbegin`, etc.). Fallbacks to innerHTML.   | `innerHTML`   |
-| `fx-event`            | The name of the specific SSE event type to listen to.                                                   | `message`     |
-| `fx-with-credentials` | If present, includes credentials (cookies) for cross-origin SSE requests.                               | `false`       |
+| Attribute             | Description                                                                                           | Default        |
+| --------------------- | ----------------------------------------------------------------------------------------------------- | -------------- |
+| `fx-realtime`         | **Required**. The URL of the SSE endpoint to connect to.                                              | -              |
+| `fx-target`           | The CSS selector of the element to swap into.                                                         | Element itself |
+| `fx-swap`             | How to swap the incoming HTML (`innerHTML`, `outerHTML`, `afterbegin`, etc.). Fallbacks to innerHTML. | `innerHTML`    |
+| `fx-event`            | The name of the specific SSE event type to listen to.                                                 | `message`      |
+| `fx-with-credentials` | If present, includes credentials (cookies) for cross-origin SSE requests.                             | `false`        |
 
 ## JavaScript Events
 

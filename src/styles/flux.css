@@ -248,7 +248,9 @@ meter.flux-meter {
   border: 1px solid var(--flux-border);
   padding: var(--flux-space-3) var(--flux-space-4);
   border-radius: var(--flux-radius);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   font-family: var(--flux-font);
   font-size: var(--flux-text-sm);
   pointer-events: auto;

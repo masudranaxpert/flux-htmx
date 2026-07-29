@@ -1,5 +1,5 @@
 import './setup.js';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import * as Flux from '../../src/flux.js';
 import { FLUX_VERSION } from '../../src/core/version.ts';
 import { getRetryOptions } from '../../src/core/retry.ts';
@@ -14,9 +14,9 @@ function makeEl(html: string): Element {
 }
 
 describe('Stable v1.0.0 Release Hardening & Features Test Suite', () => {
-  it('1. Version: exposes v1.0.0 release version', () => {
-    expect(FLUX_VERSION).toBe('1.0.0');
-    expect(Flux.default.version).toBe('1.0.0');
+  it('1. Version: exposes the package version', () => {
+    expect(FLUX_VERSION).toBe('1.2.3');
+    expect(Flux.default.version).toBe('1.2.3');
   });
 
   it('2. Automatic Retry: parses fx-retry options and calculates backoff', () => {

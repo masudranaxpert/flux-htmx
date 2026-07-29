@@ -6,9 +6,9 @@ import { log } from '../core/logger.js';
 
 export interface RealtimeOptions {
   url: string;
-  target?: string;       // CSS selector; defaults to element itself
-  swap?: string;         // hx-swap value; defaults to "innerHTML"
-  event?: string;        // SSE event name to listen to; defaults to "message"
+  target?: string; // CSS selector; defaults to element itself
+  swap?: string; // hx-swap value; defaults to "innerHTML"
+  event?: string; // SSE event name to listen to; defaults to "message"
   withCredentials?: boolean;
 }
 

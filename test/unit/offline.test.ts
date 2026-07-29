@@ -1,11 +1,7 @@
 import './setup.js';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as Flux from '../../src/flux.js';
-import {
-  pendingCount,
-  clearOfflineQueue,
-  installOfflineSupport,
-} from '../../src/core/offline.js';
+import { pendingCount, clearOfflineQueue } from '../../src/core/offline.js';
 
 describe('fx-offline: Offline Request Queue', () => {
   beforeEach(() => {
@@ -43,7 +39,9 @@ describe('fx-offline: Offline Request Queue', () => {
         ctx: { request: { method: 'post', action: '/api/save', parameters: { name: 'John' } } },
       },
     });
-    beforeReq.preventDefault = () => { prevented = true; };
+    beforeReq.preventDefault = () => {
+      prevented = true;
+    };
 
     document.dispatchEvent(beforeReq);
 
@@ -108,7 +106,13 @@ describe('fx-offline: Offline Request Queue', () => {
     document.body.appendChild(el);
 
     let queuedEvent: any = null;
-    document.addEventListener('flux:offline:queued', (e) => { queuedEvent = e; }, { once: true });
+    document.addEventListener(
+      'flux:offline:queued',
+      (e) => {
+        queuedEvent = e;
+      },
+      { once: true },
+    );
 
     const beforeReq = new CustomEvent('htmx:before:request', {
       bubbles: true,

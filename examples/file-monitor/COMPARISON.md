@@ -39,14 +39,14 @@ Flux's value here is conciseness and the cache invalidation wiring, not JS reduc
 
 From `npm run size`:
 
-| Asset                                      | Raw      | Gzip     |
-| ------------------------------------------ | -------- | -------- |
-| `flux.iife.js` (Flux only, htmx external)  | 13.06 kB | 4.56 kB  |
-| `flux.full.iife.js` (htmx + Flux) | 93.58 kB | 31.93 kB |
-| Raw HTMX (`htmx.min.js`)                   | ~14 kB   | ~5 kB    |
+| Asset                                     | Raw        | Gzip      |
+| ----------------------------------------- | ---------- | --------- |
+| `flux.iife.js` (Flux only, HTMX external) | 65.98 KiB  | 18.47 KiB |
+| `flux.full.iife.js` (HTMX + Flux)         | 108.93 KiB | 32.14 KiB |
+| Raw HTMX (`htmx.min.js`)                  | ~14 KiB    | ~5 KiB    |
 
 For an HTMX-only app, raw HTMX is smaller. Flux's overhead on top of HTMX is the Flux-only
-runtime (~4.5 kB gzip).
+runtime (~18.5 KiB gzip).
 
 ## What Flux hides
 

@@ -247,7 +247,7 @@ function resolveIndicatorSelector(getConfig?: () => ResolvedConfig | null): stri
   try {
     const parsed = JSON.parse(content);
     return parsed.indicator ?? null;
-  } catch (e) {
+  } catch {
     log.url('invalid flux-feedback meta', content);
     return null;
   }

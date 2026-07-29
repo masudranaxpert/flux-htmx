@@ -3,7 +3,7 @@ import { queryAllSafely } from '../core/selectors.js';
 export function installForm() {
   document.addEventListener('click', handleFormClick);
   document.addEventListener('input', handleFormInput);
-  
+
   // Track original values
   document.addEventListener('DOMContentLoaded', () => initializeDirtyState());
   document.addEventListener('htmx:afterSettle', (e: Event) => {
@@ -17,7 +17,7 @@ function handleFormClick(e: MouseEvent) {
   if (toggle) {
     const targetId = toggle.getAttribute('fx-password-toggle');
     if (!targetId) return;
-    
+
     const input = document.getElementById(targetId) as HTMLInputElement;
     if (input && input.tagName === 'INPUT') {
       const isPassword = input.type === 'password';
@@ -30,19 +30,20 @@ function handleFormClick(e: MouseEvent) {
 function handleFormInput(e: Event) {
   const target = e.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
   if (!target || !target.closest('form[fx-dirty]')) return;
-  
+
   const form = target.closest('form[fx-dirty]') as HTMLFormElement;
   if (!form) return;
-  
+
   const originalValue = target.getAttribute('data-fx-original');
-  const currentValue = target.type === 'checkbox' ? (target as HTMLInputElement).checked.toString() : target.value;
-  
+  const currentValue =
+    target.type === 'checkbox' ? (target as HTMLInputElement).checked.toString() : target.value;
+
   if (originalValue !== currentValue) {
     target.setAttribute('data-dirty', 'true');
   } else {
     target.removeAttribute('data-dirty');
   }
-  
+
   // Check form level dirty
   const isFormDirty = form.querySelector('[data-dirty]') !== null;
   if (isFormDirty) {
@@ -66,10 +67,11 @@ function initializeDirtyState(root: Element | Document = document) {
     const inputs = queryAllSafely('input, select, textarea', form);
     for (const el of inputs) {
       const input = el as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-      const val = input.type === 'checkbox' ? (input as HTMLInputElement).checked.toString() : input.value;
+      const val =
+        input.type === 'checkbox' ? (input as HTMLInputElement).checked.toString() : input.value;
       input.setAttribute('data-fx-original', val);
     }
-    
+
     if (form.hasAttribute('fx-disable-clean')) {
       const submitBtn = form.querySelector('[type="submit"]') as HTMLButtonElement;
       if (submitBtn) submitBtn.setAttribute('disabled', 'true');

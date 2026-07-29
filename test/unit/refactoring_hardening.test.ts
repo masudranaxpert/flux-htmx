@@ -4,10 +4,8 @@ import * as Flux from '../../src/flux.js';
 import {
   setGeneratedAttribute,
   getGeneratedAttributes,
-  removeGeneratedAttributes,
 } from '../../src/core/generated-attributes.js';
-import { usePlugin, deactivatePlugins } from '../../src/core/plugin.js';
-import { registerPreset, applyPreset } from '../../src/presets/index.js';
+import { registerPreset } from '../../src/presets/index.js';
 import { setRequestState, setLoadingState } from '../../src/core/request-state.js';
 import { inspectElement, doctor } from '../../src/diagnostics/doctor.js';
 
@@ -115,7 +113,7 @@ describe('Refactoring Hardening Test Suite', () => {
     expect(insp.presets).toContain('fx-submit');
 
     const doc = doctor(document.body);
-    expect(doc.fluxVersion).toBe('1.0.0');
+    expect(doc.fluxVersion).toBe('1.2.3');
   });
 
   it('7. registerPreset returns teardown and warns on duplicate registration without override', () => {

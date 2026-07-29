@@ -22,12 +22,12 @@ describe('Action Pipeline (fx-on-success / fx-success-action)', () => {
 
     const event = new CustomEvent('htmx:after:request', {
       bubbles: true,
-      detail: { elt: el, successful: true, failed: false }
+      detail: { elt: el, successful: true, failed: false },
     });
     document.dispatchEvent(event);
 
     // Using setTimeout to wait for async pipeline execution
-    await new Promise(r => setTimeout(r, 10));
+    await new Promise((r) => setTimeout(r, 10));
 
     expect(spy1).toHaveBeenCalledWith('foo', el, event.detail);
     expect(spy2).toHaveBeenCalledWith('', el, event.detail);
@@ -47,11 +47,11 @@ describe('Action Pipeline (fx-on-success / fx-success-action)', () => {
 
     const event = new CustomEvent('htmx:after:request', {
       bubbles: true,
-      detail: { elt: el, successful: true, failed: false }
+      detail: { elt: el, successful: true, failed: false },
     });
     document.dispatchEvent(event);
 
-    await new Promise(r => setTimeout(r, 10));
+    await new Promise((r) => setTimeout(r, 10));
 
     expect(spy3).toHaveBeenCalledWith('bar', el, event.detail);
     expect(spy4).toHaveBeenCalledWith('', el, event.detail);
@@ -67,11 +67,11 @@ describe('Action Pipeline (fx-on-success / fx-success-action)', () => {
 
     const event = new CustomEvent('htmx:after:request', {
       bubbles: true,
-      detail: { elt: el, successful: false, failed: true }
+      detail: { elt: el, successful: false, failed: true },
     });
     document.dispatchEvent(event);
 
-    await new Promise(r => setTimeout(r, 10));
+    await new Promise((r) => setTimeout(r, 10));
 
     expect(spyError).toHaveBeenCalledWith('baz', el, event.detail);
   });
@@ -88,13 +88,13 @@ describe('Action Pipeline (fx-on-success / fx-success-action)', () => {
 
     const event = new CustomEvent('htmx:after:request', {
       bubbles: true,
-      detail: { elt: el, successful: true, failed: false }
+      detail: { elt: el, successful: true, failed: false },
     });
     document.dispatchEvent(event);
 
-    await new Promise(r => setTimeout(r, 10));
-    console.log("Dialog in DOM?", document.getElementById('my-dialog') !== null);
-    console.log("queryMany:", document.querySelectorAll('#my-dialog').length);
+    await new Promise((r) => setTimeout(r, 10));
+    console.log('Dialog in DOM?', document.getElementById('my-dialog') !== null);
+    console.log('queryMany:', document.querySelectorAll('#my-dialog').length);
     expect(dialog.hasAttribute('open')).toBe(false);
   });
 });

@@ -23,7 +23,7 @@ import { installForm } from './plugins/form.js';
 
 export { FLUX_VERSION };
 
-type WindowWithGlobals = typeof window & { Flux?: any; htmx?: any; };
+type WindowWithGlobals = typeof window & { Flux?: any; htmx?: any };
 
 function bootstrap() {
   const win =
@@ -47,7 +47,7 @@ function bootstrap() {
   const startAll = (element?: Element) => {
     if (!started) {
       configure(metaConfig.flux);
-      
+
       // Install UI Plugins
       installDropdown();
       installTabs();
@@ -58,7 +58,7 @@ function bootstrap() {
       installPersist();
       installTable();
       installForm();
-      
+
       process(element);
       started = true;
     } else {

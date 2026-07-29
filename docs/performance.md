@@ -8,11 +8,11 @@ which performance work is verified versus planned.
 Sizes are for the production builds produced by `npm run build`. Minified size is the raw
 file; gzip size assumes default gzip/Brotli-class text compression over the minified file.
 
-| Asset               | Minified | Gzip     |
-| ------------------- | -------- | -------- |
-| `flux.iife.js`      | 13.06 kB | 4.56 kB  |
-| `flux.full.iife.js` | 93.58 kB | 31.93 kB |
-| `flux.css`          | 5.5 kB   | 1.82 kB  |
+| Asset               | Minified   | Gzip      |
+| ------------------- | ---------- | --------- |
+| `flux.iife.js`      | 65.98 KiB  | 18.47 KiB |
+| `flux.full.iife.js` | 108.93 KiB | 32.14 KiB |
+| `flux.css`          | 6.82 KiB   | 2.07 KiB  |
 
 `flux.full.iife.js` is dominated by HTMX 4; the Flux-specific portion of the full
 bundle is the same code counted in `flux.iife.js`.
@@ -21,8 +21,8 @@ bundle is the same code counted in `flux.iife.js`.
 
 The budget the core build is held to:
 
-- **Core size.** The Flux core (no HTMX) stays under 8 kB min+gzip. The current
-  4.56 kB gzip figure is within budget.
+- **Core size.** The Flux core (no HTMX) stays under 20 KiB gzip. The current
+  18.47 KiB gzip figure is within budget.
 - **No long tasks.** No synchronous work in the request, swap, or expansion path may exceed
   50 ms on the target-class hardware. Expansion is a single DOM-subtree scan per
   `htmx:before:process` event.

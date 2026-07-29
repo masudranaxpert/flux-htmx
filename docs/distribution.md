@@ -5,14 +5,14 @@ you load scripts. All builds expose the same `fx-*` attributes and the same glob
 
 ## Distribution Builds
 
-| File                | Format | Bundles                | Description & Primary Use Case                                   |
-| ------------------- | ------ | ---------------------- | ---------------------------------------------------------------- |
-| `flux.full.iife.js` | IIFE   | Flux + HTMX 4 | All-in-One Standalone script tag (Django, Laravel, Go, Rails)    |
-| `flux.iife.js`      | IIFE   | Flux core only         | Use when HTMX 4 is pre-loaded via separate script tags |
-| `flux.full.js`      | ESM    | Flux + HTMX 4 | Standalone ES Module bundle                                      |
-| `flux.js`           | ESM    | Flux core only         | Use with Vite, Webpack, etc. (import htmx separately)            |
-| `flux.css`          | CSS    | —                      | Styling & accessible live region                                 |
-| `flux.min.css`      | CSS    | —                      | Minified stylesheet for production                               |
+| File                | Format | Bundles        | Description & Primary Use Case                                |
+| ------------------- | ------ | -------------- | ------------------------------------------------------------- |
+| `flux.full.iife.js` | IIFE   | Flux + HTMX 4  | All-in-One Standalone script tag (Django, Laravel, Go, Rails) |
+| `flux.iife.js`      | IIFE   | Flux core only | Use when HTMX 4 is pre-loaded via separate script tags        |
+| `flux.full.js`      | ESM    | Flux + HTMX 4  | Standalone ES Module bundle                                   |
+| `flux.js`           | ESM    | Flux core only | Use with Vite, Webpack, etc. (import htmx separately)         |
+| `flux.css`          | CSS    | —              | Styling & accessible live region                              |
+| `flux.min.css`      | CSS    | —              | Minified stylesheet for production                            |
 
 ## Global `window.Flux` API & Diagnostics
 
@@ -20,7 +20,7 @@ All browser builds expose a global `window.Flux` object for browser debugging, r
 
 ```js
 // Public Inspection Properties & Status
-Flux.version; // string: "0.1.0-beta.0"
+Flux.version; // string: "1.2.3"
 Flux.dependencies; // object: { htmx: "4.0.0-beta6" }
 Flux.isStarted; // boolean: true / false
 Flux.config; // object: active ResolvedConfig instance
@@ -29,7 +29,7 @@ Flux.htmx; // exposed HTMX instance (standalone build)
 
 // Core Methods
 Flux.start(el); // Manually initialize Flux and process target element
-Flux.configure(config); // Apply configuration (CSRF, cache, feedback, requests)
+Flux.configure(config); // Apply configuration (CSRF, feedback, requests)
 Flux.reconfigure(config); // Restarts runtime with updated configuration
 Flux.process(el); // Reconcile, expand Flux attributes, and run HTMX processing
 Flux.dispose(options); // Teardown event listeners, status handlers, and reset runtime state

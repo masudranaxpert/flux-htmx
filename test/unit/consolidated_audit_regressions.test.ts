@@ -199,6 +199,30 @@ describe('consolidated release audit regressions', () => {
     teardown();
   });
 
+  it('uses timeout signals so real HTMX timeouts are distinguishable from manual aborts', async () => {
+    Flux.configure({ requests: { timeoutMs: 1 } });
+    const source = makeEl('<button></button>');
+    document.body.appendChild(source);
+    const controller = new AbortController();
+    const request = {
+      method: 'GET',
+      action: '/slow',
+      headers: {},
+      credentials: 'same-origin' as RequestCredentials,
+      signal: controller.signal,
+    };
+
+    source.dispatchEvent(
+      new CustomEvent('htmx:config:request', {
+        bubbles: true,
+        detail: { ctx: { sourceElement: source, request } },
+      }),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 5));
+
+    expect(request.signal.reason?.name).toBe('TimeoutError');
+  });
+
   it('emits the HTMX 4 response error event and ctx shape for dedupe followers', () => {
     const teardown = installDeduplication();
     const leader = makeEl('<button fx-dedupe="true" fx-get="/users"></button>');

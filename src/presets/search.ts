@@ -104,8 +104,8 @@ function syncOptionalAttribute(element: Element, name: string, value?: string): 
 function parseDelayMs(value?: string): number {
   const s = value?.trim();
   if (!s) return DEFAULT_DELAY_MS;
-  if (/^\d+$/.test(s)) return Number(s);           // bare number → ms
-  if (/^\d+ms$/i.test(s)) return parseInt(s, 10);  // "300ms"
+  if (/^\d+$/.test(s)) return Number(s); // bare number → ms
+  if (/^\d+ms$/i.test(s)) return parseInt(s, 10); // "300ms"
   if (/^\d+s$/i.test(s)) return parseInt(s, 10) * 1000; // "1s"
   return DEFAULT_DELAY_MS;
 }

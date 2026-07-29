@@ -1,10 +1,9 @@
-// Flux Upload Progress Plugin: @flux/plugin-upload
-// Handles live upload percentage, drag & drop dropzones, file size limits, MIME type validation, and automatic dropped file submission.
+// Flux Upload Plugin: @flux/plugin-upload
+// Handles drag & drop dropzones, file size limits, MIME type validation, and automatic dropped file submission.
 
 import type { FluxPlugin, FluxPluginApi } from '../core/plugin.js';
 import { log } from '../core/logger.js';
 import { removeGeneratedAttribute, setGeneratedAttribute } from '../core/generated-attributes.js';
-import { safeQuerySelector } from '../core/selectors.js';
 
 const activeUploadControllers = new Map<Element, () => void>();
 

@@ -3,11 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import * as Flux from '../../src/flux.js';
 import { registerPreset } from '../../src/presets/index.js';
 import { expandElement } from '../../src/core/expand.js';
-import {
-  setGeneratedAttribute,
-  getGeneratedAttributes,
-} from '../../src/core/generated-attributes.js';
-import { doctor, inspectElement } from '../../src/diagnostics/doctor.js';
+import { getGeneratedAttributes } from '../../src/core/generated-attributes.js';
+import { doctor } from '../../src/diagnostics/doctor.js';
 
 import { wireStatusTargeting } from '../../src/core/status.js';
 

@@ -18,9 +18,9 @@ export function installTransitions() {
 }
 
 function applyEnterTransition(node: HTMLElement) {
-  const targets = node.hasAttribute('fx-transition') 
-    ? [node] 
-    : Array.from(node.querySelectorAll('[fx-transition]')) as HTMLElement[];
+  const targets = node.hasAttribute('fx-transition')
+    ? [node]
+    : (Array.from(node.querySelectorAll('[fx-transition]')) as HTMLElement[]);
 
   for (const el of targets) {
     const enterClass = el.getAttribute('fx-transition-enter') || 'fx-enter';

@@ -1,5 +1,5 @@
 import './setup.js';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import * as Flux from '../../src/flux.js';
 import { installCacheIntegration } from '../../src/cache/cacheWire.js';
 import { FragmentCache } from '../../src/cache/cache.js';

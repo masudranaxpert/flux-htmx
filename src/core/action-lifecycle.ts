@@ -1,4 +1,4 @@
-import { executePipeline, executeAction, executeNamedPipeline } from './actions.js';
+import { executePipeline, executeNamedPipeline } from './actions.js';
 import { getRequestContext } from './events.js';
 
 export function installActionPipeline(): () => void {
