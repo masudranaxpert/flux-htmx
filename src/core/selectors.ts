@@ -28,6 +28,8 @@ export function queryMany(
   }
 }
 
+export const queryAllSafely = queryMany;
+
 export function safeQuerySelector(selector: string, context?: Element | Document): Element | null {
   return queryOne(selector, context ?? document);
 }
