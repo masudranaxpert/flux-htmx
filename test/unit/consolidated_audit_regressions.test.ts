@@ -470,4 +470,91 @@ describe('consolidated release audit regressions', () => {
     retryTeardown();
     vi.useRealTimers();
   });
+
+  it('shares a successful leader retry with dedupe followers (leader-replacement is a no-op, no double swap)', () => {
+    vi.useFakeTimers();
+    const retryTeardown = installRetrySupport();
+    const dedupeTeardown = installDeduplication();
+    const ajax = vi.fn();
+    const swap = vi.fn();
+    // window.htmx is the dedupe/retry fallback instance; mock it for the test.
+    const w = window as unknown as { htmx?: { ajax?: unknown; swap?: unknown } };
+    const previousHtmx = w.htmx;
+    w.htmx = { ajax, swap };
+
+    // Leader owns the request AND declares fx-retry; follower is dedup'd onto it.
+    const leader = makeEl(
+      '<button fx-dedupe="true" fx-retry="1" fx-retry-delay="1" fx-get="/users"></button>',
+    );
+    const follower = makeEl('<button fx-dedupe="true" fx-get="/users"></button>');
+    document.body.append(leader, follower);
+
+    for (const element of [leader, follower]) {
+      element.dispatchEvent(
+        new CustomEvent('htmx:config:request', {
+          bubbles: true,
+          detail: {
+            ctx: {
+              sourceElement: element,
+              target: element,
+              request: { method: 'GET', action: '/users', headers: {}, abort: vi.fn() },
+            },
+          },
+        }),
+      );
+    }
+
+    // Leader fails → retry scheduled, dedupe entry kept (retryPending).
+    const failCtx: Record<string, unknown> = {
+      sourceElement: leader,
+      target: leader,
+      request: { method: 'GET', action: '/users', headers: {} },
+      response: { status: 503 },
+      text: 'x',
+    };
+    leader.dispatchEvent(
+      new CustomEvent('htmx:after:request', { bubbles: true, detail: { ctx: failCtx } }),
+    );
+    expect(failCtx.retryPending).toBe(true);
+    vi.runAllTimers();
+    expect(ajax).toHaveBeenCalledOnce();
+
+    // Retry request's config:request hits the isRetry branch: consumers[0] re-set to the same leader.
+    const retryHeaders = { 'X-Flux-Retry': 'true' };
+    leader.dispatchEvent(
+      new CustomEvent('htmx:config:request', {
+        bubbles: true,
+        detail: {
+          ctx: {
+            sourceElement: leader,
+            target: leader,
+            request: { method: 'GET', action: '/users', headers: retryHeaders },
+          },
+        },
+      }),
+    );
+
+    const followerSuccess = vi.fn();
+    follower.addEventListener('flux:dedupe:success', followerSuccess);
+
+    // Retry SUCCEEDS → followers receive the payload via exactly one swap; leader not re-swapped by dedupe.
+    const okCtx: Record<string, unknown> = {
+      sourceElement: leader,
+      target: leader,
+      request: { method: 'GET', action: '/users', headers: retryHeaders },
+      response: { status: 200 },
+      text: '<p>ok</p>',
+    };
+    leader.dispatchEvent(
+      new CustomEvent('htmx:after:request', { bubbles: true, detail: { ctx: okCtx } }),
+    );
+
+    expect(followerSuccess).toHaveBeenCalledOnce();
+    expect(swap).toHaveBeenCalledTimes(1); // follower only; leader handled by its own ajax flow
+
+    w.htmx = previousHtmx;
+    dedupeTeardown();
+    retryTeardown();
+    vi.useRealTimers();
+  });
 });

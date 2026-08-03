@@ -6,7 +6,7 @@ export function installForm() {
 
   // Track original values
   document.addEventListener('DOMContentLoaded', () => initializeDirtyState());
-  document.addEventListener('htmx:afterSettle', (e: Event) => {
+  document.addEventListener('htmx:after:settle', (e: Event) => {
     initializeDirtyState((e as CustomEvent).detail.el);
   });
 }

@@ -19,6 +19,10 @@ let liveRegion: HTMLElement | null = null;
 let teardown: (() => void) | null = null;
 const activeElements = new Map<Element, number>();
 const finishedContexts = new WeakSet<object>();
+// Tracks requests that actually started (htmx:before:request). Confirm-cancel and
+// validation-drop short-circuit before before:request but still fire finally:request,
+// so onEnd must ignore those to keep inFlight/indicator accounting balanced.
+const startedContexts = new WeakSet<object>();
 
 /**
  * Installs document-level event listeners for HTMX request lifecycle to provide visual
@@ -31,6 +35,7 @@ export function installFeedback(getConfig?: () => ResolvedConfig | null): () => 
 
   const onStart = (evt: Event) => {
     const ctx = getRequestContext(evt);
+    if (ctx.ctx) startedContexts.add(ctx.ctx);
     inFlight++;
     updateGlobalIndicator(true, getConfig);
 
@@ -43,6 +48,7 @@ export function installFeedback(getConfig?: () => ResolvedConfig | null): () => 
 
   const onEnd = (evt: Event) => {
     const ctx = getRequestContext(evt);
+    if (ctx.ctx && !startedContexts.has(ctx.ctx)) return;
     if (ctx.ctx) {
       if (finishedContexts.has(ctx.ctx)) return;
       finishedContexts.add(ctx.ctx);

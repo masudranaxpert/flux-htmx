@@ -12,6 +12,7 @@ import { applyPagination } from './pagination.js';
 import { applyPrefetch, disconnectPrefetch } from './prefetch.js';
 import { applyRealtime, disconnectRealtime } from './realtime.js';
 import { getGeneratedAttributes } from '../core/generated-attributes.js';
+import { applyShow, applyHide, applyToggle, applyClassToggle, applyRemove, applyHideEscape, applyHideOutside, disconnectHideEscape, disconnectHideOutside } from './ui.js';
 
 export { applySearch, disconnectSearch } from './search.js';
 export { applyLoad } from './load.js';
@@ -254,6 +255,43 @@ registerPreset({
       withCredentials: element.hasAttribute('fx-with-credentials'),
     }),
   disconnect: (element) => disconnectRealtime(element),
+});
+
+registerPreset({
+  attribute: 'fx-show',
+  connect: (element, value, ctx) => applyShow(element, ctx('fx-target') || value),
+});
+
+registerPreset({
+  attribute: 'fx-hide',
+  connect: (element, value, ctx) => applyHide(element, ctx('fx-target') || value),
+});
+
+registerPreset({
+  attribute: 'fx-toggle',
+  connect: (element, value, ctx) => applyToggle(element, ctx('fx-target') || value),
+});
+
+registerPreset({
+  attribute: 'fx-class',
+  connect: (element, value, ctx) => applyClassToggle(element, value, ctx('fx-target')),
+});
+
+registerPreset({
+  attribute: 'fx-remove',
+  connect: (element, value, _ctx) => applyRemove(element, value),
+});
+
+registerPreset({
+  attribute: 'fx-hide-escape',
+  connect: (element, value, ctx) => applyHideEscape(element, ctx('fx-target') || value || 'this'),
+  disconnect: (element) => disconnectHideEscape(element),
+});
+
+registerPreset({
+  attribute: 'fx-hide-outside',
+  connect: (element, value, ctx) => applyHideOutside(element, ctx('fx-target') || value || 'this'),
+  disconnect: (element) => disconnectHideOutside(element),
 });
 
 /** Dispatches an element's preset attribute to its registered handler. Returns true if a preset ran. */

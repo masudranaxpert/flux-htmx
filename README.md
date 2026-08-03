@@ -154,6 +154,71 @@ Silently fetches and caches the response on `mouseenter`, `touchstart`, or `focu
 
 ---
 
+## DOM Interactivity (Alpine Alternative)
+
+Flux completely eliminates the need for Alpine.js or inline JavaScript for common UI interactivity like toggling sidebars, modals, or classes. It provides declarative `fx-*` action attributes that run entirely client-side without `eval()`, making them 100% CSP compliant and blazing fast.
+
+### Declarative UI Actions
+
+No `<script>` tags required. All actions default to triggering on `click`.
+
+```html
+<!-- Fades in #sidebar on click -->
+<button fx-show="#sidebar">Open</button>
+
+<!-- Fades out #sidebar on click -->
+<button fx-hide="#sidebar">Close</button>
+
+<!-- Toggles visibility on click -->
+<button fx-toggle="#sidebar">Toggle Menu</button>
+
+<!-- Toggles a class on click (targets self by default) -->
+<div fx-class="bg-blue-500">Toggle My Color</div>
+
+<!-- Toggles a class on a specific target -->
+<button fx-class="translate-x-full" fx-target=".circle">Toggle Circle</button>
+
+<!-- Fades out and removes ITSELF after 3 seconds -->
+<div fx-remove="3s">Item Saved Successfully!</div>
+```
+
+### Modals & Dropdowns
+
+Modals and dropdowns often need to close when you click outside of them or press the `Escape` key. Flux has built-in primitives for this:
+
+```html
+<button fx-show="#my-modal">Open Modal</button>
+
+<div id="my-modal" class="hidden">
+  <!-- Close when clicking outside this specific content box -->
+  <div class="modal-content" fx-hide-outside="#my-modal" fx-hide-escape="#my-modal">
+    <h2>Hello Modal</h2>
+    <button fx-hide="#my-modal">Close</button>
+  </div>
+</div>
+```
+
+### Advanced DOM Scripts (Surreal-style)
+
+If you need custom logic, Flux provides lightweight DOM wrappers `me()` (the script's parent element) and `any()` (global selector) for true Locality of Behavior.
+
+```html
+<button>
+  Toggle Menu
+  <script>
+    me().on('click', () => {
+      any('#menu').classToggle('hidden');
+      me().classToggle('active');
+    });
+  </script>
+</button>
+```
+
+Available methods on selected elements:
+`classAdd()`, `classRemove()`, `classToggle()`, `styles()`, `on()`, `off()`, `attribute()`, `disable()`, `enable()`, `fadeOut()`, `fadeIn()`, `remove()`.
+
+---
+
 ## Caching
 
 ```html

@@ -66,9 +66,11 @@ describe('htmx:finally:request indicator balancing and data-flux-* state attribu
     const source = makeEl('<button fx-get="/test">Fetch</button>');
     document.body.appendChild(source);
 
+    // Real HTMX 4 passes the SAME ctx object to before:request and finally:request.
+    const ctx = { sourceElement: source };
     const beforeEvt = new CustomEvent('htmx:before:request', {
       bubbles: true,
-      detail: { ctx: { sourceElement: source } },
+      detail: { ctx },
     });
     source.dispatchEvent(beforeEvt);
 
@@ -76,12 +78,48 @@ describe('htmx:finally:request indicator balancing and data-flux-* state attribu
 
     const finallyEvt = new CustomEvent('htmx:finally:request', {
       bubbles: true,
-      detail: { ctx: { sourceElement: source } },
+      detail: { ctx },
     });
     source.dispatchEvent(finallyEvt);
 
     expect(source.hasAttribute('data-flux-loading')).toBe(false);
     resetFeedbackForTests();
+  });
+
+  it('keeps global indicator active when finally:request fires without a matching before:request (confirm-cancel)', () => {
+    resetFeedbackForTests();
+    const spinner = makeEl('<div id="global-spinner"></div>');
+    document.body.appendChild(spinner);
+    // Indicator selector resolved via flux-feedback meta — no config cast needed.
+    const meta = makeEl('<meta name="flux-feedback" />') as HTMLMetaElement;
+    meta.content = JSON.stringify({ indicator: '#global-spinner' });
+    document.head.appendChild(meta);
+    installFeedback();
+
+    const sourceA = makeEl('<button fx-get="/a">A</button>');
+    const sourceB = makeEl('<button fx-get="/b">B</button>');
+    document.body.appendChild(sourceA);
+    document.body.appendChild(sourceB);
+
+    // Request A starts normally via before:request
+    const ctxA = { sourceElement: sourceA };
+    sourceA.dispatchEvent(new CustomEvent('htmx:before:request', { bubbles: true, detail: { ctx: ctxA } }));
+    expect(sourceA.getAttribute('data-flux-loading')).toBe('1');
+    expect(spinner.hasAttribute('data-flux-active')).toBe(true);
+
+    // Request B is dropped at htmx:confirm: finally:request fires with NO preceding before:request
+    const ctxB = { sourceElement: sourceB };
+    sourceB.dispatchEvent(new CustomEvent('htmx:finally:request', { bubbles: true, detail: { ctx: ctxB } }));
+
+    // A is still in flight: indicator and A's loading must survive B's orphaned finally
+    expect(spinner.hasAttribute('data-flux-active')).toBe(true);
+    expect(sourceA.getAttribute('data-flux-loading')).toBe('1');
+
+    resetFeedbackForTests();
+    spinner.remove();
+    sourceA.remove();
+    sourceB.remove();
+    meta.remove();
   });
 
   it('sets data-flux-success on 2xx and data-flux-error on 4xx/5xx', () => {

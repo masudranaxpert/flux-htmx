@@ -54,6 +54,7 @@ import { installDeduplication } from './core/dedupe.js';
 import { uploadPlugin } from './plugins/upload.js';
 import { optimisticPlugin } from './plugins/optimistic.js';
 import { removeRecipeAndScopeAttributes } from './core/expand.js';
+import { me, any, sugar, installDomSugar } from './core/sugar.js';
 
 export { type FluxConfig } from './core/config.js';
 export { default as htmx } from 'htmx.org';
@@ -62,6 +63,7 @@ export { inspectElement as inspect, doctor };
 export { uploadPlugin, optimisticPlugin };
 export { applyRealtime, disconnectRealtime } from './presets/realtime.js';
 export { applySearch, disconnectSearch } from './presets/search.js';
+export { me, any, sugar };
 
 let configured = false;
 const teardowns: Array<() => void> = [];
@@ -173,6 +175,7 @@ export function configure(userConfig?: FluxConfig): ResolvedConfig {
     teardowns.push(installCleanupHook());
     teardowns.push(installRetrySupport());
     teardowns.push(installDeduplication());
+    installDomSugar();
     activatePlugins(pluginApi());
     configured = true;
   }

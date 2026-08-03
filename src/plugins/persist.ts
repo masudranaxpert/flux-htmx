@@ -5,7 +5,7 @@ export function installPersist() {
 
   // Restore on load and on htmx swaps
   document.addEventListener('DOMContentLoaded', () => restorePersisted());
-  document.addEventListener('htmx:afterSettle', (e: Event) => {
+  document.addEventListener('htmx:after:settle', (e: Event) => {
     restorePersisted((e as CustomEvent).detail.el);
   });
 }
