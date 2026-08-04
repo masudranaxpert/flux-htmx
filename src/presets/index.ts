@@ -40,53 +40,91 @@ export interface PresetDefinition {
   connect(element: Element, value: string, ctx: (attr: string) => string | undefined): boolean;
   disconnect?(element: Element): void;
   override?: boolean;
+  group?: string;
 }
 
 const presetRegistry = new Map<string, PresetDefinition>();
-const activePresetControllers = new WeakMap<
-  Element,
-  {
-    definition: PresetDefinition;
-    signature: string;
-    controllerOnly: boolean;
-  }
->();
+interface ActiveController {
+  definition: PresetDefinition;
+  signature: string;
+  controllerOnly: boolean;
+}
+
+const activePresetControllers = new WeakMap<Element, Map<string, ActiveController>>();
 const activePresetElements = new Set<Element>();
+
+// Presets that compete for the same trigger or generated attributes are grouped: when an
+// element carries more than one member of a group, only the first (registry order) connects.
+// Ungrouped presets (fx-hide-escape, fx-hide-outside, fx-realtime) are listener-only and may
+// coexist with each other and with any grouped preset.
+const CONFLICT_GROUPS: Record<string, readonly string[]> = {
+  visibility: ['fx-show', 'fx-hide', 'fx-toggle', 'fx-class', 'fx-remove'],
+  request: ['fx-load', 'fx-poll', 'fx-infinite', 'fx-submit', 'fx-delete', 'fx-search', 'fx-autosave', 'fx-page'],
+};
+// Flat attribute -> group lookup derived from CONFLICT_GROUPS for O(1) membership tests.
+const attrToGroup: Record<string, string> = {};
+for (const [group, attrs] of Object.entries(CONFLICT_GROUPS)) {
+  for (const attr of attrs) attrToGroup[attr] = group;
+}
+
+/** Conflict group for a preset attribute (central table, falling back to the definition's own group). */
+export function groupOf(attr: string): string | undefined {
+  return attrToGroup[attr] ?? presetRegistry.get(attr)?.group;
+}
+
+function presetsInGroup(element: Element, group: string): string[] {
+  const found: string[] = [];
+  for (const [attr, def] of presetRegistry) {
+    if ((def.group ?? attrToGroup[attr]) === group && element.hasAttribute(attr)) {
+      found.push(attr);
+    }
+  }
+  return found;
+}
 
 export function getPresetRegistry(): ReadonlyMap<string, PresetDefinition> {
   return presetRegistry;
 }
 
-function disconnectActivePreset(element: Element): void {
-  const active = activePresetControllers.get(element);
+function disconnectPresetController(element: Element, attr: string): void {
+  const map = activePresetControllers.get(element);
+  const active = map?.get(attr);
   if (!active) return;
-
   active.definition.disconnect?.(element);
-  activePresetControllers.delete(element);
-  activePresetElements.delete(element);
-  element.removeAttribute('data-flux-preset');
-  element.removeAttribute('data-flux-preset-signature');
+  map!.delete(attr);
+  if (!map || map.size === 0) {
+    activePresetControllers.delete(element);
+    activePresetElements.delete(element);
+    element.removeAttribute('data-flux-preset');
+    element.removeAttribute('data-flux-preset-signature');
+  }
+}
+
+function disconnectAllPresetControllers(element: Element): void {
+  const map = activePresetControllers.get(element);
+  if (!map) return;
+  for (const attr of Array.from(map.keys())) disconnectPresetController(element, attr);
 }
 
 export function reconcilePresetController(element: Element): void {
-  const active = activePresetControllers.get(element);
-  if (
-    active &&
-    (!element.hasAttribute(active.definition.attribute) ||
-      presetRegistry.get(active.definition.attribute) !== active.definition)
-  ) {
-    disconnectActivePreset(element);
+  const map = activePresetControllers.get(element);
+  if (!map) return;
+  for (const attr of Array.from(map.keys())) {
+    const active = map.get(attr);
+    if (!active || !element.hasAttribute(attr) || presetRegistry.get(attr) !== active.definition) {
+      disconnectPresetController(element, attr);
+    }
   }
 }
 
 export function disconnectPresetTree(root: Element): void {
   for (const element of Array.from(activePresetElements)) {
-    if (element === root || root.contains(element)) disconnectActivePreset(element);
+    if (element === root || root.contains(element)) disconnectAllPresetControllers(element);
   }
 }
 
 export function disposePresetControllers(): void {
-  for (const element of Array.from(activePresetElements)) disconnectActivePreset(element);
+  for (const element of Array.from(activePresetElements)) disconnectAllPresetControllers(element);
 }
 
 export function registerPreset(
@@ -303,16 +341,25 @@ export function applyPreset(
 ): boolean {
   reconcilePresetController(element);
 
-  const activeConflicts = checkPresetConflicts(element);
-  if (activeConflicts.length > 1 && preset !== activeConflicts[0]) {
-    // Single preset per element enforcement: skip secondary conflicting presets
-    return false;
+  // Group conflict: when an element carries several presets that compete for the same trigger
+  // or generated attributes, only the first one (registry order) is allowed to connect. Presets
+  // without a group (fx-hide-escape, fx-hide-outside, ...) coexist freely with everything.
+  const group = groupOf(preset);
+  if (group) {
+    const members = presetsInGroup(element, group);
+    if (members.length > 1 && members[0] !== preset) {
+      log.warn(
+        `Element carries conflicting "${group}" presets [${members.join(', ')}]; enforcing primary "${members[0]}"`,
+      );
+      return false;
+    }
   }
 
+  const handler = presetRegistry.get(preset);
+  if (!handler) return false;
+
   const signature = computePresetSignature(element, preset, value);
-  const currentSig = element.getAttribute('data-flux-preset-signature');
-  const isPresetGenerated = element.getAttribute('data-flux-preset') === preset.replace(/^fx-/, '');
-  const active = activePresetControllers.get(element);
+  const active = activePresetControllers.get(element)?.get(preset);
   const generatedAttrs = getGeneratedAttributes(element);
   const hasOwnedAttrs = generatedAttrs.size > 0;
 
@@ -326,50 +373,37 @@ export function applyPreset(
     }
   }
 
+  // Idempotency: already connected with an identical signature and its generated attributes
+  // intact. The per-element map is authoritative, so coexisting presets (fx-hide-escape +
+  // fx-hide-outside) are tracked independently instead of overwriting one controller slot.
   if (
-    active?.definition.attribute === preset &&
+    active &&
     active.signature === signature &&
-    isPresetGenerated &&
-    currentSig === signature &&
     (active.controllerOnly || (hasOwnedAttrs && allAttrsPresent))
   ) {
     return false;
   }
 
-  const handler = presetRegistry.get(preset);
-  if (handler) {
-    try {
-      disconnectActivePreset(element);
-      const result = handler.connect(element, value, ctx);
-      if (result) {
-        element.setAttribute('data-flux-preset-signature', signature);
-        activePresetControllers.set(element, {
-          definition: handler,
-          signature,
-          controllerOnly: getGeneratedAttributes(element).size === 0,
-        });
-        activePresetElements.add(element);
-      }
-      return result;
-    } catch (error) {
-      log.error(`Preset "${preset}" connection failed:`, error);
-      return false;
+  try {
+    // Reconnect only this preset, leaving any sibling controllers intact.
+    if (active) disconnectPresetController(element, preset);
+    const result = handler.connect(element, value, ctx);
+    if (result) {
+      element.setAttribute('data-flux-preset-signature', signature);
+      const next = activePresetControllers.get(element) ?? new Map();
+      next.set(preset, {
+        definition: handler,
+        signature,
+        controllerOnly: getGeneratedAttributes(element).size === 0,
+      });
+      activePresetControllers.set(element, next);
+      activePresetElements.add(element);
     }
+    return result;
+  } catch (error) {
+    log.error(`Preset "${preset}" connection failed:`, error);
+    return false;
   }
-  return false;
-}
-
-function checkPresetConflicts(element: Element): string[] {
-  const active: string[] = [];
-  for (const attr of presetRegistry.keys()) {
-    if (element.hasAttribute(attr)) active.push(attr);
-  }
-  if (active.length > 1) {
-    log.warn(
-      `Element carries conflicting preset attributes [${active.join(', ')}]; enforcing primary preset "${active[0]}"`,
-    );
-  }
-  return active;
 }
 
 function computePresetSignature(element: Element, preset: string, value: string): string {

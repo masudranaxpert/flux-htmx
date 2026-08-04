@@ -2,7 +2,7 @@
 
 import { FLUX_VERSION } from '../core/version.js';
 import { getGeneratedAttributes } from '../core/generated-attributes.js';
-import { getPresetRegistry } from '../presets/index.js';
+import { getPresetRegistry, groupOf } from '../presets/index.js';
 
 export interface InspectionResult {
   element: Element | null;
@@ -47,11 +47,22 @@ export function inspectElement(element: Element | null): InspectionResult {
     warnings.push('empty or whitespace fx-get attribute URL');
   }
 
-  // Check preset conflicts
-  if (presets.length > 1) {
-    warnings.push(
-      `multiple conflicting presets on element [${presets.join(', ')}]; primary preset "${presets[0]}" will be enforced`,
-    );
+  // Check preset conflicts: only presets sharing a conflict group actually conflict.
+  // `presets` is collected in registry order, so members[0] matches the runtime-enforced primary.
+  const byGroup = new Map<string, string[]>();
+  for (const p of presets) {
+    const g = groupOf(p);
+    if (!g) continue;
+    const arr = byGroup.get(g);
+    if (arr) arr.push(p);
+    else byGroup.set(g, [p]);
+  }
+  for (const [g, members] of byGroup) {
+    if (members.length > 1) {
+      warnings.push(
+        `conflicting "${g}" presets on element [${members.join(', ')}]; primary "${members[0]}" will be enforced`,
+      );
+    }
   }
 
   if (element.hasAttribute('fx-append') && element.hasAttribute('fx-prepend')) {
