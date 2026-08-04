@@ -2,25 +2,27 @@ import { me, any } from '../core/sugar.js';
 
 export function applyShow(element: Element, targetSelector?: string): boolean {
   me(element)?.on('click', () => {
-    const target = targetSelector ? any(targetSelector) : me(element);
-    if (target) (target as any).fadeIn();
+    // any() resolves to an array of nodes; iterate so we call the per-node sugar method,
+    // not the array wrapper (which has no fadeIn/fadeOut/classToggle).
+    const targets = targetSelector ? any(targetSelector) : any(element);
+    targets.forEach((t) => t?.fadeIn());
   });
   return true;
 }
 
 export function applyHide(element: Element, targetSelector?: string): boolean {
   me(element)?.on('click', () => {
-    const target = targetSelector ? any(targetSelector) : me(element);
-    if (target) (target as any).fadeOut();
+    const targets = targetSelector ? any(targetSelector) : any(element);
+    targets.forEach((t) => t?.fadeOut());
   });
   return true;
 }
 
 export function applyToggle(element: Element, targetSelector?: string): boolean {
   me(element)?.on('click', () => {
-    const targets = targetSelector ? any(targetSelector) : me(element);
-    // Simple toggle via 'hidden' utility class which is standard in tailwind and common css
-    if (targets) (targets as any).classToggle('hidden');
+    const targets = targetSelector ? any(targetSelector) : any(element);
+    // Toggle the standard 'hidden' utility class (Tailwind / common CSS).
+    targets.forEach((t) => t.classToggle('hidden'));
   });
   return true;
 }
@@ -28,8 +30,8 @@ export function applyToggle(element: Element, targetSelector?: string): boolean 
 export function applyClassToggle(element: Element, className: string, targetSelector?: string): boolean {
   if (!className) return false;
   me(element)?.on('click', () => {
-    const targets = targetSelector ? any(targetSelector) : me(element);
-    if (targets) (targets as any).classToggle(className);
+    const targets = targetSelector ? any(targetSelector) : any(element);
+    targets.forEach((t) => t.classToggle(className));
   });
   return true;
 }

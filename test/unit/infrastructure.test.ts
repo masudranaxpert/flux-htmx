@@ -99,7 +99,7 @@ describe('Infrastructure Refactoring & Diagnostics Test Suite', () => {
     expect(insp.element).toBe(el);
 
     const report = Flux.doctor(document.body);
-    expect(report.fluxVersion).toBe('1.2.6');
+    expect(report.fluxVersion).toBe('1.3.1');
     expect(typeof report.elementsInspected).toBe('number');
   });
 
@@ -108,7 +108,7 @@ describe('Infrastructure Refactoring & Diagnostics Test Suite', () => {
     Flux.use({
       name: 'test-plugin',
       setup(api) {
-        expect(api.version).toBe('1.2.6');
+        expect(api.version).toBe('1.3.1');
         return pluginCleanup;
       },
     });

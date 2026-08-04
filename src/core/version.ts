@@ -1,1 +1,1 @@
-export const FLUX_VERSION = '1.2.6';
+export const FLUX_VERSION = '1.3.1';
