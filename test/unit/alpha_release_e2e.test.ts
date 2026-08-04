@@ -204,6 +204,6 @@ describe('0.1.0-Alpha Release E2E Acceptance Test Suite', () => {
     expect(typeof Flux.reconfigure).toBe('function');
     expect(typeof Flux.isStarted).toBe('function');
     expect(typeof Flux.config).toBe('function');
-    expect(Flux.FLUX_VERSION).toBe('1.3.1');
+    expect(Flux.FLUX_VERSION).toBe('1.3.2');
   });
 });

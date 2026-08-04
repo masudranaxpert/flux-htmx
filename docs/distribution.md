@@ -20,7 +20,7 @@ All browser builds expose a global `window.Flux` object for browser debugging, r
 
 ```js
 // Public Inspection Properties & Status
-Flux.version; // string: "1.3.1"
+Flux.version; // string: "1.3.2"
 Flux.dependencies; // object: { htmx: "4.0.0-beta6" }
 Flux.isStarted; // boolean: true / false
 Flux.config; // object: active ResolvedConfig instance

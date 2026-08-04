@@ -30,6 +30,6 @@ describe('Built IIFE Bundle Safeguard Verification', () => {
   });
 
   it('exposes the package version on Flux.version', () => {
-    expect(FLUX_VERSION).toBe('1.3.1');
+    expect(FLUX_VERSION).toBe('1.3.2');
   });
 });
