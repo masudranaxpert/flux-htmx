@@ -11,7 +11,6 @@ import { readFluxMetaConfig, duplicatePolicy, reportDependencies } from './core/
 import { inspectElement, doctor } from './diagnostics/doctor.js';
 
 // UI Plugins
-import { installDropdown } from './plugins/dropdown.js';
 import { installTabs } from './plugins/tabs.js';
 import { installAccordion } from './plugins/accordion.js';
 import { installModal } from './plugins/modal.js';
@@ -49,7 +48,6 @@ function bootstrap() {
       configure(metaConfig.flux);
 
       // Install UI Plugins
-      installDropdown();
       installTabs();
       installAccordion();
       installModal();

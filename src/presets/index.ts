@@ -12,7 +12,19 @@ import { applyPagination } from './pagination.js';
 import { applyPrefetch, disconnectPrefetch } from './prefetch.js';
 import { applyRealtime, disconnectRealtime } from './realtime.js';
 import { getGeneratedAttributes } from '../core/generated-attributes.js';
-import { applyShow, applyHide, applyToggle, applyClassToggle, applyRemove, applyHideEscape, applyHideOutside, disconnectHideEscape, disconnectHideOutside } from './ui.js';
+import {
+  applyShow,
+  applyHide,
+  applyToggle,
+  applyClassToggle,
+  applyRemove,
+  applyHideEscape,
+  applyHideOutside,
+  disconnectHideEscape,
+  disconnectHideOutside,
+  applyDropdown,
+  disconnectDropdown,
+} from './ui.js';
 
 export { applySearch, disconnectSearch } from './search.js';
 export { applyLoad } from './load.js';
@@ -58,8 +70,17 @@ const activePresetElements = new Set<Element>();
 // Ungrouped presets (fx-hide-escape, fx-hide-outside, fx-realtime) are listener-only and may
 // coexist with each other and with any grouped preset.
 const CONFLICT_GROUPS: Record<string, readonly string[]> = {
-  visibility: ['fx-show', 'fx-hide', 'fx-toggle', 'fx-class', 'fx-remove'],
-  request: ['fx-load', 'fx-poll', 'fx-infinite', 'fx-submit', 'fx-delete', 'fx-search', 'fx-autosave', 'fx-page'],
+  visibility: ['fx-dropdown', 'fx-show', 'fx-hide', 'fx-toggle', 'fx-class', 'fx-remove'],
+  request: [
+    'fx-load',
+    'fx-poll',
+    'fx-infinite',
+    'fx-submit',
+    'fx-delete',
+    'fx-search',
+    'fx-autosave',
+    'fx-page',
+  ],
 };
 // Flat attribute -> group lookup derived from CONFLICT_GROUPS for O(1) membership tests.
 const attrToGroup: Record<string, string> = {};
@@ -293,6 +314,12 @@ registerPreset({
       withCredentials: element.hasAttribute('fx-with-credentials'),
     }),
   disconnect: (element) => disconnectRealtime(element),
+});
+
+registerPreset({
+  attribute: 'fx-dropdown',
+  connect: (element, value, ctx) => applyDropdown(element, ctx('fx-target') || value),
+  disconnect: (element) => disconnectDropdown(element),
 });
 
 registerPreset({

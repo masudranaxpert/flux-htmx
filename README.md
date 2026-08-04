@@ -44,19 +44,19 @@ npm install htmx.org@4.0.0-beta6
 
 ```html
 <!-- Standalone Flux bundle (includes HTMX 4) -->
-<script src="https://cdn.jsdelivr.net/npm/flux-htmx@1.3.2/dist/flux.full.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flux-htmx@1.4.0/dist/flux.full.iife.js"></script>
 
 <!-- CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.3.2/dist/flux.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.4.0/dist/flux.css" />
 <!-- or minified -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.3.2/dist/flux.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.4.0/dist/flux.min.css" />
 ```
 
 ### unpkg
 
 ```html
-<script src="https://unpkg.com/flux-htmx@1.3.2/dist/flux.full.iife.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/flux-htmx@1.3.2/dist/flux.min.css" />
+<script src="https://unpkg.com/flux-htmx@1.4.0/dist/flux.full.iife.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/flux-htmx@1.4.0/dist/flux.min.css" />
 ```
 
 > **Tip:** Use `flux.full.iife.js` for CDN (includes everything). Use `flux.iife.js` for bundlers where htmx is already imported separately.
@@ -72,14 +72,14 @@ npm install htmx.org@4.0.0-beta6
     <meta charset="UTF-8" />
     <title>My App</title>
     <meta name="flux-config" content='{"csrf":{"strategy":"meta"}}' />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.3.2/dist/flux.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.4.0/dist/flux.css" />
   </head>
   <body>
     <div id="content">
       <a fx-get="/page-2" fx-target="#content" fx-prefetch>Go to Page 2</a>
     </div>
 
-<script src="https://cdn.jsdelivr.net/npm/flux-htmx@1.3.2/dist/flux.full.iife.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flux-htmx@1.4.0/dist/flux.full.iife.js"></script>
   </body>
 </html>
 ```
@@ -182,9 +182,24 @@ No `<script>` tags required. All actions default to triggering on `click`.
 <div fx-remove="3s">Item Saved Successfully!</div>
 ```
 
-### Modals & Dropdowns
+### Dropdowns
 
-Modals and dropdowns often need to close when you click outside of them or press the `Escape` key. Flux has built-in primitives for this:
+For menus and dropdowns, reach for the single `fx-dropdown` directive. It toggles the target's `hidden` class and coordinates outside-click and `Escape` close in one handler — so the click that opens a menu can never immediately close it:
+
+```html
+<button fx-dropdown="#menu">Toggle</button>
+
+<ul id="menu" class="hidden">
+  <li><a href="/profile">Profile</a></li>
+  <li><a href="/settings">Settings</a></li>
+</ul>
+```
+
+`fx-dropdown` keeps the trigger's `aria-expanded` in sync. Clicking the trigger toggles; clicking outside the trigger or menu, or pressing `Escape`, closes it.
+
+### Modals
+
+Modals often need to close when you click outside of them or press the `Escape` key. Flux has built-in primitives for this:
 
 ```html
 <button fx-show="#my-modal">Open Modal</button>
