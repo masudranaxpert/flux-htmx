@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import pkg from '../../package.json';
 
 // Waits for an htmx request cycle to settle: the request class is applied during the request
 // and removed after, so waiting for it to clear is a robust "swap done" signal. Falls back to
@@ -100,7 +101,7 @@ test('exposes the correct global IIFE API shape without default wrapper', async 
   }));
 
   expect(result).toEqual({
-    version: '1.3.2',
+    version: pkg.version,
     startType: 'function',
     startedType: 'boolean',
     hasDefaultWrapper: false,

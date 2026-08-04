@@ -7,6 +7,7 @@ import { wireStatusTargeting } from '../../src/core/status.js';
 import { installFeedback, resetFeedbackForTests } from '../../src/core/feedback.js';
 import { installCacheIntegration } from '../../src/cache/cacheWire.js';
 import { FragmentCache } from '../../src/cache/cache.js';
+import pkg from '../../package.json';
 
 function makeEl(html: string): Element {
   const container = document.createElement('div');
@@ -204,6 +205,6 @@ describe('0.1.0-Alpha Release E2E Acceptance Test Suite', () => {
     expect(typeof Flux.reconfigure).toBe('function');
     expect(typeof Flux.isStarted).toBe('function');
     expect(typeof Flux.config).toBe('function');
-    expect(Flux.FLUX_VERSION).toBe('1.3.2');
+    expect(Flux.FLUX_VERSION).toBe(pkg.version);
   });
 });

@@ -10,6 +10,7 @@ import {
 import { getRequestContext } from '../../src/core/events.js';
 import { setRequestState, setLoadingState } from '../../src/core/request-state.js';
 import { ControllerRegistry } from '../../src/core/controllers.js';
+import pkg from '../../package.json';
 
 function makeEl(html: string): Element {
   const container = document.createElement('div');
@@ -99,7 +100,7 @@ describe('Infrastructure Refactoring & Diagnostics Test Suite', () => {
     expect(insp.element).toBe(el);
 
     const report = Flux.doctor(document.body);
-    expect(report.fluxVersion).toBe('1.3.2');
+    expect(report.fluxVersion).toBe(pkg.version);
     expect(typeof report.elementsInspected).toBe('number');
   });
 
@@ -108,7 +109,7 @@ describe('Infrastructure Refactoring & Diagnostics Test Suite', () => {
     Flux.use({
       name: 'test-plugin',
       setup(api) {
-        expect(api.version).toBe('1.3.2');
+        expect(api.version).toBe(pkg.version);
         return pluginCleanup;
       },
     });

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { FLUX_VERSION } from '../../src/core/version.js';
+import pkg from '../../package.json';
 
 describe('Built IIFE Bundle Safeguard Verification', () => {
   it('evaluates dist/flux.iife.js safely when window.htmx is absent and throws friendly HTMX missing error', () => {
@@ -30,6 +31,6 @@ describe('Built IIFE Bundle Safeguard Verification', () => {
   });
 
   it('exposes the package version on Flux.version', () => {
-    expect(FLUX_VERSION).toBe('1.3.2');
+    expect(FLUX_VERSION).toBe(pkg.version);
   });
 });

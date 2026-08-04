@@ -8,6 +8,7 @@ import {
 import { registerPreset } from '../../src/presets/index.js';
 import { setRequestState, setLoadingState } from '../../src/core/request-state.js';
 import { inspectElement, doctor } from '../../src/diagnostics/doctor.js';
+import pkg from '../../package.json';
 
 function makeEl(html: string): Element {
   const container = document.createElement('div');
@@ -113,7 +114,7 @@ describe('Refactoring Hardening Test Suite', () => {
     expect(insp.presets).toContain('fx-submit');
 
     const doc = doctor(document.body);
-    expect(doc.fluxVersion).toBe('1.3.2');
+    expect(doc.fluxVersion).toBe(pkg.version);
   });
 
   it('7. registerPreset returns teardown and warns on duplicate registration without override', () => {

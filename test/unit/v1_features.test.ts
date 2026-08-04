@@ -6,6 +6,7 @@ import { getRetryOptions } from '../../src/core/retry.ts';
 import { parseMaxSizeBytes, uploadPlugin } from '../../src/plugins/upload.ts';
 import { optimisticPlugin } from '../../src/plugins/optimistic.ts';
 import { applyPagination } from '../../src/presets/pagination.ts';
+import pkg from '../../package.json';
 
 function makeEl(html: string): Element {
   const container = document.createElement('div');
@@ -15,8 +16,8 @@ function makeEl(html: string): Element {
 
 describe('Stable v1.0.0 Release Hardening & Features Test Suite', () => {
   it('1. Version: exposes the package version', () => {
-    expect(FLUX_VERSION).toBe('1.3.2');
-    expect(Flux.default.version).toBe('1.3.2');
+    expect(FLUX_VERSION).toBe(pkg.version);
+    expect(Flux.default.version).toBe(pkg.version);
   });
 
   it('2. Automatic Retry: parses fx-retry options and calculates backoff', () => {
