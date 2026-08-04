@@ -309,13 +309,14 @@ function fadeIn(e: any, f?: (el: any) => void, ms = 250) {
       if ((e as HTMLElement).style.display === 'none') {
         (e as HTMLElement).style.display = '';
       }
-      const save = (e as HTMLElement).style.cssText;
+      // Restore only the fade props; a cssText wipe would clobber unrelated inline styles.
+      const s = (e as HTMLElement).style;
+      const prev = { opacity: s.opacity, transition: s.transition, overflow: s.overflow };
       styles(e, { opacity: '0', transition: `opacity ${ms}ms ease-in`, overflow: 'hidden' });
       await tick();
       styles(e, { opacity: '1' });
       await sleep(ms, e);
-      (e as HTMLElement).style.cssText = save;
-      styles(e, { opacity: '1' });
+      styles(e, prev);
       if (typeof f === 'function') f(e);
     })();
   }

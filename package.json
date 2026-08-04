@@ -1,6 +1,6 @@
 {
   "name": "flux-htmx",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Thin server-driven frontend layer on HTMX 4. Shorthand fx-* attributes, lifecycle, presets, prefetch, and toast — without reimplementing htmx.",
   "keywords": [
     "htmx",
