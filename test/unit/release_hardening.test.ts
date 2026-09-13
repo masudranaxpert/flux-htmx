@@ -103,13 +103,17 @@ describe('htmx:finally:request indicator balancing and data-flux-* state attribu
 
     // Request A starts normally via before:request
     const ctxA = { sourceElement: sourceA };
-    sourceA.dispatchEvent(new CustomEvent('htmx:before:request', { bubbles: true, detail: { ctx: ctxA } }));
+    sourceA.dispatchEvent(
+      new CustomEvent('htmx:before:request', { bubbles: true, detail: { ctx: ctxA } }),
+    );
     expect(sourceA.getAttribute('data-flux-loading')).toBe('1');
     expect(spinner.hasAttribute('data-flux-active')).toBe(true);
 
     // Request B is dropped at htmx:confirm: finally:request fires with NO preceding before:request
     const ctxB = { sourceElement: sourceB };
-    sourceB.dispatchEvent(new CustomEvent('htmx:finally:request', { bubbles: true, detail: { ctx: ctxB } }));
+    sourceB.dispatchEvent(
+      new CustomEvent('htmx:finally:request', { bubbles: true, detail: { ctx: ctxB } }),
+    );
 
     // A is still in flight: indicator and A's loading must survive B's orphaned finally
     expect(spinner.hasAttribute('data-flux-active')).toBe(true);

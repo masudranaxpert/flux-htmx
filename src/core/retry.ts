@@ -2,6 +2,7 @@
 
 import { log } from './logger.js';
 import { getRequestContext } from './events.js';
+import { readHeader, withHeaders } from './headers.js';
 
 export interface RetryOptions {
   maxRetries: number;
@@ -82,25 +83,16 @@ export function installRetrySupport(): () => void {
           for (const timerId of timers) clearTimeout(timerId);
           activeRetryTimers.delete(timerElt);
           retryingElements.delete(timerElt);
+        } else if (!timerElt.isConnected) {
+          // Element left the DOM without an htmx cleanup (fx-remove, sugar remove):
+          // drop its pending timers so the Map cannot accumulate detached entries.
+          for (const timerId of timers) clearTimeout(timerId);
+          activeRetryTimers.delete(timerElt);
+          retryingElements.delete(timerElt);
         }
       }
     }
   };
-
-  function readHeader(headers: unknown, name: string): string | null {
-    if (!headers) return null;
-    if (typeof (headers as any).get === 'function') {
-      return (headers as any).get(name) ?? (headers as any).get(name.toLowerCase()) ?? null;
-    }
-    if (typeof headers === 'object') {
-      for (const [k, v] of Object.entries(headers as Record<string, unknown>)) {
-        if (k.toLowerCase() === name.toLowerCase() && v !== undefined && v !== null) {
-          return String(v);
-        }
-      }
-    }
-    return null;
-  }
 
   const onResponse = (evt: Event) => {
     const ctx = getRequestContext(evt);
@@ -195,7 +187,9 @@ export function installRetrySupport(): () => void {
           target: requestTarget,
           swap: element.getAttribute('hx-swap') ?? element.getAttribute('fx-swap') ?? 'innerHTML',
           values: requestParams,
-          headers: { ...(requestHeaders as Record<string, string>), 'X-Flux-Retry': 'true' },
+          // headers may be a Headers instance or a plain record; withHeaders preserves
+          // every existing header (CSRF, auth) either way.
+          headers: withHeaders(requestHeaders, { 'X-Flux-Retry': 'true' }),
         });
       } else if (typeof activeHtmx?.trigger === 'function') {
         activeHtmx.trigger(element, 'click');

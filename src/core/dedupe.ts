@@ -1,33 +1,32 @@
-// Concurrent Request Deduplication. Coalesces duplicate in-flight GET requests to the same URL into a single network call.
+// Concurrent Request Deduplication. Coalesces duplicate in-flight GET requests to the same
+// URL into a single network call. Every in-flight group carries a deadline: if the leader
+// never completes (page hide, exception, dropped htmx event), the key is released so later
+// requests are not stuck as aborted followers forever.
 
 import { getRequestContext } from './events.js';
+import { readHeader } from './headers.js';
+import { resolveHtmx } from './startup.js';
 
 interface PendingConsumer {
   element: Element;
   target?: Element | null;
   swap?: string;
 }
+const inFlightRequests = new Map<string, { consumers: PendingConsumer[]; armedAt: number }>();
 
-const inFlightRequests = new Map<string, PendingConsumer[]>();
+/** How long a leader may hold the in-flight key without completing. */
+const IN_FLIGHT_DEADLINE_MS = 30_000;
 
-function readHeader(headers: unknown, name: string): string | null {
-  if (!headers) return null;
-  if (typeof (headers as any).get === 'function') {
-    return (headers as any).get(name) ?? (headers as any).get(name.toLowerCase()) ?? null;
+/**
+ * Releases keys whose leader never finished (page hide, exception, dropped htmx event).
+ * Checked lazily on each new request: the key cannot block dedupe beyond the deadline,
+ * and no timer is kept alive for it.
+ */
+function purgeExpiredInFlight(): void {
+  const now = Date.now();
+  for (const [key, entry] of inFlightRequests) {
+    if (now - entry.armedAt > IN_FLIGHT_DEADLINE_MS) inFlightRequests.delete(key);
   }
-  if (typeof headers === 'object') {
-    const record = headers as Record<string, unknown>;
-    for (const [k, v] of Object.entries(record)) {
-      if (k.toLowerCase() === name.toLowerCase() && v !== undefined && v !== null) {
-        return String(v);
-      }
-    }
-  }
-  return null;
-}
-
-function hasAuthorizationHeader(headers: unknown): boolean {
-  return Boolean(readHeader(headers, 'authorization'));
 }
 
 /** Installs the request deduplication hook. */
@@ -35,6 +34,7 @@ export function installDeduplication(): () => void {
   if (typeof document === 'undefined') return () => {};
 
   const onRequest = (evt: Event) => {
+    purgeExpiredInFlight();
     const ctx = getRequestContext(evt);
     const element = ctx.source;
     if (!element) return;
@@ -59,33 +59,38 @@ export function installDeduplication(): () => void {
       ctx.request?.parameters,
       ctx.request?.headers,
     );
-    const consumers = inFlightRequests.get(key);
+    const entry = inFlightRequests.get(key);
 
     const isRetry = readHeader(ctx.request?.headers, 'X-Flux-Retry') === 'true';
 
-    if (consumers) {
+    if (entry) {
       if (isRetry) {
-        // Retry request takes over as the new leader
-        consumers[0] = {
+        // Retry request takes over as the new leader; followers stay queued and the
+        // deadline restarts with the retry attempt.
+        entry.consumers[0] = {
           element,
           target: ctx.target,
           swap: element.getAttribute('hx-swap') ?? element.getAttribute('fx-swap') ?? undefined,
         };
+        entry.armedAt = Date.now();
         return;
       }
       // In-flight request exists: register as duplicate consumer and set dedupe hit flag
       if (ctx.ctx) {
         ctx.ctx.isDedupeHit = true;
       }
-      consumers.push({
+      entry.consumers.push({
         element,
         target: ctx.target,
         swap: element.getAttribute('hx-swap') ?? element.getAttribute('fx-swap') ?? undefined,
       });
       ctx.request?.abort?.();
     } else {
-      // First request: initialize consumer queue
-      inFlightRequests.set(key, [{ element, target: ctx.target }]);
+      // First request: initialize consumer queue with a completion deadline.
+      inFlightRequests.set(key, {
+        consumers: [{ element, target: ctx.target }],
+        armedAt: Date.now(),
+      });
     }
   };
 
@@ -93,11 +98,11 @@ export function installDeduplication(): () => void {
     const ctx = getRequestContext(evt);
 
     // Follower early return guard: aborted deduplication followers must NOT delete the leader's in-flight request group!
-    if (ctx.isDedupeHit || (ctx as any).ctx?.isDedupeHit) return;
+    if (ctx.isDedupeHit || (ctx as { ctx?: { isDedupeHit?: boolean } }).ctx?.isDedupeHit) return;
 
     const method = (ctx.request?.method ?? 'GET').toUpperCase();
     if (method !== 'GET') return;
-
+    if (ctx.isDedupeHit || ctx.ctx?.isDedupeHit) return;
     const url =
       ctx.request?.action ??
       ctx.source?.getAttribute('hx-get') ??
@@ -111,8 +116,8 @@ export function installDeduplication(): () => void {
       ctx.request?.parameters,
       ctx.request?.headers,
     );
-    const consumers = inFlightRequests.get(key);
-    if (!consumers) return;
+    const group = inFlightRequests.get(key)?.consumers;
+    if (!group) return;
 
     if (!ctx.successful) {
       // Keep followers suspended only when retry support actually scheduled another attempt.
@@ -121,12 +126,12 @@ export function installDeduplication(): () => void {
 
     inFlightRequests.delete(key);
 
-    const activeHtmx = (window as any).htmx ?? (globalThis as any).htmx;
+    const activeHtmx = resolveHtmx();
 
     if (ctx.successful && ctx.text !== null && ctx.text !== undefined) {
       // Share response payload & fire follower lifecycle events for secondary consumers
-      for (let i = 1; i < consumers.length; i++) {
-        const consumer = consumers[i];
+      for (let i = 1; i < group.length; i++) {
+        const consumer = group[i];
         if (consumer && consumer.target && typeof activeHtmx?.swap === 'function') {
           activeHtmx.swap({
             target: consumer.target,
@@ -156,8 +161,8 @@ export function installDeduplication(): () => void {
       }
     } else if (!ctx.successful) {
       // Leader failure: propagate error lifecycle events to secondary followers
-      for (let i = 1; i < consumers.length; i++) {
-        const consumer = consumers[i];
+      for (let i = 1; i < group.length; i++) {
+        const consumer = group[i];
         if (consumer && consumer.element) {
           consumer.element.dispatchEvent(
             new CustomEvent('flux:dedupe:error', {
@@ -195,6 +200,10 @@ export function installDeduplication(): () => void {
     document.removeEventListener('htmx:after:request', onResponse);
     inFlightRequests.clear();
   };
+}
+
+function hasAuthorizationHeader(headers: unknown): boolean {
+  return Boolean(readHeader(headers, 'authorization'));
 }
 
 function computeDedupeKey(

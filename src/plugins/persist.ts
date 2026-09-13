@@ -1,10 +1,20 @@
 import { queryAllSafely } from '../core/selectors.js';
 
+/** Runs `fn` now, or on DOMContentLoaded when the document is still loading. */
+function onReady(fn: () => void): void {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fn, { once: true });
+  } else {
+    fn();
+  }
+}
+
 export function installPersist() {
   document.addEventListener('change', handlePersistChange);
 
-  // Restore on load and on htmx swaps
-  document.addEventListener('DOMContentLoaded', () => restorePersisted());
+  // Restore on load and on htmx swaps. readyState-aware: deferred or dynamic scripts
+  // load after DOMContentLoaded has already fired.
+  onReady(() => restorePersisted());
   document.addEventListener('htmx:after:settle', (e: Event) => {
     restorePersisted((e as CustomEvent).detail.el);
   });
@@ -43,8 +53,9 @@ function restorePersisted(root: Element | Document = document) {
         target.value = value;
       }
 
-      // Dispatch event in case other scripts need to know
-      target.dispatchEvent(new Event('change', { bubbles: true }));
+      // A synthetic `change` would fire fx-autosave / hx-trigger="change" and send an
+      // unintended request on page load. Listeners that care can opt in to this event.
+      target.dispatchEvent(new CustomEvent('flux:persist:restored', { bubbles: true }));
     }
   }
 }

@@ -2,7 +2,7 @@ import './setup.js';
 import { describe, expect, it, vi } from 'vitest';
 import { duplicatePolicy, reportDependencies, readFluxMetaConfig } from '../../src/core/startup.js';
 import { FLUX_VERSION } from '../../src/core/version.js';
-import '../../src/flux.js';
+import fluxApi, { bootstrapFlux } from '../../src/flux.js';
 
 describe('duplicatePolicy', () => {
   it('returns true for reuse when an instance exists', () => {
@@ -68,7 +68,7 @@ describe('FLUX_VERSION and Window.Flux public API', () => {
   });
 
   it('exposes window.Flux global public API for browser inspection', () => {
-    const globalFlux = (window as any).Flux;
+    const globalFlux = bootstrapFlux({ api: fluxApi }) as { version: string };
     expect(globalFlux).toBeDefined();
     expect(globalFlux.version).toBe(FLUX_VERSION);
     expect(globalFlux.isStarted).toBe(true);

@@ -8,12 +8,13 @@
     <!-- Flux next: its auto-configure registers the before:process listener synchronously,
          before htmx's deferred init() runs. -->
     <script src="/flux.js"></script>
+    <!-- Optional net extras: exposes FluxNet (upload/optimistic plugins + offline). -->
+    <script src="/net.js"></script>
   </head>
   <body>
-    <!-- 1. fx-get on initial DOM must be processed into hx-get and work. -->
-    <button id="btn1" fx-get="/fragment/hello" fx-target="#result1">Load</button>
+    <!-- 1. fx-get on initial DOM must be processed into hx-get; hx-target configures the swap. -->
+    <button id="btn1" fx-get="/fragment/hello" hx-target="#result1">Load</button>
     <div id="result1"></div>
-
     <!-- 2. Raw hx-* must remain a working escape hatch. -->
     <button id="btn2" hx-get="/fragment/hello" hx-target="#result2">Raw</button>
     <div id="result2"></div>
@@ -23,7 +24,7 @@
     <div id="result3"></div>
 
     <!-- 4. Swapped content with fx-get must be processed and work. -->
-    <button id="load-swapped" fx-get="/fragment/swapped" fx-target="#swap-host">
+    <button id="load-swapped" fx-get="/fragment/swapped" hx-target="#swap-host">
       Load swapped
     </button>
     <div id="swap-host"></div>

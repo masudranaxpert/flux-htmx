@@ -1,14 +1,12 @@
 # Attributes
 
-Flux provides three kinds of attributes: **generic shorthand** (1:1 renames of HTMX attributes), **presets** (one Flux attribute expanding to several HTMX attributes), and **component/feedback attributes**.
+Flux provides two kinds of attributes: **shorthand** (verbs plus a couple of small conveniences) and **presets** (one Flux attribute driving a whole pattern), along with **component/feedback attributes**.
 
 All follow one precedence rule: **raw `hx-*` wins.** If an element already declares the HTMX attribute that a Flux attribute would produce, Flux leaves it alone.
 
-## Generic shorthand
+## Verbs (shorthand)
 
-Each `fx-*` attribute expands to the identically named `hx-*` attribute, preserving the value.
-
-### Verbs
+Each verb shorthand expands to the identically named `hx-*` attribute, preserving the value.
 
 | Flux        | HTMX        | Effect                                 |
 | ----------- | ----------- | -------------------------------------- |
@@ -16,35 +14,26 @@ Each `fx-*` attribute expands to the identically named `hx-*` attribute, preserv
 | `fx-post`   | `hx-post`   | POST request.                          |
 | `fx-put`    | `hx-put`    | PUT request.                           |
 | `fx-patch`  | `hx-patch`  | PATCH request.                         |
-| `fx-delete` | `hx-delete` | DELETE request.                        |
+| `fx-delete` | `hx-delete` | DELETE request (full preset, below).   |
 
 ```html
-<button fx-get="/users" fx-target="#users">Load users</button>
+<button fx-get="/users" hx-target="#users">Load users</button>
 ```
 
 expands to:
 
 ```html
-<button fx-get="/users" fx-target="#users" hx-get="/users" hx-target="#users">Load users</button>
+<button fx-get="/users" hx-target="#users" hx-get="/users">Load users</button>
 ```
 
-### Options
+### Options are raw htmx attributes (2.0 change)
 
-| Flux           | HTMX           |
-| -------------- | -------------- |
-| `fx-target`    | `hx-target`    |
-| `fx-swap`      | `hx-swap`      |
-| `fx-trigger`   | `hx-trigger`   |
-| `fx-select`    | `hx-select`    |
-| `fx-sync`      | `hx-sync`      |
-| `fx-indicator` | `hx-indicator` |
-| `fx-include`   | `hx-include`   |
-| `fx-vals`      | `hx-vals`      |
-| `fx-headers`   | `hx-headers`   |
-| `fx-disable`   | `hx-disable`   |
-| `fx-confirm`   | `hx-confirm`   |
-| `fx-boost`     | `hx-boost`     |
-| `fx-preload`   | `hx-preload`   |
+The pure option aliases were removed: write `hx-target`, `hx-swap`, `hx-trigger`, `hx-select`,
+`hx-sync`, `hx-include`, `hx-vals`, `hx-headers`, `hx-confirm`, `hx-boost`, `hx-preload`, and
+`hx-preserve` directly next to an `fx-*` verb. `fx-indicator` remains a generic alias, and
+`fx-morph` / `fx-history` remain value-mapping shorthands (`hx-swap="innerMorph"`,
+`hx-push-url`). Presets continue to accept their own option attributes (see
+docs/presets.md).
 
 ## Status Routing
 
@@ -81,15 +70,15 @@ Native HTML component controllers provide declarative modal & popover management
 
 ## Plugin & Feedback Attributes
 
-| Attribute                                     | Plugin               | Behavior                                                           |
-| --------------------------------------------- | -------------------- | ------------------------------------------------------------------ |
-| `fx-upload="/files"`                          | Upload Plugin        | Configures multipart upload, drag-and-drop, and file validation    |
-| `fx-max-size="20mb"`                          | Upload Plugin        | Validates maximum file size limit before issuing upload request    |
-| `fx-allowed-types="image/*,.pdf"`             | Upload Plugin        | Validates allowed file MIME types or extensions before upload      |
-| `fx-optimistic-remove="closest li"`           | Optimistic UI Plugin | Instantly removes element on click before request completes        |
-| `fx-optimistic-class="hidden"`                | Optimistic UI Plugin | Instantly adds class to element on click before request completes  |
-| `fx-rollback`                                 | Optimistic UI Plugin | Automatically restores original element DOM state if request fails |
-| `fx-success="Message"`                        | Feedback             | Screen reader announcement & Flux toast push on HTTP 2xx           |
-| `fx-error="Message"`                          | Feedback             | Screen reader announcement & Flux toast push on HTTP 4xx/5xx       |
-| `fx-reset`                                    | `<form>` elements    | Resets form inputs upon HTTP 2xx success                           |
-| `fx-remove="this"` / `fx-remove="closest tr"` | Delete preset        | Removes element/ancestor from DOM upon HTTP 2xx success            |
+| Attribute                            | Plugin               | Behavior                                                          |
+| ------------------------------------ | -------------------- | ----------------------------------------------------------------- |
+| `fx-upload="/files"`                 | Upload Plugin        | Configures multipart upload, drag-and-drop, and file validation   |
+| `fx-max-size="20mb"`                 | Upload Plugin        | Validates maximum file size limit before issuing upload request   |
+| `fx-allowed-types="image/*,.pdf"`    | Upload Plugin        | Validates allowed file MIME types or extensions before upload     |
+| `fx-optimistic-remove="closest li"`  | Optimistic UI Plugin | Instantly removes element on click before request completes       |
+| `fx-optimistic-class="hidden"`       | Optimistic UI Plugin | Instantly adds class to element on click before request completes |
+| `fx-success="Message"`               | Feedback             | Screen reader announcement & Flux toast push on HTTP 2xx          |
+| `fx-error="Message"`                 | Feedback             | Screen reader announcement & Flux toast push on HTTP 4xx/5xx      |
+| `fx-reset`                           | `<form>` elements    | Resets form inputs upon HTTP 2xx success                          |
+| `fx-remove="3s"` / `fx-remove="500"` | Self-removal preset  | Removes the element itself after the given duration               |
+| `fx-remove-target="closest tr"`      | Delete preset        | Removes the matching ancestor/element from DOM upon HTTP 2xx      |

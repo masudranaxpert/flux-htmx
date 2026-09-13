@@ -59,7 +59,6 @@ describe('consolidated release audit regressions', () => {
     Flux.process(scope);
 
     const form = scope.querySelector('form')!;
-    expect(form.getAttribute('fx-target')).toBe('#result');
     expect(form.getAttribute('hx-target')).toBe('#result');
     expect(form.getAttribute('fx-disable')).toBe('true');
   });

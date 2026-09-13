@@ -23,8 +23,7 @@ describe('Scope System (fx-scope)', () => {
 
     Flux.process(btn);
 
-    // btn should have inherited properties converted from fx-default-* to fx-*
-    // and then fx-* expanded to hx-*
+    // Htmx option keys write the raw hx-* attribute; preset keys write fx-*.
     expect(btn.getAttribute('hx-target')).toBe('#users-table');
     expect(btn.getAttribute('hx-indicator')).toBe('#loading');
     expect(btn.getAttribute('fx-error')).toBe('Failed');
@@ -38,7 +37,23 @@ describe('Scope System (fx-scope)', () => {
 
     const btn = document.createElement('button');
     btn.setAttribute('fx-get', '/users');
-    btn.setAttribute('fx-target', '#explicit-target');
+    btn.setAttribute('hx-target', '#explicit-target');
+    scope.appendChild(btn);
+
+    Flux.process(btn);
+
+    expect(btn.getAttribute('hx-target')).toBe('#explicit-target');
+  });
+
+  it('raw explicit hx-target is never overwritten by scope defaults', () => {
+    const scope = document.createElement('section');
+    scope.setAttribute('fx-scope', '');
+    scope.setAttribute('fx-default-target', '#scope-target');
+    document.body.appendChild(scope);
+
+    const btn = document.createElement('button');
+    btn.setAttribute('fx-get', '/users');
+    btn.setAttribute('hx-target', '#explicit-target');
     scope.appendChild(btn);
 
     Flux.process(btn);

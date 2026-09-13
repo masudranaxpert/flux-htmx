@@ -9,28 +9,19 @@ import {
   removeGeneratedAttribute,
   hasGeneratedAttribute,
 } from './generated-attributes.js';
-import { applyRecipe } from './recipes.js';
+import { applyRecipe, attributeForKey, hasExplicitAttribute } from './recipes.js';
 
 // Verbs make an element actionable (matched by HTMX's `[hx-get],[hx-post],...` selector).
 const VERBS = ['get', 'post', 'put', 'patch', 'delete'] as const;
 
-// Options configure a request declared by a verb or a preset (e.g. fx-search).
-// Note: 'disable' is excluded from generic options so fx-disable remains exclusively for form/submit control disabling.
-const OPTIONS = [
-  'target',
-  'swap',
-  'trigger',
-  'select',
-  'sync',
-  'indicator',
-  'include',
-  'vals',
-  'headers',
-  'confirm',
-  'boost',
-  'preload',
-  'preserve',
-] as const;
+// Generic option aliases were removed in 2.0: fx-target, fx-swap, fx-trigger, fx-select,
+// fx-sync, fx-include, fx-vals, fx-headers, fx-confirm, fx-boost, fx-preload, and
+// fx-preserve were 1:1 renames of the hx-* attributes with no added behaviour. Use the
+// raw hx-* attributes next to an fx-* verb. Presets keep reading their own option
+// attributes (fx-target, fx-swap, fx-confirm, ...) directly via ctx().
+//
+// fx-indicator stays a generic alias: presets and raw verbs both consume it everywhere.
+const OPTIONS = ['indicator'] as const;
 
 // One selector matching any Flux shorthand attribute, used for subtree discovery.
 const FLUX_SELECTOR = [
@@ -146,12 +137,37 @@ function syncShorthand(element: Element, name: string): 0 | 1 {
 
 const recipeOwnedAttributes = new WeakMap<Element, Map<string, string>>();
 const scopeOwnedAttributes = new WeakMap<Element, Map<string, string>>();
-const recipeAndScopeElements = new Set<Element>();
+// WeakRef registry — strong Set references leaked detached elements (sugar remove,
+// fx-remove). Dead refs are dropped lazily during iteration.
+const recipeAndScopeRefs = new Set<WeakRef<Element>>();
+
+function trackRecipeScopeElement(element: Element): void {
+  recipeAndScopeRefs.add(new WeakRef(element));
+}
+
+function trackedRecipeScopeElements(): Element[] {
+  const live: Element[] = [];
+  for (const ref of recipeAndScopeRefs) {
+    const el = ref.deref();
+    if (el) live.push(el);
+    else recipeAndScopeRefs.delete(ref);
+  }
+  return live;
+}
+
+function untrackRecipeScopeElement(element: Element): void {
+  for (const ref of recipeAndScopeRefs) {
+    if (ref.deref() === element) {
+      recipeAndScopeRefs.delete(ref);
+      return;
+    }
+  }
+}
 
 export function applyRecipeAndScope(element: Element): void {
   clearOwnedAttributes(element, recipeOwnedAttributes, 'data-flux-recipe-owned');
   clearOwnedAttributes(element, scopeOwnedAttributes, 'data-flux-scope-owned');
-  recipeAndScopeElements.delete(element);
+  untrackRecipeScopeElement(element);
 
   // Apply Recipe
   if (element.hasAttribute('fx-recipe')) {
@@ -159,7 +175,7 @@ export function applyRecipeAndScope(element: Element): void {
     applyRecipe(element, element.getAttribute('fx-recipe') || '', writtenKeys);
     if (writtenKeys.size > 0) {
       recipeOwnedAttributes.set(element, writtenKeys);
-      recipeAndScopeElements.add(element);
+      trackRecipeScopeElement(element);
       element.setAttribute('data-flux-recipe-owned', '1');
     }
   }
@@ -173,18 +189,18 @@ export function applyRecipeAndScope(element: Element): void {
     }
     if (writtenKeys.size > 0) {
       scopeOwnedAttributes.set(element, writtenKeys);
-      recipeAndScopeElements.add(element);
+      trackRecipeScopeElement(element);
       element.setAttribute('data-flux-scope-owned', '1');
     }
   }
 }
 
 export function removeRecipeAndScopeAttributes(root?: Element): void {
-  for (const element of Array.from(recipeAndScopeElements)) {
+  for (const element of trackedRecipeScopeElements()) {
     if (root && element !== root && !root.contains(element)) continue;
     clearOwnedAttributes(element, recipeOwnedAttributes, 'data-flux-recipe-owned');
     clearOwnedAttributes(element, scopeOwnedAttributes, 'data-flux-scope-owned');
-    recipeAndScopeElements.delete(element);
+    untrackRecipeScopeElement(element);
   }
 }
 
@@ -219,10 +235,11 @@ function getScopesBottomUp(element: Element): Element[] {
 function applyScope(element: Element, scope: Element, writtenKeys: Map<string, string>): void {
   for (const attr of Array.from(scope.attributes)) {
     if (attr.name.startsWith('fx-default-')) {
-      const originalName = attr.name.replace('fx-default-', 'fx-');
-      if (!element.hasAttribute(originalName)) {
-        element.setAttribute(originalName, attr.value);
-        writtenKeys.set(originalName, attr.value);
+      const key = attr.name.replace('fx-default-', '');
+      if (!hasExplicitAttribute(element, key)) {
+        const attrName = attributeForKey(key);
+        element.setAttribute(attrName, attr.value);
+        writtenKeys.set(attrName, attr.value);
       }
     }
   }

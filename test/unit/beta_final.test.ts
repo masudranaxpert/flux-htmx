@@ -16,13 +16,14 @@ describe('0.1.0-Beta Final Polish 1: DOM Reprocessing on reconfigure()', () => {
     Flux.dispose();
     Flux.configure({ requests: { timeoutMs: 1000 } });
 
-    const btn = makeEl('<button fx-post="/delete" fx-confirm="Are you sure?">Delete</button>');
+    const btn = makeEl('<button fx-post="/delete" fx-indicator="#spinner">Delete</button>');
     document.body.appendChild(btn);
 
     Flux.reconfigure({ requests: { timeoutMs: 3000 } });
 
     // Expansion attributes should be re-applied to existing DOM elements
-    expect(btn.getAttribute('hx-confirm')).toBe('Are you sure?');
+    expect(btn.getAttribute('hx-post')).toBe('/delete');
+    expect(btn.getAttribute('hx-indicator')).toBe('#spinner');
     Flux.dispose();
   });
 });

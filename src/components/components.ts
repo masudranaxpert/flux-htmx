@@ -41,61 +41,64 @@ export function installOpenController(): () => void {
     const targetEl = evt.target as Element | null;
     if (!targetEl) return;
 
-    // Handle fx-open
+    // Handle fx-open. An empty value must not short-circuit the handler: the fx-close
+    // handling below still needs to run for clicks inside this element.
     const openTarget = targetEl.closest(`[${OPEN_ATTR}]`);
     if (openTarget instanceof Element) {
       const selector = openTarget.getAttribute(OPEN_ATTR);
-      if (!selector) return;
+      if (selector) {
+        const el = safeQuerySelector(selector);
+        if (el instanceof HTMLDialogElement) {
+          if (!openers.has(el)) {
+            const opener = (document.activeElement as HTMLElement) ?? (openTarget as HTMLElement);
+            openers.set(el, opener);
+          }
 
-      const el = safeQuerySelector(selector);
-      if (el instanceof HTMLDialogElement) {
-        if (!openers.has(el)) {
+          if (!el.open && typeof el.showModal === 'function') {
+            el.showModal();
+          }
+
+          // Wire focus restoration on close event
+          if (!dialogControllers.has(el)) {
+            const onClose = () => {
+              const previousOpener = openers.get(el);
+              if (previousOpener && document.body.contains(previousOpener)) {
+                previousOpener.focus();
+              }
+              openers.delete(el);
+            };
+            el.addEventListener('close', onClose);
+
+            const cleanup = () => {
+              el.removeEventListener('close', onClose);
+              el.removeAttribute('data-flux-close-wired');
+              dialogControllers.delete(el);
+              activeDialogDisposers.delete(cleanup);
+            };
+
+            dialogControllers.set(el, cleanup);
+            activeDialogDisposers.add(cleanup);
+            el.setAttribute('data-flux-close-wired', '1');
+          }
+
+          // Move focus into the dialog for keyboard users.
+          const focusable = el.querySelector<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+          );
+          focusable?.focus();
+          evt.preventDefault();
+          return;
+        } else if (el instanceof HTMLElement && typeof el.showPopover === 'function') {
           const opener = (document.activeElement as HTMLElement) ?? (openTarget as HTMLElement);
-          openers.set(el, opener);
+          if (!openers.has(el as unknown as HTMLDialogElement)) {
+            openers.set(el as unknown as HTMLDialogElement, opener);
+          }
+          if (!el.matches(':popover-open')) {
+            el.showPopover();
+          }
+          evt.preventDefault();
+          return;
         }
-
-        if (!el.open && typeof el.showModal === 'function') {
-          el.showModal();
-        }
-
-        // Wire focus restoration on close event
-        if (!dialogControllers.has(el)) {
-          const onClose = () => {
-            const previousOpener = openers.get(el);
-            if (previousOpener && document.body.contains(previousOpener)) {
-              previousOpener.focus();
-            }
-            openers.delete(el);
-          };
-          el.addEventListener('close', onClose);
-
-          const cleanup = () => {
-            el.removeEventListener('close', onClose);
-            el.removeAttribute('data-flux-close-wired');
-            dialogControllers.delete(el);
-            activeDialogDisposers.delete(cleanup);
-          };
-
-          dialogControllers.set(el, cleanup);
-          activeDialogDisposers.add(cleanup);
-          el.setAttribute('data-flux-close-wired', '1');
-        }
-
-        // Move focus into the dialog for keyboard users.
-        const focusable = el.querySelector<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-        );
-        focusable?.focus();
-        evt.preventDefault();
-        return;
-      } else if (el instanceof HTMLElement && typeof el.showPopover === 'function') {
-        const opener = (document.activeElement as HTMLElement) ?? (openTarget as HTMLElement);
-        if (!openers.has(el as unknown as HTMLDialogElement)) {
-          openers.set(el as unknown as HTMLDialogElement, opener);
-        }
-        el.showPopover();
-        evt.preventDefault();
-        return;
       }
     }
 
@@ -127,6 +130,10 @@ export function installOpenController(): () => void {
     const detail = (evt as CustomEvent).detail;
     const elt = (detail?.ctx?.sourceElement ?? detail?.elt) as Element | undefined;
     if (!elt) return;
+
+    // validation.ts already prevented + dropped this request (invalid form); showing
+    // the dialog would let issueRequest(true) submit an invalid form.
+    if (detail?.ctx?.fluxValidationDropped) return;
 
     const dialogSelector = elt.getAttribute('fx-confirm-dialog');
     if (!dialogSelector) return;

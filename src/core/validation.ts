@@ -31,6 +31,11 @@ function onValidate(evt: Event): void {
   if (!form.reportValidity()) {
     log.info('[flux] Form validation failed, aborting request.');
     evt.preventDefault();
+    // Coordinate with other htmx:confirm listeners (fx-confirm-dialog): preventDefault
+    // only stops the default, not other listeners, so mark the drop explicitly.
+    if (detail && detail.ctx) {
+      detail.ctx.fluxValidationDropped = true;
+    }
     detail.dropRequest?.();
   }
 }

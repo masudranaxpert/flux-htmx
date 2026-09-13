@@ -18,6 +18,7 @@ function makeEl(html: string): Element {
 
 describe('Refactoring Hardening Test Suite', () => {
   it('1. Custom plugin presets expand dynamically during Flux.process()', () => {
+    Flux.configure();
     const customConnect = vi.fn((el: Element, val: string) => {
       el.setAttribute('hx-get', val);
       return true;

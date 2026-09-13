@@ -46,7 +46,7 @@ const server = createServer(async (req, res) => {
     if (path === '/fragment/swapped') {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(
-        '<button id="swapped-btn" fx-get="/fragment/hello" fx-target="#result2">Swap me</button>',
+        '<button id="swapped-btn" fx-get="/fragment/hello" hx-target="#result2">Swap me</button>',
       );
       return;
     }
@@ -56,6 +56,8 @@ const server = createServer(async (req, res) => {
       filePath = join(REPO, 'node_modules', 'htmx.org', 'dist', 'htmx.min.js');
     } else if (path === '/flux.js') {
       filePath = join(REPO, 'dist', 'flux.iife.js');
+    } else if (path === '/net.js') {
+      filePath = join(REPO, 'dist', 'net.iife.js');
     } else {
       // Map the URL under /public; "/" resolves to index.html.
       const rel = path === '/' ? 'index.html' : normalize(path);

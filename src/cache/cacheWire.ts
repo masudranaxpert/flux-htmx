@@ -3,6 +3,7 @@
 
 import { FragmentCache, isCacheableMethod } from './cache.js';
 import { getRequestContext } from '../core/events.js';
+import type { HtmxGlobal } from '../core/startup.js';
 
 const CACHE_ATTR = 'fx-cache';
 const CACHE_MODE_ATTR = 'fx-cache-mode';
@@ -354,6 +355,4 @@ function normalizeInvalidationPattern(pattern: string): string {
   return `GET:${trimmed}`;
 }
 
-export type HtmxInstance = {
-  swap?: (opts: { target: Element; text: string; swap?: string }) => void;
-};
+export type HtmxInstance = HtmxGlobal;

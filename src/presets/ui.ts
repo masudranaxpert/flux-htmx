@@ -1,135 +1,224 @@
-import { me, any } from '../core/sugar.js';
+// Visibility and self-removal presets. One visibility mechanism throughout: the
+// `hidden` class (Tailwind-compatible, synchronous, no inline styles). fx-show,
+// fx-hide, fx-toggle, fx-hide-escape, fx-hide-outside, and fx-dropdown all read and
+// write the same class, so any combination composes — a panel hidden by fx-hide can
+// be shown again by fx-toggle.
+//
+// Every controller registers a disconnect so signature changes and element teardown
+// remove the previous listeners instead of stacking them.
 
+import { queryMany } from '../core/selectors.js';
+import { log } from '../core/logger.js';
+
+const HIDDEN_CLASS = 'hidden';
+
+/** Resolves a preset target selector; `this`/omitted means the trigger element itself. */
+function resolveTargets(targetSelector: string | undefined, element: Element): Element[] {
+  if (targetSelector && targetSelector !== 'this') {
+    return queryMany(targetSelector);
+  }
+  return [element];
+}
+
+interface UiListenerController {
+  listener: EventListener;
+}
+
+const uiListeners = new WeakMap<Element, UiListenerController>();
+
+function connectUiListener(
+  element: Element,
+  listener: EventListener,
+  previous: UiListenerController | undefined,
+): void {
+  if (previous) element.removeEventListener('click', previous.listener);
+  element.addEventListener('click', listener);
+  uiListeners.set(element, { listener });
+}
+
+function disconnectUiListener(element: Element): void {
+  const controller = uiListeners.get(element);
+  if (!controller) return;
+  element.removeEventListener('click', controller.listener);
+  uiListeners.delete(element);
+}
+
+/** fx-show: removes the `hidden` class from the target on click. */
 export function applyShow(element: Element, targetSelector?: string): boolean {
-  me(element)?.on('click', () => {
-    // any() resolves to an array of nodes; iterate so we call the per-node sugar method,
-    // not the array wrapper (which has no fadeIn/fadeOut/classToggle).
-    const targets = targetSelector ? any(targetSelector) : any(element);
-    targets.forEach((t) => t?.fadeIn());
-  });
+  connectUiListener(
+    element,
+    () => {
+      for (const t of resolveTargets(targetSelector, element)) t.classList.remove(HIDDEN_CLASS);
+    },
+    uiListeners.get(element),
+  );
   return true;
 }
 
+export function disconnectShow(element: Element): void {
+  disconnectUiListener(element);
+}
+
+/** fx-hide: adds the `hidden` class to the target on click. */
 export function applyHide(element: Element, targetSelector?: string): boolean {
-  me(element)?.on('click', () => {
-    const targets = targetSelector ? any(targetSelector) : any(element);
-    targets.forEach((t) => t?.fadeOut());
-  });
+  connectUiListener(
+    element,
+    () => {
+      for (const t of resolveTargets(targetSelector, element)) t.classList.add(HIDDEN_CLASS);
+    },
+    uiListeners.get(element),
+  );
   return true;
 }
 
+export function disconnectHide(element: Element): void {
+  disconnectUiListener(element);
+}
+
+/** fx-toggle: toggles the `hidden` class on the target on click. */
 export function applyToggle(element: Element, targetSelector?: string): boolean {
-  me(element)?.on('click', () => {
-    const targets = targetSelector ? any(targetSelector) : any(element);
-    // Toggle the standard 'hidden' utility class (Tailwind / common CSS).
-    targets.forEach((t) => t.classToggle('hidden'));
-  });
+  connectUiListener(
+    element,
+    () => {
+      for (const t of resolveTargets(targetSelector, element)) t.classList.toggle(HIDDEN_CLASS);
+    },
+    uiListeners.get(element),
+  );
   return true;
 }
 
+export function disconnectToggle(element: Element): void {
+  disconnectUiListener(element);
+}
+
+/** fx-class="name": toggles an arbitrary class on the target on click. */
 export function applyClassToggle(
   element: Element,
   className: string,
   targetSelector?: string,
 ): boolean {
   if (!className) return false;
-  me(element)?.on('click', () => {
-    const targets = targetSelector ? any(targetSelector) : any(element);
-    targets.forEach((t) => t.classToggle(className));
+  connectUiListener(
+    element,
+    () => {
+      for (const t of resolveTargets(targetSelector, element)) t.classList.toggle(className);
+    },
+    uiListeners.get(element),
+  );
+  return true;
+}
+
+export function disconnectClassToggle(element: Element): void {
+  disconnectUiListener(element);
+}
+
+/** Parses `fx-remove`'s duration ("500", "500ms", "2s"). Returns null when unparseable. */
+function parseRemoveDelayMs(delayStr: string): number | null {
+  const raw = delayStr.trim();
+  if (!raw) return null;
+  let ms: number;
+  if (raw.endsWith('ms')) {
+    ms = parseInt(raw, 10);
+  } else if (raw.endsWith('s')) {
+    ms = parseFloat(raw) * 1000;
+  } else {
+    ms = parseInt(raw, 10);
+  }
+  if (Number.isNaN(ms) || ms < 0) return null;
+  return ms;
+}
+
+/**
+ * fx-remove="3s": removes the element itself after a delay. The value MUST be a
+ * duration — a non-duration value (e.g. the `closest li` used by fx-delete's
+ * fx-remove-target) disables self-removal instead of destroying the element on load.
+ */
+export function applyRemove(element: Element, delayStr: string): boolean {
+  const ms = parseRemoveDelayMs(delayStr);
+  if (ms === null) {
+    log.warn(
+      `fx-remove="${delayStr}" is not a duration; ignoring. ` +
+        `To remove an ancestor after fx-delete succeeds, use fx-remove-target.`,
+    );
+    return false;
+  }
+  const remove = () => {
+    if (element.isConnected) element.remove();
+  };
+  if (ms > 0) {
+    setTimeout(remove, ms);
+  } else {
+    remove();
+  }
+  return true;
+}
+
+interface DocumentListenerController {
+  listener: EventListener;
+  arm?: ReturnType<typeof setTimeout>;
+}
+
+const escapeListeners = new WeakMap<Element, DocumentListenerController>();
+
+/** fx-hide-escape: closes the target (adds `hidden`) when Escape is pressed. */
+export function applyHideEscape(element: Element, targetSelector?: string): boolean {
+  disconnectHideEscape(element);
+  const listener = (e: Event) => {
+    if ((e as KeyboardEvent).key !== 'Escape') return;
+    for (const el of resolveTargets(targetSelector, element)) {
+      if (!el.classList.contains(HIDDEN_CLASS)) el.classList.add(HIDDEN_CLASS);
+    }
+  };
+  document.addEventListener('keydown', listener);
+  escapeListeners.set(element, { listener });
+  return true;
+}
+
+export function disconnectHideEscape(element: Element): void {
+  const controller = escapeListeners.get(element);
+  if (!controller) return;
+  document.removeEventListener('keydown', controller.listener);
+  escapeListeners.delete(element);
+}
+
+const outsideListeners = new WeakMap<Element, { cancel: () => void }>();
+
+/**
+ * fx-hide-outside: closes the target when a click lands outside the trigger.
+ * The document listener attaches after a 100 ms grace period; `cancelled` guards
+ * the race where disconnect runs before the listener was attached.
+ */
+export function applyHideOutside(element: Element, targetSelector?: string): boolean {
+  disconnectHideOutside(element);
+  let cancelled = false;
+  const listener = (e: Event) => {
+    if (cancelled) return;
+    if (element.contains(e.target as Node)) return;
+    for (const el of resolveTargets(targetSelector, element)) {
+      if (!el.classList.contains(HIDDEN_CLASS)) el.classList.add(HIDDEN_CLASS);
+    }
+  };
+  const arm = setTimeout(() => {
+    if (!cancelled) document.addEventListener('click', listener);
+  }, 100);
+  outsideListeners.set(element, {
+    cancel: () => {
+      cancelled = true;
+      clearTimeout(arm);
+      document.removeEventListener('click', listener);
+    },
   });
   return true;
 }
 
-export function applyRemove(element: Element, delayStr: string): boolean {
-  let ms = 0;
-  if (delayStr) {
-    if (delayStr.endsWith('ms')) {
-      ms = parseInt(delayStr, 10);
-    } else if (delayStr.endsWith('s')) {
-      ms = parseFloat(delayStr) * 1000;
-    } else {
-      ms = parseInt(delayStr, 10);
-    }
-  }
-
-  if (!isNaN(ms) && ms > 0) {
-    setTimeout(() => {
-      me(element)?.fadeOut(undefined, 500, true);
-    }, ms);
-  } else {
-    me(element)?.fadeOut(undefined, 500, true);
-  }
-  return true;
+export function disconnectHideOutside(element: Element): void {
+  outsideListeners.get(element)?.cancel();
+  outsideListeners.delete(element);
 }
-
-const escapeListeners = new WeakMap<Element, EventListener>();
-
-export function applyHideEscape(element: Element, targetSelector?: string): boolean {
-  const listener = (e: Event) => {
-    if ((e as KeyboardEvent).key === 'Escape') {
-      const target =
-        targetSelector && targetSelector !== 'this' ? any(targetSelector) : me(element);
-      if (!target) return;
-
-      const nodes = Array.isArray(target) ? target : [target];
-      nodes.forEach((n) => {
-        const el = n as unknown as HTMLElement;
-        if (el.style.display !== 'none' && !el.classList.contains('hidden')) {
-          (me(el) as any).fadeOut();
-        }
-      });
-    }
-  };
-  document.addEventListener('keydown', listener);
-  escapeListeners.set(element, listener);
-  return true;
-}
-
-export function disconnectHideEscape(element: Element) {
-  const listener = escapeListeners.get(element);
-  if (listener) {
-    document.removeEventListener('keydown', listener);
-    escapeListeners.delete(element);
-  }
-}
-
-const outsideListeners = new WeakMap<Element, EventListener>();
-
-export function applyHideOutside(element: Element, targetSelector?: string): boolean {
-  const listener = (e: Event) => {
-    const target = targetSelector && targetSelector !== 'this' ? any(targetSelector) : me(element);
-    if (!target) return;
-
-    // If click is outside the specified element, hide the target
-    if (!element.contains(e.target as Node)) {
-      const nodes = Array.isArray(target) ? target : [target];
-      nodes.forEach((n) => {
-        const el = n as unknown as HTMLElement;
-        if (el.style.display !== 'none' && !el.classList.contains('hidden')) {
-          (me(el) as any).fadeOut();
-        }
-      });
-    }
-  };
-  // Use a slight delay to avoid instantly closing if a button click triggered the open
-  setTimeout(() => {
-    document.addEventListener('click', listener);
-  }, 100);
-  outsideListeners.set(element, listener);
-  return true;
-}
-
-export function disconnectHideOutside(element: Element) {
-  const listener = outsideListeners.get(element);
-  if (listener) {
-    document.removeEventListener('click', listener);
-    outsideListeners.delete(element);
-  }
-}
-
 // Coordinated dropdown controller: toggle + outside-click + Escape close in one synchronous
-// handler. Unlike fx-show/fx-hide-outside (which race via async fades on a shared click),
-// this toggles the `hidden` class instantly and excludes the trigger from outside-close.
+// handler. Toggles the `hidden` class instantly and excludes the trigger from outside-close,
+// so no setTimeout deferral is needed to keep the opening click safe.
+
 interface DropdownController {
   triggerClick: EventListener;
   outsideClick: EventListener;
@@ -139,11 +228,12 @@ interface DropdownController {
 const dropdownControllers = new WeakMap<Element, DropdownController>();
 
 export function applyDropdown(element: Element, targetSelector?: string): boolean {
+  disconnectDropdown(element);
   const trigger = element;
 
   const targets = (): Element[] => {
     if (targetSelector && targetSelector !== 'this') {
-      return Array.from(document.querySelectorAll(targetSelector));
+      return queryMany(targetSelector);
     }
     return [trigger];
   };
@@ -153,18 +243,18 @@ export function applyDropdown(element: Element, targetSelector?: string): boolea
   };
 
   const open = () => {
-    targets().forEach((t) => t.classList.remove('hidden'));
+    targets().forEach((t) => t.classList.remove(HIDDEN_CLASS));
     sync(true);
   };
 
   const close = () => {
-    targets().forEach((t) => t.classList.add('hidden'));
+    targets().forEach((t) => t.classList.add(HIDDEN_CLASS));
     sync(false);
   };
 
   const triggerClick = () => {
-    // Synchronous class toggle: no async fade, so nothing can race the outside-close below.
-    if (targets().some((t) => !t.classList.contains('hidden'))) {
+    // Synchronous class toggle: nothing can race the outside-close below.
+    if (targets().some((t) => !t.classList.contains(HIDDEN_CLASS))) {
       close();
     } else {
       open();
@@ -186,12 +276,12 @@ export function applyDropdown(element: Element, targetSelector?: string): boolea
   trigger.addEventListener('click', triggerClick);
   document.addEventListener('click', outsideClick);
   document.addEventListener('keydown', escapeKey);
-  sync(targets().some((t) => !t.classList.contains('hidden')));
+  sync(targets().some((t) => !t.classList.contains(HIDDEN_CLASS)));
   dropdownControllers.set(trigger, { triggerClick, outsideClick, escapeKey });
   return true;
 }
 
-export function disconnectDropdown(element: Element) {
+export function disconnectDropdown(element: Element): void {
   const c = dropdownControllers.get(element);
   if (!c) return;
   element.removeEventListener('click', c.triggerClick);

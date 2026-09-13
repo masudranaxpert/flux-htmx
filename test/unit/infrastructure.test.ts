@@ -105,6 +105,7 @@ describe('Infrastructure Refactoring & Diagnostics Test Suite', () => {
   });
 
   it('7. Public Plugin System: Flux.use registers custom plugins and presets', () => {
+    Flux.configure();
     const pluginCleanup = vi.fn();
     Flux.use({
       name: 'test-plugin',

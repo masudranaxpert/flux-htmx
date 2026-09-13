@@ -1,7 +1,7 @@
 {
   "name": "flux-htmx",
-  "version": "1.4.0",
-  "description": "Thin server-driven frontend layer on HTMX 4. Shorthand fx-* attributes, lifecycle, presets, prefetch, and toast — without reimplementing htmx.",
+  "version": "2.0.0",
+  "description": "Thin server-driven frontend layer on HTMX 4. Shorthand fx-* verbs, presets, lifecycle, prefetch, and toast — without reimplementing htmx.",
   "keywords": [
     "htmx",
     "htmx4",
@@ -23,15 +23,21 @@
     ".": {
       "types": "./dist/flux.d.ts",
       "import": "./dist/flux.js",
-      "default": "./dist/flux.iife.js"
+      "require": "./dist/flux.cjs"
+    },
+    "./net": {
+      "types": "./dist/net.d.ts",
+      "import": "./dist/net.js",
+      "require": "./dist/net.cjs"
     },
     "./package.json": "./package.json"
   },
-  "main": "./dist/flux.iife.js",
+  "main": "./dist/flux.cjs",
   "module": "./dist/flux.js",
   "types": "./dist/flux.d.ts",
   "files": [
     "dist",
+    "src",
     "README.md",
     "LICENSE"
   ],
@@ -39,7 +45,7 @@
     "node": ">=20"
   },
   "peerDependencies": {
-    "htmx.org": "4.0.0-beta6"
+    "htmx.org": "^4.0.0-beta6"
   },
   "peerDependenciesMeta": {
     "htmx.org": {
@@ -60,20 +66,24 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "npm run build:modular && npm run build:full && npm run build:css && tsc -p tsconfig.build.json",
-    "build:modular": "vite build --mode es && vite build --mode iife",
+    "prebuild": "node scripts/generate-version.mjs",
+    "build": "npm run build:modular && npm run build:net && npm run build:full && npm run build:css && tsc -p tsconfig.build.json",
+    "build:modular": "vite build --mode es && vite build --mode cjs && vite build --mode iife",
+    "build:net": "vite build --mode net-es && vite build --mode net-cjs && vite build --mode net-iife",
     "build:full": "vite build --mode full-es && vite build --mode full-iife",
     "build:css": "node scripts/copy-css.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "pretest": "node scripts/generate-version.mjs",
     "test": "vitest run",
     "test:log": "vitest run --reporter=verbose",
     "test:unit": "vitest run",
     "test:browser": "playwright test --config=test/e2e/playwright.config.ts",
     "test:watch": "vitest",
     "size": "node scripts/size.mjs",
-    "example": "node examples/vanilla/server.mjs"
+    "example": "node examples/vanilla/server.mjs",
+    "prepack": "npm run build && npm test"
   }
 }

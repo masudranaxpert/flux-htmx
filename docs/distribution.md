@@ -5,14 +5,16 @@ you load scripts. All builds expose the same `fx-*` attributes and the same glob
 
 ## Distribution Builds
 
-| File                | Format | Bundles        | Description & Primary Use Case                                |
-| ------------------- | ------ | -------------- | ------------------------------------------------------------- |
-| `flux.full.iife.js` | IIFE   | Flux + HTMX 4  | All-in-One Standalone script tag (Django, Laravel, Go, Rails) |
-| `flux.iife.js`      | IIFE   | Flux core only | Use when HTMX 4 is pre-loaded via separate script tags        |
-| `flux.full.js`      | ESM    | Flux + HTMX 4  | Standalone ES Module bundle                                   |
-| `flux.js`           | ESM    | Flux core only | Use with Vite, Webpack, etc. (import htmx separately)         |
-| `flux.css`          | CSS    | —              | Styling & accessible live region                              |
-| `flux.min.css`      | CSS    | —              | Minified stylesheet for production                            |
+| File                   | Format | Bundles                                      | Description & Primary Use Case                                |
+| ---------------------- | ------ | -------------------------------------------- | ------------------------------------------------------------- |
+| `flux.full.iife.js`    | IIFE   | HTMX 4 + Flux core + UI plugins + net extras | All-in-One Standalone script tag (Django, Laravel, Go, Rails) |
+| `flux.iife.js`         | IIFE   | Flux core + UI plugins                       | Use when HTMX 4 is pre-loaded via separate script tags        |
+| `net.iife.js`          | IIFE   | Offline queue + upload/optimistic plugins    | Optional add-on after `flux.iife.js` (exposes `FluxNet`)      |
+| `flux.full.js`         | ESM    | HTMX 4 + everything                          | Standalone ES Module bundle                                   |
+| `flux.js`              | ESM    | Flux core only                               | Use with Vite, Webpack, etc. (import htmx separately)         |
+| `flux.cjs` / `net.cjs` | CJS    | Flux core / net extras                       | `require("flux-htmx")` consumers                              |
+| `flux.css`             | CSS    | —                                            | Styling & accessible live region                              |
+| `flux.min.css`         | CSS    | —                                            | Minified stylesheet for production                            |
 
 ## Global `window.Flux` API & Diagnostics
 

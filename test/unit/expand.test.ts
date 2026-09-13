@@ -15,33 +15,34 @@ describe('expandElement — verbs', () => {
     expect(el.getAttribute(`fx-${verb}`)).toBe('/users/1');
   });
 
-  it('expands a verb and its options together', () => {
-    const el = makeEl(`<button fx-get="/u" fx-target="#u" fx-swap="outerHTML">x</button>`);
-    expect(expandElement(el)).toBe(3);
+  it('expands a verb and its indicator option together', () => {
+    const el = makeEl(`<button fx-get="/u" fx-indicator="#spinner">x</button>`);
+    expect(expandElement(el)).toBe(2);
     expect(el.getAttribute('hx-get')).toBe('/u');
-    expect(el.getAttribute('hx-target')).toBe('#u');
-    expect(el.getAttribute('hx-swap')).toBe('outerHTML');
+    expect(el.getAttribute('hx-indicator')).toBe('#spinner');
   });
-});
 
-describe('expandElement — options', () => {
-  it.each([
-    'target',
-    'swap',
-    'trigger',
-    'select',
-    'sync',
-    'indicator',
-    'include',
-    'vals',
-    'headers',
-    'confirm',
-    'boost',
-    'preload',
-  ])('expands fx-%s into hx-%s', (option) => {
-    const el = makeEl(`<div fx-${option}="v">x</div>`);
-    expect(expandElement(el)).toBe(1);
-    expect(el.getAttribute(`hx-${option}`)).toBe('v');
+  // 2.0: pure option aliases were removed. Users configure requests with raw hx-*.
+  it.each(['target', 'swap', 'trigger', 'select', 'sync', 'vals', 'headers', 'confirm', 'boost'])(
+    'no longer expands fx-%s',
+    (option) => {
+      const el = makeEl(`<div fx-${option}="v">x</div>`);
+      expect(expandElement(el)).toBe(0);
+      expect(el.hasAttribute(`hx-${option}`)).toBe(false);
+      expect(hasFluxAttributes(el)).toBe(false);
+    },
+  );
+
+  it('still expands fx-morph into hx-swap', () => {
+    const el = makeEl(`<button fx-get="/u" fx-morph="outer">x</button>`);
+    expandElement(el);
+    expect(el.getAttribute('hx-swap')).toBe('outerMorph');
+  });
+
+  it('still expands fx-history into hx-push-url', () => {
+    const el = makeEl(`<button fx-get="/u" fx-history="true">x</button>`);
+    expandElement(el);
+    expect(el.getAttribute('hx-push-url')).toBe('true');
   });
 });
 
@@ -50,13 +51,6 @@ describe('expandElement — raw-wins precedence', () => {
     const el = makeEl(`<button fx-get="/flux" hx-get="/raw">x</button>`);
     expect(expandElement(el)).toBe(0);
     expect(el.getAttribute('hx-get')).toBe('/raw');
-  });
-
-  it('does not overwrite an existing hx-target but still expands other fx-*', () => {
-    const el = makeEl(`<button fx-get="/u" fx-target="#flux" hx-target="#raw">x</button>`);
-    expect(expandElement(el)).toBe(1);
-    expect(el.getAttribute('hx-get')).toBe('/u');
-    expect(el.getAttribute('hx-target')).toBe('#raw');
   });
 
   it('leaves a fully-raw hx-* element untouched', () => {
@@ -75,12 +69,12 @@ describe('expandElement — idempotency', () => {
   });
 
   it('is idempotent across many calls', () => {
-    const el = makeEl(`<button fx-get="/u" fx-target="#u">x</button>`);
+    const el = makeEl(`<button fx-get="/u" fx-indicator="#s">x</button>`);
     expandElement(el);
     expandElement(el);
     expandElement(el);
     expect(el.getAttribute('hx-get')).toBe('/u');
-    expect(el.getAttribute('hx-target')).toBe('#u');
+    expect(el.getAttribute('hx-indicator')).toBe('#s');
   });
 });
 
@@ -101,13 +95,15 @@ describe('expandElement — edge cases', () => {
 });
 
 describe('hasFluxAttributes', () => {
-  it('true for any fx-* verb or option', () => {
+  it('true for fx-* verbs and remaining shorthands', () => {
     expect(hasFluxAttributes(makeEl('<button fx-get="/u">x</button>'))).toBe(true);
-    expect(hasFluxAttributes(makeEl('<div fx-target="#u">x</div>'))).toBe(true);
+    expect(hasFluxAttributes(makeEl('<div fx-indicator="#s">x</div>'))).toBe(true);
+    expect(hasFluxAttributes(makeEl('<div fx-history="true">x</div>'))).toBe(true);
   });
 
-  it('false for raw hx-* and plain elements', () => {
+  it('false for raw hx-*, removed aliases, and plain elements', () => {
     expect(hasFluxAttributes(makeEl('<button hx-get="/u">x</button>'))).toBe(false);
+    expect(hasFluxAttributes(makeEl('<div fx-target="#u">x</div>'))).toBe(false);
     expect(hasFluxAttributes(makeEl('<button>x</button>'))).toBe(false);
   });
 });

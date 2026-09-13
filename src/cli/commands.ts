@@ -200,12 +200,7 @@ export function inspectHtml(html: string): string[] {
     'fx-put': 'hx-put',
     'fx-patch': 'hx-patch',
     'fx-delete': 'hx-delete',
-    'fx-target': 'hx-target',
-    'fx-trigger': 'hx-trigger',
-    'fx-swap': 'hx-swap',
-    'fx-sync': 'hx-sync',
     'fx-indicator': 'hx-indicator',
-    'fx-confirm': 'hx-confirm',
   };
 
   for (const [fx, hx] of Object.entries(attrMap)) {

@@ -22,16 +22,21 @@ All generated `hx-*` attributes written by Flux are tracked in a central `genera
 - **Dynamic Attribute Sync**: When `fx-*` shorthand or preset options are edited or removed at runtime, reconciliation cleans up owned `hx-*` attributes cleanly.
 - **Teardown Safety**: Hard disposal strips generated attributes without damaging pre-existing raw markup.
 
-### Generic Shorthand
+### Verbal Shorthand
 
-Verbs and options map one-to-one to HTMX attributes:
+Only verbs (plus three small conveniences) map to HTMX attributes — pure option aliases were
+removed in 2.0 because raw `hx-target` next to `fx-get` needs no intermediary:
 
 ```
 fx-get fx-post fx-put fx-patch fx-delete      →  hx-* verbs (make an element actionable)
-fx-target fx-swap fx-trigger fx-select fx-sync
-fx-indicator fx-include fx-vals fx-headers
-fx-disable fx-confirm fx-boost fx-preload     →  hx-* options
+fx-indicator                                  →  hx-indicator
+fx-morph                                      →  hx-swap="innerMorph|outerMorph|outerSync"
+fx-history                                    →  hx-push-url
 ```
+
+Request configuration (`hx-target`, `hx-swap`, `hx-trigger`, `hx-sync`, `hx-vals`, …) is
+written with raw htmx attributes. Presets keep reading their own option attributes
+(`fx-target`, `fx-swap`, `fx-confirm`, …) through the preset registry.
 
 ### Presets
 

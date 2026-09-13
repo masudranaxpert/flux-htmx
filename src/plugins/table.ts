@@ -15,12 +15,25 @@ function handleTableChange(e: Event) {
     const isChecked = target.checked;
     const checkboxes = queryAllSafely('[fx-select]', table) as Element[] as HTMLInputElement[];
 
+    // Bulk update: set every checkbox and row highlight directly, then notify once.
+    // Dispatching a change per checkbox would fire one htmx request per row.
     for (const cb of checkboxes) {
-      if (cb.checked !== isChecked) {
-        cb.checked = isChecked;
-        cb.dispatchEvent(new Event('change', { bubbles: true }));
+      cb.checked = isChecked;
+      const row = cb.closest('tr');
+      if (row) {
+        if (isChecked) {
+          row.setAttribute('data-selected', 'true');
+        } else {
+          row.removeAttribute('data-selected');
+        }
       }
     }
+    table.dispatchEvent(
+      new CustomEvent('flux:select-all', {
+        bubbles: true,
+        detail: { checked: isChecked, count: checkboxes.length },
+      }),
+    );
   } else if (target.hasAttribute('fx-select')) {
     const table = target.closest('table') || target.closest('[fx-table]');
     if (!table) return;

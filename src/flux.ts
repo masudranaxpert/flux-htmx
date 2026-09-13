@@ -10,24 +10,27 @@ import { install, expandPresets } from './core/lifecycle.js';
 import { resolveToken, shouldAttach } from './core/csrf.js';
 import { installFeedback, resetFeedbackForTests } from './core/feedback.js';
 import { installValidation } from './core/validation.js';
-import {
-  installOfflineSupport,
-  pendingCount,
-  clearOfflineQueue,
-  flush as flushOffline,
-} from './core/offline.js';
 import { installStatusTargeting, disposeStatusTargeting } from './core/status.js';
 import { registerRecipe } from './core/recipes.js';
+import { setHeader } from './core/headers.js';
+import { setRuntimeConfig } from './core/runtime.js';
 import { installActionPipeline } from './core/action-lifecycle.js';
 import { registerAction, defineActionPipeline } from './core/actions.js';
 export { registerRecipe as recipe } from './core/recipes.js';
 export { registerAction, defineActionPipeline as action } from './core/actions.js';
+import type { FragmentCache } from './cache/cache.js';
 import { cache } from './cache/instance.js';
 import { installCacheIntegration } from './cache/cacheWire.js';
 import { installOpenController, disposeDialogControllers } from './components/components.js';
 import { log } from './core/logger.js';
 import { FLUX_VERSION } from './core/version.js';
-import { readFluxMetaConfig, reportDependencies, verifyHtmxVersion } from './core/startup.js';
+import {
+  readFluxMetaConfig,
+  reportDependencies,
+  resolveHtmx,
+  verifyHtmxVersion,
+  type HtmxGlobal,
+} from './core/startup.js';
 import { disposeDeleteControllers, installDeleteControllers } from './presets/delete.js';
 import { disposeSubmitControllers, installSubmitControllers } from './presets/submit.js';
 import { disconnectPresetTree, disposePresetControllers } from './presets/index.js';
@@ -51,8 +54,6 @@ import {
 } from './core/generated-attributes.js';
 import { installRetrySupport, disposeRetrySupport } from './core/retry.js';
 import { installDeduplication } from './core/dedupe.js';
-import { uploadPlugin } from './plugins/upload.js';
-import { optimisticPlugin } from './plugins/optimistic.js';
 import { removeRecipeAndScopeAttributes } from './core/expand.js';
 import { me, any, sugar, installDomSugar } from './core/sugar.js';
 
@@ -60,10 +61,40 @@ export { type FluxConfig } from './core/config.js';
 export { default as htmx } from 'htmx.org';
 export { FLUX_VERSION };
 export { inspectElement as inspect, doctor };
-export { uploadPlugin, optimisticPlugin };
 export { applyRealtime, disconnectRealtime } from './presets/realtime.js';
 export { applySearch, disconnectSearch } from './presets/search.js';
 export { me, any, sugar };
+
+/**
+ * Public modular API surface. The full bundle adds the optional `offline` and `plugins`
+ * blocks via the net entry; modular consumers import those from `flux-htmx/net`.
+ */
+export interface FluxApi {
+  version: string;
+  readonly dependencies: Record<string, string>;
+  readonly isStarted: boolean;
+  readonly config: ResolvedConfig | null;
+  start(element?: Element, userConfig?: FluxConfig): void;
+  configure(userConfig?: FluxConfig): ResolvedConfig;
+  reconfigure(userConfig?: FluxConfig, root?: Element): ResolvedConfig;
+  process(element?: Element): void;
+  dispose(options?: DisposeOptions): void;
+  recipe: typeof registerRecipe;
+  action: typeof defineActionPipeline;
+  registerAction: typeof registerAction;
+  cache: FragmentCache;
+  htmx: HtmxGlobal | undefined;
+  inspect: typeof inspectElement;
+  doctor: typeof doctor;
+  use(plugin: FluxPlugin): void;
+  unuse(pluginName: string): void;
+  offline?: {
+    readonly pending: number;
+    flush(): Promise<void>;
+    clear(): void;
+  };
+  plugins?: { upload: FluxPlugin; optimistic: FluxPlugin };
+}
 
 let configured = false;
 const teardowns: Array<() => void> = [];
@@ -148,10 +179,9 @@ export function configure(userConfig?: FluxConfig): ResolvedConfig {
     );
   }
   currentConfig = resolveConfig(userConfig);
-  const activeHtmx =
-    (typeof htmx !== 'undefined' ? htmx : undefined) ??
-    (typeof window !== 'undefined' ? (window as any).htmx : undefined) ??
-    (typeof globalThis !== 'undefined' ? (globalThis as any).htmx : undefined);
+  setRuntimeConfig(currentConfig);
+
+  const activeHtmx = resolveHtmx(htmx);
 
   if (activeHtmx?.config) {
     activeHtmx.config.defaultSwap = currentConfig.htmx.defaultSwap;
@@ -166,8 +196,6 @@ export function configure(userConfig?: FluxConfig): ResolvedConfig {
     teardowns.push(installDeleteControllers());
     const validationTd = installValidation();
     if (validationTd) teardowns.push(validationTd);
-    const offlineTd = installOfflineSupport(() => activeHtmx);
-    teardowns.push(offlineTd);
     teardowns.push(installActionPipeline());
     teardowns.push(installFeedback(() => currentConfig));
     teardowns.push(installCacheIntegration(cache, activeHtmx));
@@ -188,10 +216,7 @@ export function process(element?: Element): void {
   const root = element ?? document.body;
   reconcileGeneratedAttributes(root);
   expandPresets(root);
-  const activeHtmx =
-    (typeof htmx !== 'undefined' ? htmx : undefined) ??
-    (typeof window !== 'undefined' ? (window as any).htmx : undefined) ??
-    (typeof globalThis !== 'undefined' ? (globalThis as any).htmx : undefined);
+  const activeHtmx = resolveHtmx(htmx);
   if (typeof activeHtmx?.process === 'function') {
     activeHtmx.process(root);
   }
@@ -225,6 +250,7 @@ export function dispose(options?: DisposeOptions): void {
   }
   configured = false;
   currentConfig = null;
+  setRuntimeConfig(null);
 }
 
 interface RequestState {
@@ -265,11 +291,7 @@ function installRequestHooks(
 
     const token = resolveToken(cfg.csrf);
     if (shouldAttach(request.method, request.action, token) && token.value) {
-      if (typeof (request.headers as any)?.set === 'function') {
-        (request.headers as any).set(token.headerName, token.value);
-      } else {
-        request.headers = { ...(request.headers ?? {}), [token.headerName]: token.value };
-      }
+      setHeader(request.headers, token.headerName, token.value);
     }
   };
 
@@ -297,19 +319,12 @@ function installCleanupHook(): () => void {
   return () => document.removeEventListener('htmx:before:cleanup', onCleanup);
 }
 
-function createFluxApi() {
-  const activeHtmx =
-    (typeof htmx !== 'undefined' ? htmx : undefined) ??
-    (typeof window !== 'undefined' ? (window as any).htmx : undefined) ??
-    (typeof globalThis !== 'undefined' ? (globalThis as any).htmx : undefined);
+function createFluxApi(): FluxApi {
+  const activeHtmx = resolveHtmx(htmx);
 
-  const api = {
+  return {
     version: FLUX_VERSION,
-    get dependencies() {
-      return reportDependencies({
-        htmx: activeHtmx,
-      });
-    },
+    dependencies: reportDependencies({ htmx: activeHtmx }),
     get isStarted() {
       return configured;
     },
@@ -333,63 +348,81 @@ function createFluxApi() {
     doctor,
     use,
     unuse,
-    offline: {
-      get pending() {
-        return pendingCount();
-      },
-      flush: () => flushOffline(activeHtmx),
-      clear: clearOfflineQueue,
-    },
-    plugins: {
-      upload: uploadPlugin,
-      optimistic: optimisticPlugin,
-    },
   };
-
-  return api;
 }
 
-let fluxApiInstance: ReturnType<typeof createFluxApi> | undefined;
+let fluxApiInstance: FluxApi | undefined;
 
-if (typeof window !== 'undefined') {
-  const activeHtmx =
-    (typeof htmx !== 'undefined' ? htmx : undefined) ??
-    (window as any).htmx ??
-    (typeof globalThis !== 'undefined' ? (globalThis as any).htmx : undefined);
-  verifyHtmxVersion(activeHtmx);
+/** Module-singleton accessor so the default export and bootstrapFlux share one API object. */
+function getFluxApi(): FluxApi {
+  fluxApiInstance ??= createFluxApi();
+  return fluxApiInstance;
+}
 
+/** Runs `fn` now, or on DOMContentLoaded when the document is still loading. */
+export function onBodyReady(fn: () => void): void {
+  if (typeof document === 'undefined') return;
+  if (document.readyState === 'loading') {
+    const handler = () => fn();
+    document.addEventListener('DOMContentLoaded', handler, { once: true });
+    teardowns.push(() => document.removeEventListener('DOMContentLoaded', handler));
+  } else {
+    fn();
+  }
+}
+
+export interface FluxBootstrapOptions {
+  /** API object to publish as `window.Flux` (defaults to the modular API). */
+  api?: FluxApi;
+  /** Custom auto-start routine (e.g. the full bundle's plugin-aware startAll). */
+  start?: (element?: Element) => void;
+}
+
+/**
+ * Publishes the Flux global, applies duplicate-load policy, and honours meta-tag autoStart.
+ * Entry points call this explicitly: importing the module alone has no global side effects,
+ * so modular and full builds can coexist without racing for `window.Flux`.
+ */
+export function bootstrapFlux(options?: FluxBootstrapOptions): FluxApi {
+  if (typeof window === 'undefined') return options?.api ?? getFluxApi();
+
+  const win = window as Window & { Flux?: Partial<FluxApi> };
   const metaConfig = readFluxMetaConfig();
   const policy = metaConfig.duplicatePolicy ?? 'reuse';
 
-  const existingFlux = (window as any).Flux;
+  const existingFlux = win.Flux;
   if (existingFlux && existingFlux.version) {
     if (policy === 'warn') {
       log.warn('Flux is already loaded; reusing existing instance');
     } else if (policy === 'error') {
       throw new Error('[flux] Flux is already loaded');
     }
-    fluxApiInstance = existingFlux;
-  } else {
-    fluxApiInstance = createFluxApi();
-    (window as any).Flux = fluxApiInstance;
+    return existingFlux as FluxApi;
+  }
 
-    if (metaConfig.autoStart && !configured) {
-      try {
+  const activeHtmx =
+    (typeof htmx !== 'undefined' ? htmx : undefined) ??
+    (win as { htmx?: unknown }).htmx ??
+    (globalThis as { htmx?: unknown }).htmx;
+  verifyHtmxVersion(activeHtmx as { version?: string; VERSION?: string } | undefined);
+
+  const api = options?.api ?? getFluxApi();
+  win.Flux = api;
+
+  if (metaConfig.autoStart && !configured) {
+    try {
+      if (options?.start) {
+        options.start();
+      } else {
         configure(metaConfig.flux);
-        if (typeof document !== 'undefined') {
-          if (document.readyState === 'loading') {
-            const domHandler = () => process(document.body);
-            document.addEventListener('DOMContentLoaded', domHandler, { once: true });
-            teardowns.push(() => document.removeEventListener('DOMContentLoaded', domHandler));
-          } else {
-            process(document.body);
-          }
-        }
-      } catch (e) {
-        log.warn('auto-configure failed', e);
+        onBodyReady(() => process(document.body));
       }
+    } catch (e) {
+      log.warn('auto-configure failed', e);
     }
   }
+
+  return api;
 }
 
-export default fluxApiInstance ?? createFluxApi();
+export default getFluxApi();

@@ -3,9 +3,9 @@ import { inspectHtml, parseArgs } from '../../src/cli/commands.js';
 
 describe('inspectHtml', () => {
   it('expands generic fx-* verbs', () => {
-    const lines = inspectHtml('<button fx-get="/users" fx-target="#u">x</button>');
+    const lines = inspectHtml('<button fx-get="/users" fx-indicator="#s">Go</button>');
     expect(lines).toContain('fx-get="/users" → hx-get="/users"');
-    expect(lines).toContain('fx-target="#u" → hx-target="#u"');
+    expect(lines).toContain('fx-indicator="#s" → hx-indicator="#s"');
   });
 
   it('expands fx-search into the multi-attribute preset', () => {

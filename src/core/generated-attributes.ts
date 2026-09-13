@@ -6,7 +6,34 @@
 import { getPresetRegistry, reconcilePresetController } from '../presets/index.js';
 
 const generatedAttributes = new WeakMap<Element, Map<string, string>>();
-const generatedElements = new Set<Element>();
+// WeakRef registry: strong Set references leaked detached elements (fx-remove, sugar
+// remove, plugin DOM ops never went through htmx:before:cleanup). Dead refs are dropped
+// lazily during iteration; elements still referenced by the app keep working.
+const generatedRefs = new Set<WeakRef<Element>>();
+
+function trackGeneratedElement(element: Element): void {
+  generatedRefs.add(new WeakRef(element));
+}
+
+function untrackGeneratedElement(element: Element): void {
+  for (const ref of generatedRefs) {
+    if (ref.deref() === element) {
+      generatedRefs.delete(ref);
+      return;
+    }
+  }
+}
+
+/** Live tracked elements; drops refs whose element was garbage-collected. */
+function trackedGeneratedElements(): Element[] {
+  const live: Element[] = [];
+  for (const ref of generatedRefs) {
+    const el = ref.deref();
+    if (el) live.push(el);
+    else generatedRefs.delete(ref);
+  }
+  return live;
+}
 
 /**
  * Sets a generated attribute on `element`. If the attribute already exists and was NOT generated
@@ -24,7 +51,7 @@ export function setGeneratedAttribute(element: Element, name: string, value: str
     map?.delete(name);
     if (map?.size === 0) {
       generatedAttributes.delete(element);
-      generatedElements.delete(element);
+      untrackGeneratedElement(element);
     }
     return false;
   }
@@ -44,7 +71,7 @@ export function setGeneratedAttribute(element: Element, name: string, value: str
   const attrMap = map ?? new Map<string, string>();
   attrMap.set(name, value);
   generatedAttributes.set(element, attrMap);
-  generatedElements.add(element);
+  trackGeneratedElement(element);
   return true;
 }
 
@@ -71,7 +98,7 @@ export function removeGeneratedAttribute(element: Element, name: string): void {
   attrMap?.delete(name);
   if (attrMap?.size === 0) {
     generatedAttributes.delete(element);
-    generatedElements.delete(element);
+    untrackGeneratedElement(element);
   }
 }
 
@@ -82,7 +109,7 @@ export function removeGeneratedAttributes(element?: Element, hardDispose = false
     return;
   }
 
-  for (const tracked of Array.from(generatedElements)) {
+  for (const tracked of trackedGeneratedElements()) {
     cleanElementGeneratedAttributes(tracked, hardDispose);
   }
 
@@ -105,7 +132,7 @@ function cleanElementGeneratedAttributes(element: Element, hardDispose = false):
       }
     }
     generatedAttributes.delete(element);
-    generatedElements.delete(element);
+    untrackGeneratedElement(element);
   }
 
   if (hardDispose) {
@@ -149,7 +176,7 @@ export function reconcileGeneratedAttributes(root?: Element): void {
   const elements = new Set<Element>(
     context.querySelectorAll('[data-flux-preset], [data-flux-status]'),
   );
-  for (const tracked of generatedElements) {
+  for (const tracked of trackedGeneratedElements()) {
     if (!root || tracked === root || root.contains(tracked)) elements.add(tracked);
   }
   if (root) elements.add(root);

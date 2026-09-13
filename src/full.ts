@@ -1,14 +1,31 @@
-// Standalone distribution entry. Bundles htmx + Flux into one IIFE for server-
-// rendered apps (Django, Flask, Go, Laravel) that want a single <script> tag.
+// Standalone distribution entry. Bundles htmx + Flux + UI plugins + net extras into one
+// IIFE for server-rendered apps (Django, Flask, Go, Laravel) that want a single <script>.
 //
 // Handles duplicate-dependency detection: if htmx was already loaded, the policy
 // (default "warn" in dev) decides whether to reuse it or fail.
 
 import htmx from 'htmx.org';
-import { configure, process, dispose, cache, use, unuse, action, recipe } from './flux.js';
+import {
+  configure,
+  process,
+  reconfigure,
+  dispose,
+  cache,
+  use,
+  unuse,
+  action,
+  recipe,
+  registerAction,
+  bootstrapFlux,
+  onBodyReady,
+  config as fluxConfig,
+  type DisposeOptions,
+  type FluxApi,
+} from './flux.js';
 import { FLUX_VERSION } from './core/version.js';
 import { readFluxMetaConfig, duplicatePolicy, reportDependencies } from './core/startup.js';
 import { inspectElement, doctor } from './diagnostics/doctor.js';
+import { installNet, offline, uploadPlugin, optimisticPlugin } from './net.js';
 
 // UI Plugins
 import { installTabs } from './plugins/tabs.js';
@@ -22,18 +39,12 @@ import { installForm } from './plugins/form.js';
 
 export { FLUX_VERSION };
 
-type WindowWithGlobals = typeof window & { Flux?: any; htmx?: any };
+type WindowWithGlobals = typeof window & { Flux?: FluxApi; htmx?: unknown };
 
-function bootstrap() {
-  const win =
-    typeof window !== 'undefined' ? (window as WindowWithGlobals) : ({} as WindowWithGlobals);
+function bootstrap(): FluxApi {
+  const win = (typeof window !== 'undefined' ? window : {}) as WindowWithGlobals;
   const metaConfig = readFluxMetaConfig();
   const policy = metaConfig.duplicatePolicy ?? 'reuse';
-
-  const existingFlux = win.Flux;
-  if (existingFlux && existingFlux.version) {
-    return existingFlux;
-  }
 
   // Apply duplicate dependency checks before assigning globals or initializing
   duplicatePolicy('htmx', win.htmx, policy);
@@ -45,9 +56,10 @@ function bootstrap() {
 
   const startAll = (element?: Element) => {
     if (!started) {
+      installNet();
       configure(metaConfig.flux);
 
-      // Install UI Plugins
+      // Install UI plugins
       installTabs();
       installAccordion();
       installModal();
@@ -57,14 +69,12 @@ function bootstrap() {
       installTable();
       installForm();
 
-      process(element);
       started = true;
-    } else {
-      process(element);
     }
+    onBodyReady(() => process(element));
   };
 
-  const api = {
+  const api: FluxApi = {
     version: FLUX_VERSION,
     get dependencies() {
       return reportDependencies({ htmx });
@@ -73,12 +83,13 @@ function bootstrap() {
       return started;
     },
     get config() {
-      return metaConfig.flux ?? null;
+      return fluxConfig();
     },
     start: startAll,
     configure,
+    reconfigure,
     process,
-    dispose: (opts?: any) => {
+    dispose: (opts?: DisposeOptions) => {
       dispose(opts);
       started = false;
     },
@@ -90,15 +101,14 @@ function bootstrap() {
     unuse,
     action,
     recipe,
+    registerAction,
+    offline,
+    plugins: { upload: uploadPlugin, optimistic: optimisticPlugin },
   };
 
-  win.Flux = api;
-
-  if (metaConfig.autoStart) {
-    startAll();
-  }
-
-  return api;
+  // bootstrapFlux owns the window.Flux slot, the Flux duplicate policy, and meta-tag
+  // autoStart — so the modular and full builds can never race for the global.
+  return bootstrapFlux({ api, start: startAll });
 }
 
 export default bootstrap();

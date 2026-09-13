@@ -4,7 +4,15 @@
 import { log } from './logger.js';
 import type { FluxConfig } from './config.js';
 
-export function verifyHtmxVersion(htmx: { version?: string; VERSION?: string } | undefined): void {
+export interface HtmxGlobal {
+  version?: string;
+  VERSION?: string;
+  config?: { defaultSwap?: string; defaultTimeout?: number };
+  process?: (element: Element) => void;
+  swap?: (opts: { target: Element; text: string; swap?: string }) => void;
+}
+
+export function verifyHtmxVersion(htmx: HtmxGlobal | undefined): void {
   if (!htmx) {
     throw new Error('[flux] HTMX was not found. Load HTMX 4 before Flux scripts.');
   }
@@ -13,6 +21,16 @@ export function verifyHtmxVersion(htmx: { version?: string; VERSION?: string } |
   if (version && typeof version === 'string' && !version.startsWith('4.')) {
     throw new Error(`[flux] HTMX 4 is required; found ${version}. Load HTMX 4.x before Flux.`);
   }
+}
+
+/**
+ * Resolves the active HTMX instance: the bundled import first, then the script-tag
+ * global (set by htmx itself or by the full Flux bundle).
+ */
+export function resolveHtmx(imported?: HtmxGlobal | null): HtmxGlobal | undefined {
+  if (imported) return imported;
+  const fromGlobal = globalThis.htmx;
+  return fromGlobal && typeof fromGlobal === 'object' ? (fromGlobal as HtmxGlobal) : undefined;
 }
 
 export interface FluxMetaConfig {

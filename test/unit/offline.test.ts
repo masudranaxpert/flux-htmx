@@ -1,6 +1,7 @@
 import './setup.js';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as Flux from '../../src/flux.js';
+import { installNet } from '../../src/net.js';
 import { pendingCount, clearOfflineQueue } from '../../src/core/offline.js';
 
 describe('fx-offline: Offline Request Queue', () => {
@@ -9,6 +10,7 @@ describe('fx-offline: Offline Request Queue', () => {
     document.body.innerHTML = '';
     clearOfflineQueue();
     Flux.configure();
+    installNet();
   });
 
   afterEach(() => {

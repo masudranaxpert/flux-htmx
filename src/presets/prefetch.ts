@@ -1,6 +1,8 @@
 import { log } from '../core/logger.js';
 import { cache } from '../cache/instance.js';
 import { cacheKey, canStoreResponse, getCachePolicy } from '../cache/cacheWire.js';
+import { runtimeConfig } from '../core/runtime.js';
+import { resolveToken, shouldAttach } from '../core/csrf.js';
 
 export interface PrefetchOptions {
   url: string;
@@ -8,6 +10,58 @@ export interface PrefetchOptions {
 
 let PREFETCHED = new WeakSet<Element>();
 const prefetchControllers = new WeakMap<Element, { signature: string; cleanup: () => void }>();
+
+/**
+ * Approximates the parameters htmx would send for this element, so the prefetch cache
+ * key matches the key a real request computes (which includes ctx.request.parameters).
+ */
+function prefetchParameters(element: Element): Record<string, unknown> {
+  const vals = element.getAttribute('hx-vals');
+  if (vals) {
+    try {
+      const parsed: unknown = JSON.parse(vals);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      // js:/css: expressions or malformed JSON — fall through to form/empty params.
+    }
+  }
+  if (element instanceof HTMLFormElement) {
+    const params: Record<string, unknown> = {};
+    try {
+      for (const [k, v] of Array.from(new FormData(element).entries())) {
+        if (typeof v === 'string') params[k] = v;
+      }
+    } catch {
+      // Detached form edge case — params stay empty.
+    }
+    return params;
+  }
+  return {};
+}
+
+/** Builds the headers a real htmx request would carry (plus the prefetch marker). */
+function prefetchHeaders(element: Element): Record<string, string> {
+  const headers: Record<string, string> = {
+    'HX-Request': 'true',
+    'HX-Current-URL': typeof location !== 'undefined' ? location.href : '',
+    'X-Flux-Prefetch': 'true',
+  };
+  const target = element.getAttribute('hx-target') ?? element.getAttribute('fx-target');
+  if (target) headers['HX-Target'] = target;
+  const triggerName = element.id || element.getAttribute('name');
+  if (triggerName) headers['HX-Trigger'] = triggerName;
+
+  const cfg = runtimeConfig();
+  if (cfg) {
+    const token = resolveToken(cfg.csrf);
+    if (shouldAttach('GET', element.getAttribute('hx-get') ?? '', token) && token.value) {
+      headers[token.headerName] = token.value;
+    }
+  }
+  return headers;
+}
 
 export function applyPrefetch(element: Element, options: PrefetchOptions): boolean {
   const marker = 'data-flux-prefetch-bound';
@@ -34,16 +88,27 @@ export function applyPrefetch(element: Element, options: PrefetchOptions): boole
     const policy = getCachePolicy(element);
     if (element.getAttribute('fx-cache') === 'false') return;
 
-    const key = cacheKey(element, { method: 'GET', action: url });
+    // Same key shape a real request produces, including parameters.
+    const key = cacheKey(element, {
+      method: 'GET',
+      action: url,
+      parameters: prefetchParameters(element),
+    });
     const existing = cache.get(key, { allowStale: true, returnMeta: true });
     if (existing) return;
 
+    const cfg = runtimeConfig();
+    const timeoutMs = cfg?.requests.timeoutMs ?? 0;
+    const signal =
+      timeoutMs > 0 && typeof AbortSignal.timeout === 'function'
+        ? AbortSignal.timeout(timeoutMs)
+        : undefined;
+
     fetch(url, {
       method: 'GET',
-      headers: {
-        'HX-Request': 'true',
-        'X-Flux-Prefetch': 'true',
-      },
+      credentials: cfg?.requests.credentials,
+      signal,
+      headers: prefetchHeaders(element),
     })
       .then(async (res) => {
         if (!canStoreResponse({ method: 'GET' }, res)) return;
@@ -52,7 +117,7 @@ export function applyPrefetch(element: Element, options: PrefetchOptions): boole
         cache.set(key, text, policy.ttl ?? 60000); // Default to 60s if no policy
         log.info(`[flux] Prefetched and cached: ${url}`);
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         log.warn(`[flux] Prefetch failed for ${url}:`, err);
       });
   };

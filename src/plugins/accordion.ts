@@ -38,7 +38,10 @@ function handleAccordionClick(e: MouseEvent) {
 }
 
 function openDisclosure(disclosure: Element, trigger?: HTMLElement) {
-  disclosure.setAttribute('fx-open', '');
+  // State marker on a data attribute: fx-open is the dialog/popover action attribute;
+  // shadowing it here would make every click inside the disclosure hit the fx-open
+  // controller in components.ts instead of fx-close and the rest of the handler.
+  disclosure.setAttribute('data-fx-open', '');
   const t = trigger || disclosure.querySelector('[fx-disclosure-trigger]');
   if (t) {
     t.setAttribute('aria-expanded', 'true');
@@ -50,7 +53,7 @@ function openDisclosure(disclosure: Element, trigger?: HTMLElement) {
 }
 
 function closeDisclosure(disclosure: Element, trigger?: HTMLElement) {
-  disclosure.removeAttribute('fx-open');
+  disclosure.removeAttribute('data-fx-open');
   const t = trigger || disclosure.querySelector('[fx-disclosure-trigger]');
   if (t) {
     t.setAttribute('aria-expanded', 'false');

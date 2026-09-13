@@ -3,17 +3,17 @@
 Flux is a thin, robust framework over HTMX 4 that expands `fx-*` shorthand attributes into `hx-*`
 attributes. HTMX handles request and swap mechanics; Flux provides shorthand syntax, high-level presets, accessibility feedback, client caching, and native component controls.
 
-> HTMX 4 is currently `4.0.0-beta6`. Flux pins this exact version for full compatibility.
+> HTMX 4 is currently in beta (`^4.0.0-beta6`). Flux accepts any 4.x-compatible beta via its peer dependency range.
 
 ## First example
 
 A button that loads `/users` into `#users`:
 
 ```html
-<button fx-get="/users" fx-target="#users">Load users</button>
+<button fx-get="/users" hx-target="#users">Load users</button>
 ```
 
-At processing time, Flux expands this to `hx-get="/users" hx-target="#users"` on the same element.
+At processing time, Flux expands this to `hx-get="/users"` (configure the swap with `hx-target="#users"`) on the same element.
 
 ## Quick Installation
 
@@ -21,7 +21,7 @@ The simplest setup is the pre-bundled IIFE, which includes HTMX 4 and Flux in a 
 
 ```html
 <link rel="stylesheet" href="/flux.css" />
-<button fx-get="/users" fx-target="#users">Load users</button>
+<button fx-get="/users" hx-target="#users">Load users</button>
 <script src="/flux.full.iife.js"></script>
 ```
 

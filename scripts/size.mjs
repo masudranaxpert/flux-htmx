@@ -11,10 +11,13 @@ const here = dirname(fileURLToPath(import.meta.url));
 const dist = join(here, '..', 'dist');
 
 const FILES = [
-  { name: 'flux.js', bundled: 'Flux only (HTMX external)' },
-  { name: 'flux.iife.js', bundled: 'Flux only (HTMX external)' },
-  { name: 'flux.full.js', bundled: 'HTMX + Flux' },
-  { name: 'flux.full.iife.js', bundled: 'HTMX + Flux' },
+  { name: 'flux.js', bundled: 'Flux core (HTMX external)' },
+  { name: 'flux.cjs', bundled: 'Flux core, CJS (HTMX external)' },
+  { name: 'flux.iife.js', bundled: 'Flux core, IIFE (HTMX external)' },
+  { name: 'net.js', bundled: 'offline + upload + optimistic' },
+  { name: 'net.iife.js', bundled: 'offline + upload + optimistic, IIFE' },
+  { name: 'flux.full.js', bundled: 'HTMX + Flux + UI + net' },
+  { name: 'flux.full.iife.js', bundled: 'HTMX + Flux + UI + net' },
   { name: 'flux.css', bundled: 'styles' },
   { name: 'flux.min.css', bundled: 'styles (minified)' },
 ];

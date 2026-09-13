@@ -28,6 +28,12 @@ export const uploadPlugin: FluxPlugin = {
     const disconnectUpload = (element: HTMLElement) => {
       activeUploadControllers.get(element)?.();
       trackedUploadElements.delete(element);
+      // Undo everything connect wrote: the plugin may live in a separate bundle from
+      // the core, so reconcile's registry-based cleanup cannot see these attributes.
+      removeGeneratedAttribute(element, 'hx-post');
+      removeGeneratedAttribute(element, 'hx-encoding');
+      element.removeAttribute('data-flux-preset');
+      element.removeAttribute('data-flux-preset-signature');
     };
 
     // Register fx-upload preset

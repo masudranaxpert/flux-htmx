@@ -20,6 +20,10 @@ import {
   applyRemove,
   applyHideEscape,
   applyHideOutside,
+  disconnectShow,
+  disconnectHide,
+  disconnectToggle,
+  disconnectClassToggle,
   disconnectHideEscape,
   disconnectHideOutside,
   applyDropdown,
@@ -274,7 +278,7 @@ registerPreset({
       url: value,
       confirm: ctx('fx-confirm'),
       target: ctx('fx-target'),
-      remove: ctx('fx-remove'),
+      remove: ctx('fx-remove-target'),
       swap: ctx('fx-swap'),
       indicator: ctx('fx-indicator'),
       success: ctx('fx-success'),
@@ -325,21 +329,25 @@ registerPreset({
 registerPreset({
   attribute: 'fx-show',
   connect: (element, value, ctx) => applyShow(element, ctx('fx-target') || value),
+  disconnect: (element) => disconnectShow(element),
 });
 
 registerPreset({
   attribute: 'fx-hide',
   connect: (element, value, ctx) => applyHide(element, ctx('fx-target') || value),
+  disconnect: (element) => disconnectHide(element),
 });
 
 registerPreset({
   attribute: 'fx-toggle',
   connect: (element, value, ctx) => applyToggle(element, ctx('fx-target') || value),
+  disconnect: (element) => disconnectToggle(element),
 });
 
 registerPreset({
   attribute: 'fx-class',
   connect: (element, value, ctx) => applyClassToggle(element, value, ctx('fx-target')),
+  disconnect: (element) => disconnectClassToggle(element),
 });
 
 registerPreset({
@@ -447,6 +455,7 @@ function computePresetSignature(element: Element, preset: string, value: string)
     'fx-confirm',
     'fx-disable',
     'fx-remove',
+    'fx-remove-target',
     'fx-reset',
     'fx-max-size',
     'fx-allowed-types',

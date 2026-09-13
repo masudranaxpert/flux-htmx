@@ -1,5 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import pkg from '../../package.json';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const pkg = JSON.parse(
+  readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf8'),
+) as { version: string };
 
 // Waits for an htmx request cycle to settle: the request class is applied during the request
 // and removed after, so waiting for it to clear is a robust "swap done" signal. Falls back to
@@ -179,7 +185,8 @@ test('cleans removed recipe presets and empty preset URLs in one process pass', 
 test('disconnects upload listeners when fx-upload is removed', async ({ page }) => {
   const result = await page.evaluate(() => {
     const Flux = (window as any).Flux;
-    Flux.use(Flux.plugins.upload);
+    const FluxNet = (window as any).FluxNet;
+    Flux.use(FluxNet.uploadPlugin);
     const form = document.createElement('form');
     form.setAttribute('fx-upload', '/upload');
     document.body.appendChild(form);

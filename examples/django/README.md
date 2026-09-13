@@ -36,11 +36,11 @@ cp dist/flux.full.iife.js dist/flux.css static/flux/
   <script defer src="{% static 'flux/flux.full.iife.js' %}"></script>
 </head>
 <body>
-  <button class="flux-btn" fx-get="{% url 'users_partial' %}" fx-target="#users">Load users</button>
+  <button class="flux-btn" hx-get="{% url 'users_partial' %}" hx-target="#users">Load users</button>
   <div id="users"></div>
 
   <!-- POST form with validation routing to #form-errors on 422. -->
-  <form fx-post="{% url 'user_create' %}" fx-target="#users" fx-on-422="#form-errors">
+  <form hx-post="{% url 'user_create' %}" hx-target="#users" fx-on-422="#form-errors">
     {% csrf_token %}
     <input name="email" placeholder="email" />
     <button class="flux-btn flux-btn--primary" type="submit">Create</button>

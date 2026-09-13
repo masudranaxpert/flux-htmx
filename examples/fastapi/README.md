@@ -67,7 +67,7 @@ the `X-CSRFToken` header on mutations, then wire Flux via:
 ## Template
 
 ```html
-<form fx-post="/users" fx-target="#users" fx-on-422="#form-errors">
+<form hx-post="/users" hx-target="#users" fx-on-422="#form-errors">
   <input name="email" />
   <button class="flux-btn flux-btn--primary">Create</button>
 </form>

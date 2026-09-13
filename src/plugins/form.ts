@@ -4,8 +4,13 @@ export function installForm() {
   document.addEventListener('click', handleFormClick);
   document.addEventListener('input', handleFormInput);
 
-  // Track original values
-  document.addEventListener('DOMContentLoaded', () => initializeDirtyState());
+  // Track original values. readyState-aware: deferred or dynamic scripts load after
+  // DOMContentLoaded has already fired.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => initializeDirtyState(), { once: true });
+  } else {
+    initializeDirtyState();
+  }
   document.addEventListener('htmx:after:settle', (e: Event) => {
     initializeDirtyState((e as CustomEvent).detail.el);
   });

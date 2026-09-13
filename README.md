@@ -1,7 +1,7 @@
 # flux-htmx
 
 > A thin, server-driven frontend layer built on top of **HTMX 4**.  
-> Shorthand `fx-*` attributes, lifecycle hooks, presets, smart caching, prefetching, and built-in toasts — without reimplementing htmx.
+> Shorthand `fx-*` attributes, presets, lifecycle hooks, smart caching, prefetching, and built-in toasts — without reimplementing htmx.
 
 [![npm version](https://img.shields.io/npm/v/flux-htmx.svg)](https://www.npmjs.com/package/flux-htmx)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -10,17 +10,19 @@
 
 ## Why?
 
-HTMX is great. But writing `hx-get`, `hx-target`, `hx-trigger`, `hx-swap` for every element adds up. Flux adds a minimal preset layer on top:
+Flux adds a preset layer on top of htmx: request presets (`fx-search`, `fx-poll`, `fx-submit`…), UI behaviour (`fx-dropdown`, `fx-toggle`…), caching, retry/dedupe, and toasts — while raw `hx-*` attributes remain the unconditional escape hatch.
 
 ```html
-<!-- Without Flux -->
-<a hx-get="/products" hx-target="#main" hx-trigger="click" hx-swap="innerHTML">Products</a>
+<!-- Flux verb + native htmx configuration -->
+<a hx-get="/products" hx-target="#main">Products</a>
 
-<!-- With Flux -->
-<a fx-get="/products" fx-target="#main">Products</a>
+<!-- Flux preset: debounced search without eval -->
+<input fx-search="/search" fx-target="#results" fx-delay="300ms" />
 ```
 
-No build step required. Raw `hx-*` attributes always work as an escape hatch.
+No build step required.
+
+> **2.0 note:** the pure `fx-*` → `hx-*` option aliases (`fx-target`, `fx-swap`, `fx-trigger`, `fx-select`, `fx-sync`, `fx-include`, `fx-vals`, `fx-headers`, `fx-confirm`, `fx-boost`, `fx-preload`, `fx-preserve`) were removed — write the `hx-*` attribute directly. Presets still read their own option attributes (`fx-target`, `fx-swap`, `fx-delay`, `fx-indicator`, …) next to a preset like `fx-search` or `fx-delete`.
 
 ---
 
@@ -33,7 +35,7 @@ npm install flux-htmx
 **Peer dependency** (required for the core builds):
 
 ```bash
-npm install htmx.org@4.0.0-beta6
+npm install htmx.org@^4.0.0-beta6
 ```
 
 ---
@@ -43,23 +45,32 @@ npm install htmx.org@4.0.0-beta6
 ### jsDelivr
 
 ```html
-<!-- Standalone Flux bundle (includes HTMX 4) -->
-<script src="https://cdn.jsdelivr.net/npm/flux-htmx@1.4.0/dist/flux.full.iife.js"></script>
+<!-- Standalone Flux bundle (includes HTMX 4, UI plugins, net extras) -->
+<script src="https://cdn.jsdelivr.net/npm/flux-htmx@2.0.0/dist/flux.full.iife.js"></script>
 
 <!-- CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.4.0/dist/flux.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@2.0.0/dist/flux.css" />
 <!-- or minified -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.4.0/dist/flux.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@2.0.0/dist/flux.min.css" />
 ```
 
 ### unpkg
 
 ```html
-<script src="https://unpkg.com/flux-htmx@1.4.0/dist/flux.full.iife.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/flux-htmx@1.4.0/dist/flux.min.css" />
+<script src="https://unpkg.com/flux-htmx@2.0.0/dist/flux.full.iife.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/flux-htmx@2.0.0/dist/flux.min.css" />
 ```
 
-> **Tip:** Use `flux.full.iife.js` for CDN (includes everything). Use `flux.iife.js` for bundlers where htmx is already imported separately.
+### Bundles
+
+| File                   | Contents                                             | Size (gzip) |
+| ---------------------- | ---------------------------------------------------- | ----------- |
+| `flux.full.iife.js`    | htmx 4 + core + UI plugins + net extras              | ~35 kB      |
+| `flux.iife.js`         | core + UI plugins, htmx from `globalThis.htmx`       | ~20 kB      |
+| `net.iife.js`          | offline queue + upload/optimistic plugins (optional) | ~3 kB       |
+| `flux.js` / `flux.cjs` | modular ESM / CJS, htmx.org as peer dependency       | ~20 kB      |
+
+Loading the full bundle after the modular bundle is not supported — the duplicate-load policy reuses the first `window.Flux` it sees.
 
 ---
 
@@ -72,37 +83,48 @@ npm install htmx.org@4.0.0-beta6
     <meta charset="UTF-8" />
     <title>My App</title>
     <meta name="flux-config" content='{"csrf":{"strategy":"meta"}}' />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@1.4.0/dist/flux.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@2.0.0/dist/flux.css" />
   </head>
   <body>
     <div id="content">
-      <a fx-get="/page-2" fx-target="#content" fx-prefetch>Go to Page 2</a>
+      <a hx-get="/page-2" hx-target="#content" fx-prefetch>Go to Page 2</a>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/flux-htmx@1.4.0/dist/flux.full.iife.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flux-htmx@2.0.0/dist/flux.full.iife.js"></script>
   </body>
 </html>
 ```
 
 ---
 
-## Preset Attributes
+## Request Presets
 
-| Attribute            | Expands To                       | Description                                                         |
-| -------------------- | -------------------------------- | ------------------------------------------------------------------- |
-| `fx-get="/url"`      | `hx-get` + `hx-trigger="click"`  | GET request on click                                                |
-| `fx-post="/url"`     | `hx-post` + `hx-trigger="click"` | POST request on click                                               |
-| `fx-delete="/url"`   | `hx-delete`                      | DELETE request; add `fx-confirm` or `fx-confirm-dialog` when needed |
-| `fx-load="/url"`     | `hx-get` + `hx-trigger="load"`   | Fetch on page load                                                  |
-| `fx-poll="/url"`     | `hx-get` + polling trigger       | Periodic polling                                                    |
-| `fx-search="/url"`   | `hx-get` + native debounce       | Debounced search input (eval-free)                                  |
-| `fx-submit="/url"`   | `hx-post` on form                | Form submission                                                     |
-| `fx-autosave="/url"` | `hx-post` + auto-save on input   | Auto-save on change                                                 |
-| `fx-infinite="/url"` | Infinite scroll                  | Load more on scroll                                                 |
-| `fx-realtime="/url"` | `EventSource` (SSE)              | Server-Sent Events stream                                           |
-| `fx-page="/url"`     | Pagination pattern               | Page-based navigation                                               |
-| `fx-prefetch`        | Hover/touch prefetch             | Cache on hover before click                                         |
-| `fx-history`         | `hx-push-url="true"`             | Push URL to browser history on swap                                 |
+| Attribute            | Description                                                         |
+| -------------------- | ------------------------------------------------------------------- |
+| `fx-get="/url"`      | GET request on click (`fx-post` / `fx-put` / `fx-patch` likewise)   |
+| `fx-delete="/url"`   | DELETE request; add `fx-confirm` or `fx-confirm-dialog` when needed |
+| `fx-load="/url"`     | Fetch on page load                                                  |
+| `fx-poll="/url"`     | Periodic polling                                                    |
+| `fx-search="/url"`   | Debounced search input (eval-free)                                  |
+| `fx-submit="/url"`   | Form submission                                                     |
+| `fx-autosave="/url"` | Auto-save on change                                                 |
+| `fx-infinite="/url"` | Infinite scroll                                                     |
+| `fx-realtime="/url"` | `EventSource` (SSE) stream                                          |
+| `fx-page="/url"`     | Pagination pattern                                                  |
+| `fx-prefetch`        | Hover/touch prefetch into the cache                                 |
+| `fx-history`         | `hx-push-url` shorthand                                             |
+| `fx-morph`           | `hx-swap="innerMorph"` shorthand                                    |
+
+### Preset options
+
+Presets read these attributes themselves (they are not global aliases):
+`fx-target`, `fx-swap`, `fx-delay`, `fx-interval`, `fx-min-length`, `fx-indicator`,
+`fx-confirm`, `fx-disable`, `fx-success`, `fx-error`, `fx-invalidate`, `fx-reset`,
+`fx-append`, `fx-prepend`, `fx-search-clear`, `fx-event`, `fx-with-credentials`,
+`fx-remove-target`, `fx-cache`, `fx-cache-mode`, `fx-cache-key`, `fx-cache-vary`,
+`fx-max-size`, `fx-allowed-types`.
+
+Generic request attributes (`hx-trigger`, `hx-select`, `hx-sync`, `hx-include`, `hx-vals`, `hx-headers`, `hx-boost`, `hx-preserve`, …) come straight from htmx.
 
 ---
 
@@ -110,11 +132,8 @@ npm install htmx.org@4.0.0-beta6
 
 | Attribute                 | Description                        |
 | ------------------------- | ---------------------------------- |
-| `fx-target="#id"`         | Override swap target               |
-| `fx-swap="outerHTML"`     | Override swap strategy             |
 | `fx-delay="300ms"`        | Debounce / polling delay           |
 | `fx-indicator="#spinner"` | Loading indicator element          |
-| `fx-confirm="Sure?"`      | Confirmation prompt text           |
 | `fx-disable`              | Disable element during request     |
 | `fx-cache`                | Cache GET response                 |
 | `fx-toast`                | Show built-in success/error toast  |
@@ -132,6 +151,7 @@ Add `fx-toast` to any element:
 ```html
 <button
   fx-delete="/item/1"
+  fx-remove-target="closest li"
   fx-toast
   fx-success="Deleted successfully!"
   fx-error="Failed to delete."
@@ -146,30 +166,28 @@ Toasts appear bottom-right with smooth slide-in/out animations.
 
 ## Prefetch (`fx-prefetch`)
 
-Silently fetches and caches the response on `mouseenter`, `touchstart`, or `focusin` — so clicking feels instant:
+Silently fetches and caches the response on `mouseenter`, `touchstart`, or `focusin` — so clicking feels instant. Prefetch goes through the same conventions as real requests (credentials, CSRF token, `HX-Target`/`HX-Trigger`/`HX-Current-URL` headers, and the same cache key including parameters):
 
 ```html
-<a fx-get="/product/42" fx-target="#main" fx-prefetch> View Product </a>
+<a hx-get="/product/42" hx-target="#main" fx-prefetch> View Product </a>
 ```
 
 ---
 
-## DOM Interactivity (Alpine Alternative)
+## DOM Interactivity
 
-Flux completely eliminates the need for Alpine.js or inline JavaScript for common UI interactivity like toggling sidebars, modals, or classes. It provides declarative `fx-*` action attributes that run entirely client-side without `eval()`, making them 100% CSP compliant and blazing fast.
+Flux covers the class-toggling and show/hide core of what Alpine.js is used for in server-rendered panels: declarative `fx-*` action attributes, no `eval()`, 100% CSP compliant. All actions default to triggering on `click`.
 
-### Declarative UI Actions
-
-No `<script>` tags required. All actions default to triggering on `click`.
+All visibility actions drive **one mechanism: the `hidden` class** — synchronous, Tailwind-compatible, and composable (a panel hidden by `fx-hide` is shown again by `fx-show` or `fx-toggle`). For reactive client-side state (scoped stores, two-way binding, list rendering), Alpine remains the right tool; Flux intentionally keeps state on the server.
 
 ```html
-<!-- Fades in #sidebar on click -->
+<!-- Shows #sidebar on click (removes .hidden) -->
 <button fx-show="#sidebar">Open</button>
 
-<!-- Fades out #sidebar on click -->
+<!-- Hides #sidebar on click (adds .hidden) -->
 <button fx-hide="#sidebar">Close</button>
 
-<!-- Toggles visibility on click -->
+<!-- Toggles .hidden on click -->
 <button fx-toggle="#sidebar">Toggle Menu</button>
 
 <!-- Toggles a class on click (targets self by default) -->
@@ -178,13 +196,13 @@ No `<script>` tags required. All actions default to triggering on `click`.
 <!-- Toggles a class on a specific target -->
 <button fx-class="translate-x-full" fx-target=".circle">Toggle Circle</button>
 
-<!-- Fades out and removes ITSELF after 3 seconds -->
+<!-- Removes ITSELF after 3 seconds (value must be a duration) -->
 <div fx-remove="3s">Item Saved Successfully!</div>
 ```
 
 ### Dropdowns
 
-For menus and dropdowns, reach for the single `fx-dropdown` directive. It toggles the target's `hidden` class and coordinates outside-click and `Escape` close in one handler — so the click that opens a menu can never immediately close it:
+`fx-dropdown` toggles the target's `hidden` class and coordinates outside-click and `Escape` close in one handler — so the click that opens a menu can never immediately close it:
 
 ```html
 <button fx-dropdown="#menu">Toggle</button>
@@ -198,8 +216,6 @@ For menus and dropdowns, reach for the single `fx-dropdown` directive. It toggle
 `fx-dropdown` keeps the trigger's `aria-expanded` in sync. Clicking the trigger toggles; clicking outside the trigger or menu, or pressing `Escape`, closes it.
 
 ### Modals
-
-Modals often need to close when you click outside of them or press the `Escape` key. Flux has built-in primitives for this:
 
 ```html
 <button fx-show="#my-modal">Open Modal</button>
@@ -215,7 +231,7 @@ Modals often need to close when you click outside of them or press the `Escape` 
 
 ### Advanced DOM Scripts (Surreal-style)
 
-If you need custom logic, Flux provides lightweight DOM wrappers `me()` (the script's parent element) and `any()` (global selector) for true Locality of Behavior.
+If you need custom logic, Flux provides lightweight DOM wrappers `me()` (the script's parent element) and `any()` (global selector) for true Locality of Behavior:
 
 ```html
 <button>
@@ -246,7 +262,14 @@ Available methods on selected elements:
 
 ---
 
-## Experimental Offline Queue
+## Experimental Offline Queue & Upload/Optimistic Plugins
+
+These features ship in the **optional net entry** so core users don't download them:
+
+- **CDN:** load `dist/net.iife.js` after the core bundle (exposes `FluxNet`).
+- **Bundler:** `import { installNet, uploadPlugin, optimisticPlugin, offline } from 'flux-htmx/net'`.
+
+The full CDN bundle (`flux.full.iife.js`) already includes everything.
 
 `fx-offline` is opt-in and experimental. It stores plain request parameters in
 `localStorage`; it does not preserve files/FormData, headers, target/swap metadata, expiry, or
@@ -281,7 +304,8 @@ Flux.dispose();
 ## Plugin System
 
 ```js
-import { uploadPlugin, optimisticPlugin } from 'flux-htmx';
+// Bundler
+import { uploadPlugin, optimisticPlugin } from 'flux-htmx/net';
 
 Flux.use(uploadPlugin);
 Flux.use(optimisticPlugin);
@@ -296,16 +320,25 @@ Flux.unuse('upload');
 import Flux from 'flux-htmx';
 
 Flux.reconfigure({ csrf: { strategy: 'meta' } });
+// or explicit bootstrap (publishes window.Flux and honours meta-tag autoStart):
+import { bootstrapFlux } from 'flux-htmx';
+bootstrapFlux();
+```
+
+Importing the module has **no global side effects** — the CDN/IIFE builds call
+`bootstrapFlux()` for you; modular consumers opt in.
+
+---
+
+## Development
+
+```bash
+npm run build        # all bundles + CSS + type declarations
+npm test             # unit suite (vitest, jsdom)
+npm run test:browser # Playwright e2e (Chromium)
+npm run size         # honest bundle-size report
 ```
 
 ---
-
-## Browser Support
-
-All modern browsers (Chrome, Firefox, Safari, Edge). Requires `fetch` and `WeakMap` — both available natively in all target environments.
-
----
-
-## License
 
 MIT © [masudranaxpert](https://www.npmjs.com/~masudranaxpert)

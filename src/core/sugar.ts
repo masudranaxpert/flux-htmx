@@ -17,11 +17,11 @@ export function sugar<T extends NodeOrList>(e: T): T & Sugared {
   if (isNodeList(e)) {
     e.forEach((el) => sugar(el));
   }
-  
+
   // If it's a node and doesn't already have sugar
   if (isNode(e) && !(e as any).hasSurreal) {
     const el = e as any;
-    
+
     el.run = (f: (el: any) => void) => run(el, f);
     el.remove = () => remove(el);
     el.classAdd = (name: string) => classAdd(el, name);
@@ -35,9 +35,10 @@ export function sugar<T extends NodeOrList>(e: T): T & Sugared {
     el.enable = () => enable(el);
     el.send = (name: string, detail?: any) => send(el, name, detail);
     el.attribute = (name: string | Record<string, any>, value?: any) => attribute(el, name, value);
-    el.fadeOut = (f?: (el: any) => void, ms?: number, removeEl?: boolean) => fadeOut(el, f, ms, removeEl);
+    el.fadeOut = (f?: (el: any) => void, ms?: number, removeEl?: boolean) =>
+      fadeOut(el, f, ms, removeEl);
     el.fadeIn = (f?: (el: any) => void, ms?: number) => fadeIn(el, f, ms);
-    
+
     // aliases
     el.addClass = el.classAdd;
     el.removeClass = el.classRemove;
@@ -47,7 +48,7 @@ export function sugar<T extends NodeOrList>(e: T): T & Sugared {
 
     el.hasSurreal = true;
   }
-  
+
   return e as T & Sugared;
 }
 
@@ -74,7 +75,11 @@ export interface Sugared {
   fadeIn(f?: (el: this) => void, ms?: number): this;
 }
 
-export function me(selector: string | Event | Element | null = null, start: Document | Element = document, warning = true): (Element & Sugared) | null {
+export function me(
+  selector: string | Event | Element | null = null,
+  start: Document | Element = document,
+  warning = true,
+): (Element & Sugared) | null {
   if (selector == null) {
     if (document.currentScript && document.currentScript.parentElement) {
       return sugar(document.currentScript.parentElement) as any;
@@ -105,7 +110,11 @@ export function me(selector: string | Event | Element | null = null, start: Docu
   return null;
 }
 
-export function any(selector: string | Event | Element | null | NodeList, start: Document | Element = document, warning = true): (Element & Sugared)[] {
+export function any(
+  selector: string | Event | Element | null | NodeList,
+  start: Document | Element = document,
+  warning = true,
+): (Element & Sugared)[] {
   if (selector == null) {
     if (document.currentScript && document.currentScript.parentElement) {
       return sugar([document.currentScript.parentElement]) as any;
@@ -113,7 +122,7 @@ export function any(selector: string | Event | Element | null | NodeList, start:
     return sugar([]) as any;
   }
   if (selector instanceof Event) {
-    return selector.currentTarget ? any(selector.currentTarget as Element) : sugar([]) as any;
+    return selector.currentTarget ? any(selector.currentTarget as Element) : (sugar([]) as any);
   }
   if (selector === '-' || selector === 'prev' || selector === 'previous') {
     if (document.currentScript && document.currentScript.previousElementSibling) {
@@ -242,9 +251,10 @@ function attribute(e: any, name: string | Record<string, any>, value?: any) {
     return e;
   }
   if (typeof name === 'object') {
-    if (isNodeList(e)) e.forEach((_: any) => {
-      Object.entries(name).forEach(([key, val]) => attribute(_, key, val));
-    });
+    if (isNodeList(e))
+      e.forEach((_: any) => {
+        Object.entries(name).forEach(([key, val]) => attribute(_, key, val));
+      });
     if (isNode(e)) {
       Object.entries(name).forEach(([key, val]) => attribute(e, key, val));
     }
@@ -272,7 +282,11 @@ export async function tick() {
 }
 
 export async function sleep(ms: number, e?: any) {
-  return await new Promise((resolve) => setTimeout(() => { resolve(e); }, ms));
+  return await new Promise((resolve) =>
+    setTimeout(() => {
+      resolve(e);
+    }, ms),
+  );
 }
 
 function fadeOut(e: any, f?: (el: any) => void, ms = 250, removeEl = false) {
@@ -330,10 +344,9 @@ export function installDomSugar() {
     if (!w.any) w.any = any;
     if (!w.tick) w.tick = tick;
     if (!w.sleep) w.sleep = sleep;
-    
+
     // Add me and any to document as well (like Surreal does)
     if (!(document as any).me) (document as any).me = me;
     if (!(document as any).any) (document as any).any = any;
   }
 }
-
