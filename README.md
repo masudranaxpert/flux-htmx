@@ -1,51 +1,53 @@
 # flux-htmx
 
-> A thin, server-driven frontend layer built on top of **HTMX 4**.  
-> Shorthand `fx-*` attributes, presets, lifecycle hooks, smart caching, prefetching, and built-in toasts — without reimplementing htmx.
+> The request layer for **HTMX 4** — presets, retries, caching, prefetch, CSRF and toasts
+> in one thin script. Includes a small eval-free visibility layer so a show/hide toggle
+> doesn't cost a second library. Raw `hx-*` attributes stay first-class throughout.
 
 [![npm version](https://img.shields.io/npm/v/flux-htmx.svg)](https://www.npmjs.com/package/flux-htmx)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-## Why?
+## What Flux is
 
-Flux adds a preset layer on top of htmx: request presets (`fx-search`, `fx-poll`, `fx-submit`…), UI behaviour (`fx-dropdown`, `fx-toggle`…), caching, retry/dedupe, and toasts — while raw `hx-*` attributes remain the unconditional escape hatch.
+htmx gives you `hx-get`, `hx-post` and a swap pipeline. Flux layers the things real
+server-driven apps need on every page:
+
+| Layer                | What you get                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------------- |
+| **Request presets**  | `fx-search`, `fx-poll`, `fx-submit`, `fx-delete`, `fx-infinite`, `fx-realtime`…             |
+| **Safety**           | CSRF token injection, HTML5 validation gate, confirm dialogs — no eval, CSP-safe            |
+| **Resilience**       | Automatic retry with backoff, in-flight dedupe, fragment caching                            |
+| **Speed**            | Hover/touch prefetch into the cache, so the next click is instant                           |
+| **Feedback**         | Built-in toasts, loading indicators, `data-flux-*` state attributes, ARIA live region       |
+| **Status targeting** | `fx-on-404="#notfound"` — retarget swaps per response status code                           |
+| **Visibility**       | `fx-show / fx-hide / fx-toggle / fx-class / fx-dropdown` — one `hidden` class, nothing more |
+
+Everything is declarative `fx-*` / `hx-*` attributes processed at htmx's own pipeline
+points. There is no build step, no virtual DOM, and no client-side template language.
+
+### Where Flux ends
+
+Flux intentionally keeps **state on the server**. It does not provide client-side
+reactivity: no two-way binding (`x-model`), no derived/computed values, no client-side
+list rendering, no scoped stores. If a screen genuinely needs those — a live-validated
+multi-step form, an editable table, heavy client state — run **Alpine.js alongside
+Flux**. They coexist without conflict: htmx/Flux own the requests and swaps, Alpine owns
+the interactive widget state. That combination is supported, not discouraged.
 
 ```html
-<!-- Flux verb + native htmx configuration -->
-<a hx-get="/products" hx-target="#main">Products</a>
+<!-- Flux: the request, cached, with a toast -->
+<form fx-submit="/subscribe" fx-cache="0" fx-toast fx-success="Subscribed!">...</form>
 
-<!-- Flux preset: debounced search without eval -->
-<input fx-search="/search" fx-target="#results" fx-delay="300ms" />
+<!-- Alpine, alongside: pure client-side widget state -->
+<div x-data="{ step: 1 }">...</div>
 ```
 
-No build step required.
-
-## What's New in v2.1
-
-- **Clean teardown contract** — every UI plugin (`installTabs()`, `installPersist()`, …) returns a teardown; `Flux.dispose()` removes plugin listeners and MutationObservers, so dispose → start cycles can no longer stack them. `installTransitions()` no longer crashes when the script runs before `<body>` exists.
-- **Safer internals** — retry never falls back to re-clicking the element (no surprise `hx-confirm` replays); cache keys hash sensitive values instead of dropping them (distinct cache entries per secret, secrets never appear in keys); sugar helpers are thin native delegates (`offAll` node-cloning removed); generated-attribute registry is deduplicated and O(1).
-- **Less weight** — dead code cut (undocumented CLI, recipe system, named action pipelines); core gzip dropped ~0.5 kB. CI now fails on bundle-size budget regressions (`npm run size:check`).
-
-## What's New in v2.0
-
-- **Reliable bootstrap contract** — importing the module has zero global side effects; `bootstrapFlux()` publishes `window.Flux` and auto-starts. The CDN bundles call it for you (fixes UI plugins not installing in 1.x full bundles).
-- **20+ runtime bug fixes** — visibility/listener lifecycle, dedupe deadlocks, retry header loss, invalid-form confirm bypass, prefetch pipeline parity, memory-leak sweeps, optimistic rollback defaults.
-- **Real CommonJS build** — `require('flux-htmx')` now works (`dist/flux.cjs`).
-- **Optional `net` entry** — offline queue, upload and optimistic plugins moved out of core so everyone else ships less.
-- **Leaner API** — the pure `fx-*` → `hx-*` alias layer is gone. Write the native htmx attribute directly; presets still read their own option attributes (`fx-target`, `fx-swap`, `fx-delay`, `fx-indicator`, …).
-
-### Migrating from 1.x
-
-| 1.x                                          | 2.0                                                     |
-| -------------------------------------------- | ------------------------------------------------------- |
-| `<a fx-get="/x" fx-target="#main">`          | `<a fx-get="/x" hx-target="#main">` (all pure aliases)  |
-| `fx-delete` + `fx-remove="closest li"`       | `fx-delete` + `fx-remove-target="closest li"`           |
-| `fx-remove="3s"`                             | unchanged — `fx-remove` is duration-only self-removal   |
-| offline/upload/optimistic bundled in core    | `import … from 'flux-htmx/net'` or load `net.iife.js`   |
-| optimistic rollback opt-in via `fx-rollback` | rollback on failure is the default                      |
-| `window.Flux` set at import time (ESM)       | call `bootstrapFlux()` (CDN bundles boot automatically) |
+> **2.0 note:** the pure `fx-*` → `hx-*` option aliases (`fx-target`, `fx-swap`,
+> `fx-trigger`, …) were removed — write the native `hx-*` attribute directly. Presets
+> still read their own option attributes (`fx-target`, `fx-swap`, `fx-delay`,
+> `fx-indicator`, …) next to a preset like `fx-search` or `fx-delete`.
 
 ---
 
@@ -53,15 +55,8 @@ No build step required.
 
 ```bash
 npm install flux-htmx
+npm install htmx.org@^4.0.0-beta6   # peer dependency for the core builds
 ```
-
-**Peer dependency** (required for the core builds):
-
-```bash
-npm install htmx.org@^4.0.0-beta6
-```
-
----
 
 ## CDN (No Install)
 
@@ -93,9 +88,12 @@ npm install htmx.org@^4.0.0-beta6
 | `net.iife.js`          | offline queue + upload/optimistic plugins (optional) | ~3 kB       |
 | `flux.js` / `flux.cjs` | modular ESM / CJS, htmx.org as peer dependency       | ~20–22 kB   |
 
-Loading the full bundle after the modular bundle is not supported — the duplicate-load policy reuses the first `window.Flux` it sees.
+Loading the full bundle after the modular bundle is not supported — the duplicate-load
+policy reuses the first `window.Flux` it sees.
 
 ---
+
+## Quick Start
 
 ```html
 <!DOCTYPE html>
@@ -115,6 +113,9 @@ Loading the full bundle after the modular bundle is not supported — the duplic
   </body>
 </html>
 ```
+
+Put the script at the end of `<body>`. If it ends up in `<head>`, Flux still boots —
+plugins wait for the DOM instead of crashing.
 
 ---
 
@@ -145,7 +146,9 @@ Presets read these attributes themselves (they are not global aliases):
 `fx-remove-target`, `fx-cache`, `fx-cache-mode`, `fx-cache-key`, `fx-cache-vary`,
 `fx-max-size`, `fx-allowed-types`.
 
-Generic request attributes (`hx-trigger`, `hx-select`, `hx-sync`, `hx-include`, `hx-vals`, `hx-headers`, `hx-boost`, `hx-preserve`, …) come straight from htmx.
+Generic request attributes (`hx-trigger`, `hx-select`, `hx-sync`, `hx-include`,
+`hx-vals`, `hx-headers`, `hx-boost`, `hx-preserve`, …) come straight from htmx — mix
+them freely next to any `fx-*` preset.
 
 ---
 
@@ -167,8 +170,6 @@ Generic request attributes (`hx-trigger`, `hx-select`, `hx-sync`, `hx-include`, 
 
 ## Built-in Toast (`fx-toast`)
 
-Add `fx-toast` to any element:
-
 ```html
 <button
   fx-delete="/item/1"
@@ -183,11 +184,12 @@ Add `fx-toast` to any element:
 
 Toasts appear bottom-right with smooth slide-in/out animations.
 
----
-
 ## Prefetch (`fx-prefetch`)
 
-Silently fetches and caches the response on `mouseenter`, `touchstart`, or `focusin` — so clicking feels instant. Prefetch goes through the same conventions as real requests (credentials, CSRF token, `HX-Target`/`HX-Trigger`/`HX-Current-URL` headers, and the same cache key including parameters):
+Silently fetches and caches the response on `mouseenter`, `touchstart`, or `focusin`.
+Prefetch goes through the same conventions as real requests — credentials, CSRF token,
+`HX-Target`/`HX-Trigger`/`HX-Current-URL` headers, timeout, and the same cache key
+including parameters — so a prefetched entry is always a real cache hit.
 
 ```html
 <a hx-get="/product/42" hx-target="#main" fx-prefetch> View Product </a>
@@ -195,11 +197,13 @@ Silently fetches and caches the response on `mouseenter`, `touchstart`, or `focu
 
 ---
 
-## DOM Interactivity
+## Visibility Layer
 
-Flux covers the class-toggling and show/hide core of what Alpine.js is used for in server-rendered panels: declarative `fx-*` action attributes, no `eval()`, 100% CSP compliant. All actions default to triggering on `click`.
-
-All visibility actions drive **one mechanism: the `hidden` class** — synchronous, Tailwind-compatible, and composable (a panel hidden by `fx-hide` is shown again by `fx-show` or `fx-toggle`). For reactive client-side state (scoped stores, two-way binding, list rendering), Alpine remains the right tool; Flux intentionally keeps state on the server.
+A small, honest set of show/hide primitives so a toggle doesn't require pulling in a
+separate library. All actions are declarative, eval-free, CSP-compliant, and default to
+`click`. Every visibility action drives **one mechanism: the `hidden` class** —
+synchronous, Tailwind-compatible, and composable (a panel hidden by `fx-hide` is shown
+again by `fx-show` or `fx-toggle`; no inline-style fights).
 
 ```html
 <!-- Shows #sidebar on click (removes .hidden) -->
@@ -223,7 +227,9 @@ All visibility actions drive **one mechanism: the `hidden` class** — synchrono
 
 ### Dropdowns
 
-`fx-dropdown` toggles the target's `hidden` class and coordinates outside-click and `Escape` close in one handler — so the click that opens a menu can never immediately close it:
+`fx-dropdown` toggles the target's `hidden` class and coordinates outside-click and
+`Escape` close in one handler — so the click that opens a menu can never immediately
+close it. The trigger's `aria-expanded` stays in sync.
 
 ```html
 <button fx-dropdown="#menu">Toggle</button>
@@ -233,8 +239,6 @@ All visibility actions drive **one mechanism: the `hidden` class** — synchrono
   <li><a href="/settings">Settings</a></li>
 </ul>
 ```
-
-`fx-dropdown` keeps the trigger's `aria-expanded` in sync. Clicking the trigger toggles; clicking outside the trigger or menu, or pressing `Escape`, closes it.
 
 ### Modals
 
@@ -250,9 +254,10 @@ All visibility actions drive **one mechanism: the `hidden` class** — synchrono
 </div>
 ```
 
-### Advanced DOM Scripts (Surreal-style)
+### Inline DOM helpers (Surreal-style)
 
-If you need custom logic, Flux provides lightweight DOM wrappers `me()` (the script's parent element) and `any()` (global selector) for true Locality of Behavior:
+For one-off logic inside an element, `me()` (the script's parent) and `any()` (global
+selector) give thin wrappers over the native DOM — true Locality of Behavior:
 
 ```html
 <button>
@@ -266,8 +271,9 @@ If you need custom logic, Flux provides lightweight DOM wrappers `me()` (the scr
 </button>
 ```
 
-Available methods on selected elements:
-`classAdd()`, `classRemove()`, `classToggle()`, `styles()`, `on()`, `off()`, `attribute()`, `disable()`, `enable()`, `fadeOut()`, `fadeIn()`, `remove()`.
+Available methods: `classAdd()`, `classRemove()`, `classToggle()`, `styles()`, `on()`,
+`off()`, `attribute()`, `disable()`, `enable()`, `fadeOut()`, `fadeIn()`, `remove()` —
+each a direct delegate of the corresponding native API.
 
 ---
 
@@ -281,11 +287,15 @@ Available methods on selected elements:
 <section fx-load="/stats" fx-cache fx-cache-key="stats-v1">...</section>
 ```
 
+Cache keys hash sensitive parameter values (passwords, tokens, …) instead of dropping
+them — two requests differing only in a secret get distinct entries, and the secret
+itself never appears in the key.
+
 ---
 
-## Experimental Offline Queue & Upload/Optimistic Plugins
+## Offline Queue, Upload & Optimistic UI (optional `net` entry)
 
-These features ship in the **optional net entry** so core users don't download them:
+These ship separately so core users don't download them:
 
 - **CDN:** load `dist/net.iife.js` after the core bundle (exposes `FluxNet`).
 - **Bundler:** `import { installNet, uploadPlugin, optimisticPlugin, offline } from 'flux-htmx/net'`.
@@ -293,8 +303,9 @@ These features ship in the **optional net entry** so core users don't download t
 The full CDN bundle (`flux.full.iife.js`) already includes everything.
 
 `fx-offline` is opt-in and experimental. It stores plain request parameters in
-`localStorage`; it does not preserve files/FormData, headers, target/swap metadata, expiry, or
-sensitive-field filtering. Do not use it for sensitive or file-bearing requests.
+`localStorage`; it does not preserve files/FormData, headers, target/swap metadata,
+expiry, or sensitive-field filtering. Do not use it for sensitive or file-bearing
+requests.
 
 ---
 
@@ -320,8 +331,6 @@ Flux.inspect(document.querySelector('#my-form'));
 Flux.dispose();
 ```
 
----
-
 ## Plugin System
 
 ```js
@@ -333,7 +342,9 @@ Flux.use(optimisticPlugin);
 Flux.unuse('upload');
 ```
 
----
+Every UI plugin installer (`installTabs()`, `installPersist()`, …) returns a teardown
+function, and `Flux.dispose()` runs it — dispose → start cycles never stack listeners
+or observers.
 
 ## ES Module (Bundler)
 
@@ -351,6 +362,33 @@ Importing the module has **no global side effects** — the CDN/IIFE builds call
 
 ---
 
+## What's New in v2.1
+
+- **Clean teardown contract** — every UI plugin installer returns a teardown; `Flux.dispose()` removes plugin listeners and MutationObservers, so dispose → start cycles can no longer stack them. `installTransitions()` no longer crashes when the script runs before `<body>` exists.
+- **Safer internals** — retry never falls back to re-clicking the element (no surprise `hx-confirm` replays); cache keys hash sensitive values instead of dropping them (distinct cache entries per secret, secrets never appear in keys); sugar helpers are thin native delegates (`offAll` node-cloning removed); generated-attribute registry is deduplicated and O(1).
+- **Less weight** — dead code cut (undocumented CLI, recipe system, named action pipelines); core gzip dropped ~0.5 kB. CI now fails on bundle-size budget regressions (`npm run size:check`).
+
+## What's New in v2.0
+
+- **Reliable bootstrap contract** — importing the module has zero global side effects; `bootstrapFlux()` publishes `window.Flux` and auto-starts. The CDN bundles call it for you (fixes UI plugins not installing in 1.x full bundles).
+- **20+ runtime bug fixes** — visibility/listener lifecycle, dedupe deadlocks, retry header loss, invalid-form confirm bypass, prefetch pipeline parity, memory-leak sweeps, optimistic rollback defaults.
+- **Real CommonJS build** — `require('flux-htmx')` now works (`dist/flux.cjs`).
+- **Optional `net` entry** — offline queue, upload and optimistic plugins moved out of core so everyone else ships less.
+- **Leaner API** — the pure `fx-*` → `hx-*` alias layer is gone. Write the native htmx attribute directly; presets still read their own option attributes (`fx-target`, `fx-swap`, `fx-delay`, `fx-indicator`, …).
+
+### Migrating from 1.x
+
+| 1.x                                          | 2.0                                                     |
+| -------------------------------------------- | ------------------------------------------------------- |
+| `<a fx-get="/x" fx-target="#main">`          | `<a fx-get="/x" hx-target="#main">` (all pure aliases)  |
+| `fx-delete` + `fx-remove="closest li"`       | `fx-delete` + `fx-remove-target="closest li"`           |
+| `fx-remove="3s"`                             | unchanged — `fx-remove` is duration-only self-removal   |
+| offline/upload/optimistic bundled in core    | `import … from 'flux-htmx/net'` or load `net.iife.js`   |
+| optimistic rollback opt-in via `fx-rollback` | rollback on failure is the default                      |
+| `window.Flux` set at import time (ESM)       | call `bootstrapFlux()` (CDN bundles boot automatically) |
+
+---
+
 ## Development
 
 ```bash
@@ -358,6 +396,7 @@ npm run build        # all bundles + CSS + type declarations
 npm test             # unit suite (vitest, jsdom)
 npm run test:browser # Playwright e2e (Chromium)
 npm run size         # honest bundle-size report
+npm run size:check   # same report, fails CI on gzip budget regression
 ```
 
 ---
