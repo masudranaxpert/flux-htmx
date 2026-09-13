@@ -25,6 +25,21 @@
         <loc>https://masudranaxpert.github.io/flux-htmx/attributes/status/</loc>
       </url>
       <url>
+        <loc>https://masudranaxpert.github.io/flux-htmx/htmx/</loc>
+      </url>
+      <url>
+        <loc>https://masudranaxpert.github.io/flux-htmx/htmx/core-attributes/</loc>
+      </url>
+      <url>
+        <loc>https://masudranaxpert.github.io/flux-htmx/htmx/events/</loc>
+      </url>
+      <url>
+        <loc>https://masudranaxpert.github.io/flux-htmx/htmx/config/</loc>
+      </url>
+      <url>
+        <loc>https://masudranaxpert.github.io/flux-htmx/htmx/whats-new-4/</loc>
+      </url>
+      <url>
         <loc>https://masudranaxpert.github.io/flux-htmx/guides/forms/</loc>
       </url>
       <url>
@@ -83,5 +98,8 @@
       </url>
       <url>
         <loc>https://masudranaxpert.github.io/flux-htmx/examples/fastapi/</loc>
+      </url>
+      <url>
+        <loc>https://masudranaxpert.github.io/flux-htmx/examples/go/</loc>
       </url>
 </urlset>
