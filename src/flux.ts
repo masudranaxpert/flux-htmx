@@ -58,6 +58,7 @@ import { installPollVisibilityPause } from './presets/poll.js';
 import { installDatagrid } from './core/datagrid.js';
 import { installFieldErrors } from './core/field-errors.js';
 import { installHiddenClassGuard } from './presets/ui.js';
+import { installWidgets } from './core/widgets.js';
 import { me, any, sugar, installDomSugar } from './core/sugar.js';
 
 export { type FluxConfig } from './core/config.js';
@@ -209,6 +210,7 @@ export function configure(userConfig?: FluxConfig): ResolvedConfig {
     teardowns.push(installDatagrid());
     teardowns.push(installFieldErrors());
     teardowns.push(installHiddenClassGuard());
+    teardowns.push(installWidgets());
     installDomSugar();
     activatePlugins(pluginApi());
     configured = true;

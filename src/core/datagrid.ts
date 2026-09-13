@@ -7,6 +7,15 @@ declare global {
   }
 }
 
+function queryOrNull(selector: string | null | undefined): Element | null {
+  if (!selector || !selector.trim()) return null;
+  try {
+    return document.querySelector(selector);
+  } catch {
+    return null;
+  }
+}
+
 function htmxApi(): Window['htmx'] {
   return (window as Window).htmx ?? (globalThis as { htmx?: Window['htmx'] }).htmx;
 }
@@ -59,7 +68,7 @@ function onBulkConfigRequest(evt: Event): void {
     | undefined;
   const source = detail?.ctx?.source;
   const btn = source?.closest?.('[fx-include-selection]') as HTMLElement | null;
-  const container = document.querySelector(btn?.getAttribute('fx-include-selection') ?? '');
+  const container = queryOrNull(btn?.getAttribute('fx-include-selection'));
   if (!btn || !container || !detail?.ctx?.request) return;
   const params = detail.ctx.request.parameters ?? (detail.ctx.request.parameters = {});
   const checked = Array.from(
@@ -72,7 +81,7 @@ function onBulkConfigRequest(evt: Event): void {
 
 function onContainerChange(): void {
   for (const btn of document.querySelectorAll<HTMLButtonElement>('[fx-include-selection]')) {
-    const container = document.querySelector(btn.getAttribute('fx-include-selection') ?? '');
+    const container = queryOrNull(btn.getAttribute('fx-include-selection'));
     if (!container) continue;
     const any = container.querySelector('input[type="checkbox"][fx-select]:checked') !== null;
     if (btn.tagName === 'BUTTON' || btn.tagName === 'INPUT') {

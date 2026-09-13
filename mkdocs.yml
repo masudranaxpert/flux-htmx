@@ -84,6 +84,7 @@ nav:
       - attributes/options.md
       - attributes/visibility.md
       - attributes/status.md
+      - attributes/widgets.md
   - htmx 4:
       - htmx/index.md
       - htmx/whats-new-4.md

@@ -346,6 +346,31 @@ Built-in server-callable actions: `toast`, `close`, `open`, `reset`, `refresh`,
 Server returns `422` with `{"email": "already taken"}` → Flux fills the slots, marks
 inputs `aria-invalid`, focuses the first invalid field, clears on next edit.
 
+## Admin widgets
+
+```html
+<!-- Auto-scroll log viewer: pinned to bottom, pauses when you scroll up,
+     caps at 1000 lines (value = cap) -->
+<div id="deploy-log" fx-log="1000" style="height:300px;overflow:auto"></div>
+
+<!-- Copy to clipboard with "Copied!" feedback -->
+<button fx-copy="#api-key">Copy API key</button>
+
+<!-- Relative time: "3 minutes ago", refreshes each minute, pauses when hidden -->
+<time fx-ago datetime="2026-09-13T10:00:00Z"></time>
+
+<!-- Eval-free keyboard shortcuts (triggers a click) -->
+<button fx-shortcut="ctrl+k">Command palette</button>
+
+<!-- Upload progress: form gets data-flux-progress="42", <progress> fills -->
+<form fx-submit="/upload" hx-encoding="multipart/form-data">
+  <input type="file" name="f" /><progress max="100"></progress>
+</form>
+```
+
+Plus an **unsaved-changes guard**: a `form[fx-dirty]` with pending edits warns on
+`beforeunload` and on htmx-boosted navigation away from the form.
+
 ## Reliability extras
 
 - **`fx-poll` pauses when the tab is hidden** and fires once on return — no wasted
