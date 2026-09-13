@@ -1,0 +1,13 @@
+/* flux-htmx docs — landing polish */
+.md-typeset .hero {
+  padding: 1.6rem 1.8rem;
+  margin: 1.2rem 0 2rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.6rem;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--md-primary-fg-color) 8%, transparent),
+    transparent 60%);
+}
+.md-typeset .hero p:first-child { font-size: 1.15rem; }
+.md-typeset h1 { font-weight: 700; letter-spacing: -0.02em; }
+.md-typeset table:not([class]) { font-size: 0.78rem; }

@@ -1,47 +1,10 @@
-# Dependencies
 node_modules/
-.pnpm-store/
-
-# Build and Output
 dist/
 dist-ssr/
-*.tsbuildinfo
-*.tgz
-
-# Logs & Diagnostics
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# Environment & IDE
-.env
-.env.local
-.env.*.local
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-.idea/
-.zcode/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Testing & Coverage
-coverage/
-playwright-report/
+site/
+.venv/
 test-results/
-.nyc_output/
-
-# Cache & Temporary
-.cache/
-.vite/
-.eslintcache
-.DS_Store
-Thumbs.db
-
-# npm auth token — never commit this
+playwright-report/
+*.local
+.env*
 .npmrc
