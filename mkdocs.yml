@@ -86,10 +86,10 @@ nav:
       - attributes/status.md
   - htmx 4:
       - htmx/index.md
+      - htmx/whats-new-4.md
       - htmx/core-attributes.md
       - htmx/events.md
       - htmx/config.md
-      - htmx/whats-new-4.md
   - Guides:
       - guides/forms.md
       - guides/csrf.md
