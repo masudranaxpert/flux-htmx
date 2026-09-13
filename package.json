@@ -1,6 +1,6 @@
 {
   "name": "flux-htmx",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Thin server-driven frontend layer on HTMX 4. Shorthand fx-* verbs, presets, lifecycle, prefetch, and toast — without reimplementing htmx.",
   "keywords": [
     "htmx",
@@ -56,7 +56,7 @@
     "@playwright/test": "1.62.0",
     "@types/node": "22.12.0",
     "eslint": "10.8.0",
-    "htmx.org": "4.0.0-beta6",
+    "htmx.org": "^4.0.0",
     "jsdom": "25.0.1",
     "prettier": "3.4.2",
     "typescript": "5.9.3",

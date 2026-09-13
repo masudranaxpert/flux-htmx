@@ -1,54 +1,99 @@
+---
+title: Getting started
+---
+
 # Getting started
 
-Flux is a thin, robust framework over HTMX 4 that expands `fx-*` shorthand attributes into `hx-*`
-attributes. HTMX handles request and swap mechanics; Flux provides shorthand syntax, high-level presets, accessibility feedback, client caching, and native component controls.
+Flux layers request superpowers on top of HTMX 4. This page gets you from zero to a
+working request in under two minutes.
 
-> HTMX 4 is currently in beta (`^4.0.0-beta6`). Flux accepts any 4.x-compatible beta via its peer dependency range.
+## 1. Load htmx and Flux
 
-## First example
+=== "CDN — one script"
 
-A button that loads `/users` into `#users`:
+    ```html
+    <body>
+      <!-- your app -->
+      <script src="https://cdn.jsdelivr.net/npm/flux-htmx@2/dist/flux.full.iife.js"></script>
+    </body>
+    ```
+
+    The full bundle includes HTMX 4, all Flux presets, UI plugins and the optional
+    net extras — and boots itself.
+
+=== "CDN — htmx separate"
+
+    ```html
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2/dist/htmx.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flux-htmx@2/dist/flux.iife.js"></script>
+    ```
+
+=== "Bundler (Vite, Webpack…)"
+
+    ```bash
+    npm install flux-htmx htmx.org
+    ```
+
+    ```js
+    import { bootstrapFlux } from 'flux-htmx';
+
+    bootstrapFlux(); // publishes window.Flux and starts the runtime
+    ```
+
+!!! note "Where to put the script"
+
+    End of `<body>` is the classic spot. If the script lands in `<head>` (or is moved
+    there later), Flux still boots — plugins wait for the DOM instead of crashing.
+
+## 2. Add the stylesheet
 
 ```html
-<button fx-get="/users" hx-target="#users">Load users</button>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@2/dist/flux.min.css" />
 ```
 
-At processing time, Flux expands this to `hx-get="/users"` (configure the swap with `hx-target="#users"`) on the same element.
+This ships the toast styles, the `hidden` class contract and the ARIA live region.
 
-## Quick Installation
+## 3. Configure CSRF (server-rendered apps)
 
-The simplest setup is the pre-bundled IIFE, which includes HTMX 4 and Flux in a single script tag:
+Flux reads your CSRF token and attaches it to every mutating request:
 
 ```html
-<link rel="stylesheet" href="/flux.css" />
-<button fx-get="/users" hx-target="#users">Load users</button>
-<script src="/flux.full.iife.js"></script>
+<!-- Django / Flask / Rails style -->
+<meta name="csrf-token" content="{{ csrf_token }}" />
+<meta name="flux-config" content='{"csrf":{"strategy":"meta"}}' />
 ```
 
-`flux.full.iife.js` loads HTMX and Flux in the correct order, exposes `window.Flux` and `window.htmx`, and starts automatically.
+See [CSRF guide](guides/csrf.md) for Django, FastAPI and Go specifics.
 
-If your page already loads HTMX 4, use `flux.iife.js`:
+## 4. Make your first Flux request
 
 ```html
-<!-- HTMX 4 (required first) -->
-<script src="/htmx.js"></script>
+<!-- Native htmx does the targeting; Flux adds prefetch + caching -->
+<a hx-get="/products" hx-target="#main" fx-prefetch fx-cache>Products</a>
 
-<!-- Flux core (IIFE) -->
-<script src="/flux.iife.js"></script>
+<!-- Flux preset: debounced search without eval -->
+<input fx-search="/search" fx-target="#results" hx-trigger="input changed delay:300ms" />
+
+<!-- Flux verb: delete with confirm + toast + row removal -->
+<button fx-delete="/item/42" fx-confirm="Delete this item?" fx-toast
+        fx-success="Deleted!" fx-remove-target="closest tr">
+  Delete
+</button>
 ```
 
-## What works out of the box
+## 5. Verify the installation
 
-- **Shorthand Verbs & Options**: `fx-get`, `fx-post`, `fx-put`, `fx-patch`, `fx-delete`, `fx-target`, `fx-swap`, `fx-indicator`, etc.
-- **High-Level Presets**: `fx-search`, `fx-submit`, `fx-delete`, `fx-autosave`, `fx-load`, `fx-poll`, `fx-infinite`.
-- **Status Routing**: `fx-on-422="#errors"`, `fx-on-404="#not-found"`.
-- **Component Controls**: `fx-open="#modal"`, `fx-close="#modal"`, focus restoration.
-- **Client Fragment Caching**: `fx-cache="60s"`, `fx-invalidate="key"`.
-- **Accessible Feedback**: Live-region announcements via `fx-success` and `fx-error`.
+Open the console and run:
 
-## Documentation
+```js
+Flux.doctor();
+```
 
-- [attributes.md](./attributes.md) — full attribute reference & component controls.
-- [presets.md](./presets.md) — search, submit, delete, autosave, poll, infinite scroll.
-- [distribution.md](./distribution.md) — bundles, `window.Flux` inspection API, and meta configuration.
-- [architecture.md](./architecture.md) — core engine architecture & lifecycle.
+A healthy report lists the detected htmx version, registered presets, plugins and
+configuration. `Flux.inspect(element)` explains what Flux sees on a single element.
+
+## Next steps
+
+- [Attributes reference](attributes/verbs.md) — every `fx-*` verb, preset and option
+- [Forms guide](guides/forms.md) — validation, confirms, dirty tracking, autosave
+- [Configuration reference](reference/configuration.md) — the `flux-config` meta tag

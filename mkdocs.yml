@@ -1,0 +1,121 @@
+site_name: flux-htmx
+site_description: The request layer for HTMX 4 — presets, retries, caching, prefetch, CSRF and toasts, plus an eval-free visibility layer.
+site_url: https://masudranaxpert.github.io/flux-htmx/
+repo_url: https://github.com/masudranaxpert/flux-htmx
+repo_name: masudranaxpert/flux-htmx
+edit_uri: edit/master/docs/
+
+theme:
+  name: material
+  features:
+    - content.code.copy
+    - content.code.select
+    - content.tabs.link
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.tabs
+    - navigation.top
+    - navigation.indexes
+    - search.highlight
+    - search.share
+    - toc.follow
+    - header.autohide
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  font:
+    text: Inter
+    code: JetBrains Mono
+  icon:
+    repo: fontawesome/brands/github
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/masudranaxpert/flux-htmx
+    - icon: fontawesome/brands/npm
+      link: https://www.npmjs.com/package/flux-htmx
+  generator: false
+
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.keys
+  - attr_list
+  - md_in_html
+  - tables
+  - def_list
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - getting-started.md
+      - installation.md
+  - Attributes:
+      - attributes/verbs.md
+      - attributes/presets.md
+      - attributes/options.md
+      - attributes/visibility.md
+      - attributes/status.md
+  - htmx 4:
+      - htmx/index.md
+      - htmx/core-attributes.md
+      - htmx/events.md
+      - htmx/config.md
+      - htmx/whats-new-4.md
+  - Guides:
+      - guides/forms.md
+      - guides/csrf.md
+      - guides/caching.md
+      - guides/retry-dedupe.md
+      - guides/toasts-feedback.md
+      - guides/offline.md
+      - guides/with-alpine.md
+  - JavaScript:
+      - javascript/api.md
+      - javascript/plugins.md
+      - javascript/sugar.md
+  - Reference:
+      - reference/configuration.md
+      - reference/bundles.md
+      - reference/events.md
+      - reference/architecture.md
+      - reference/performance.md
+      - reference/security.md
+  - Migration:
+      - migration/from-1x.md
+  - Examples:
+      - examples/index.md
+      - examples/django.md
+      - examples/fastapi.md
+  - examples/go.md
+exclude_docs: |
+  stylesheets/
+  assets/

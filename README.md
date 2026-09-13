@@ -55,7 +55,7 @@ the interactive widget state. That combination is supported, not discouraged.
 
 ```bash
 npm install flux-htmx
-npm install htmx.org@^4.0.0-beta6   # peer dependency for the core builds
+npm install htmx.org@^4.0.0   # peer dependency for the core builds
 ```
 
 ## CDN (No Install)
