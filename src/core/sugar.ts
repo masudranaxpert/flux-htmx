@@ -210,16 +210,14 @@ export function any(
   return sugar(empty) as any;
 }
 
+// Executor form on purpose: Promise.withResolvers() is missing in Node 20's jsdom
+// and older browser engines this library supports (CI runs Node 20).
 export async function tick(): Promise<void> {
-  const { promise, resolve } = Promise.withResolvers<void>();
-  requestAnimationFrame(() => resolve());
-  await promise;
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 }
 
 export async function sleep<T = void>(ms: number, value?: T): Promise<T | undefined> {
-  const { promise, resolve } = Promise.withResolvers<void>();
-  setTimeout(resolve, ms);
-  await promise;
+  await new Promise<void>((resolve) => setTimeout(resolve, ms));
   return value;
 }
 

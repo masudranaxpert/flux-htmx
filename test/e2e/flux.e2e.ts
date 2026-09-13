@@ -145,9 +145,7 @@ test('activates pre-installed plugin once on start', async ({ page }) => {
   expect(count).toBe(1);
 });
 
-test('cleans removed presets and empty preset URLs in one process pass', async ({
-  page,
-}) => {
+test('cleans removed presets and empty preset URLs in one process pass', async ({ page }) => {
   const result = await page.evaluate(() => {
     const Flux = (window as any).Flux;
 
