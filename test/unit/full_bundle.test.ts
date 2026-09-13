@@ -6,7 +6,6 @@ import pkg from '../../package.json';
 // so the full bundle's bootstrap() returned early and no UI plugin ever installed.
 import '../../src/full.js';
 
-
 describe('full bundle bootstrap', () => {
   it('publishes a full API object on window.Flux', () => {
     const Flux = (window as unknown as { Flux: Record<string, unknown> }).Flux;

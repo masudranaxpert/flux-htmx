@@ -22,7 +22,24 @@ Flux adds a preset layer on top of htmx: request presets (`fx-search`, `fx-poll`
 
 No build step required.
 
-> **2.0 note:** the pure `fx-*` → `hx-*` option aliases (`fx-target`, `fx-swap`, `fx-trigger`, `fx-select`, `fx-sync`, `fx-include`, `fx-vals`, `fx-headers`, `fx-confirm`, `fx-boost`, `fx-preload`, `fx-preserve`) were removed — write the `hx-*` attribute directly. Presets still read their own option attributes (`fx-target`, `fx-swap`, `fx-delay`, `fx-indicator`, …) next to a preset like `fx-search` or `fx-delete`.
+## What's New in v2.0
+
+- **Reliable bootstrap contract** — importing the module has zero global side effects; `bootstrapFlux()` publishes `window.Flux` and auto-starts. The CDN bundles call it for you (fixes UI plugins not installing in 1.x full bundles).
+- **20+ runtime bug fixes** — visibility/listener lifecycle, dedupe deadlocks, retry header loss, invalid-form confirm bypass, prefetch pipeline parity, memory-leak sweeps, optimistic rollback defaults.
+- **Real CommonJS build** — `require('flux-htmx')` now works (`dist/flux.cjs`).
+- **Optional `net` entry** — offline queue, upload and optimistic plugins moved out of core so everyone else ships less.
+- **Leaner API** — the pure `fx-*` → `hx-*` alias layer is gone. Write the native htmx attribute directly; presets still read their own option attributes (`fx-target`, `fx-swap`, `fx-delay`, `fx-indicator`, …).
+
+### Migrating from 1.x
+
+| 1.x                                          | 2.0                                                     |
+| -------------------------------------------- | ------------------------------------------------------- |
+| `<a fx-get="/x" fx-target="#main">`          | `<a fx-get="/x" hx-target="#main">` (all pure aliases)  |
+| `fx-delete` + `fx-remove="closest li"`       | `fx-delete` + `fx-remove-target="closest li"`           |
+| `fx-remove="3s"`                             | unchanged — `fx-remove` is duration-only self-removal   |
+| offline/upload/optimistic bundled in core    | `import … from 'flux-htmx/net'` or load `net.iife.js`   |
+| optimistic rollback opt-in via `fx-rollback` | rollback on failure is the default                      |
+| `window.Flux` set at import time (ESM)       | call `bootstrapFlux()` (CDN bundles boot automatically) |
 
 ---
 
@@ -46,19 +63,19 @@ npm install htmx.org@^4.0.0-beta6
 
 ```html
 <!-- Standalone Flux bundle (includes HTMX 4, UI plugins, net extras) -->
-<script src="https://cdn.jsdelivr.net/npm/flux-htmx@2.0.0/dist/flux.full.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flux-htmx@2/dist/flux.full.iife.js"></script>
 
 <!-- CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@2.0.0/dist/flux.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@2/dist/flux.css" />
 <!-- or minified -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@2.0.0/dist/flux.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@2/dist/flux.min.css" />
 ```
 
 ### unpkg
 
 ```html
-<script src="https://unpkg.com/flux-htmx@2.0.0/dist/flux.full.iife.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/flux-htmx@2.0.0/dist/flux.min.css" />
+<script src="https://unpkg.com/flux-htmx@2/dist/flux.full.iife.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/flux-htmx@2/dist/flux.min.css" />
 ```
 
 ### Bundles
@@ -68,13 +85,11 @@ npm install htmx.org@^4.0.0-beta6
 | `flux.full.iife.js`    | htmx 4 + core + UI plugins + net extras              | ~35 kB      |
 | `flux.iife.js`         | core + UI plugins, htmx from `globalThis.htmx`       | ~20 kB      |
 | `net.iife.js`          | offline queue + upload/optimistic plugins (optional) | ~3 kB       |
-| `flux.js` / `flux.cjs` | modular ESM / CJS, htmx.org as peer dependency       | ~20 kB      |
+| `flux.js` / `flux.cjs` | modular ESM / CJS, htmx.org as peer dependency       | ~20–22 kB   |
 
 Loading the full bundle after the modular bundle is not supported — the duplicate-load policy reuses the first `window.Flux` it sees.
 
 ---
-
-## Quick Start
 
 ```html
 <!DOCTYPE html>
@@ -83,14 +98,14 @@ Loading the full bundle after the modular bundle is not supported — the duplic
     <meta charset="UTF-8" />
     <title>My App</title>
     <meta name="flux-config" content='{"csrf":{"strategy":"meta"}}' />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@2.0.0/dist/flux.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@2/dist/flux.css" />
   </head>
   <body>
     <div id="content">
       <a hx-get="/page-2" hx-target="#content" fx-prefetch>Go to Page 2</a>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/flux-htmx@2.0.0/dist/flux.full.iife.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flux-htmx@2/dist/flux.full.iife.js"></script>
   </body>
 </html>
 ```
