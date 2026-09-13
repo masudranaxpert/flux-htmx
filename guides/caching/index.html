@@ -258,6 +258,8 @@
       
         
       
+        
+      
     
     
     
@@ -696,6 +698,8 @@
       
         
       
+        
+      
     
     
     
@@ -862,6 +866,33 @@
     
   
   Status targeting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../attributes/widgets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Admin widgets
 
     
   </span>
@@ -2177,8 +2208,8 @@ or <code>token</code> field contributes <code>name=~hash</code> to the key, so:<
 even when listed.</p>
 <h2 id="programmatic-control">Programmatic control<a class="headerlink" href="#programmatic-control" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">cache</span><span class="p">.</span><span class="nx">invalidate</span><span class="p">(</span><span class="s1">'/products/*'</span><span class="p">);</span><span class="w"> </span><span class="c1">// wildcard</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">cache</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span><span class="w">                   </span><span class="c1">// everything</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">cache</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">'GET:/stats'</span><span class="p">);</span><span class="w">         </span><span class="c1">// read</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">cache</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span><span class="w"> </span><span class="c1">// everything</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">cache</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">'GET:/stats'</span><span class="p">);</span><span class="w"> </span><span class="c1">// read</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">cache</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">'GET:/stats'</span><span class="p">,</span><span class="w"> </span><span class="s1">'&lt;div&gt;…&lt;/div&gt;'</span><span class="p">);</span>
 </code></pre></div>
 <h2 id="cache-coherence">Cache coherence<a class="headerlink" href="#cache-coherence" title="Permanent link">&para;</a></h2>

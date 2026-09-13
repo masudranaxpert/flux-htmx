@@ -258,6 +258,8 @@
       
         
       
+        
+      
     
     
     
@@ -696,6 +698,8 @@
       
         
       
+        
+      
     
     
     
@@ -862,6 +866,33 @@
     
   
   Status targeting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../attributes/widgets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Admin widgets
 
     
   </span>
@@ -1276,6 +1307,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Field persistence — fx-persist
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-field-errors-fx-field-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Server field errors — fx-field-errors
       </span>
     </span>
   </a>
@@ -2223,6 +2265,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#server-field-errors-fx-field-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Server field errors — fx-field-errors
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#password-toggle" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2310,9 +2363,11 @@ failure suppresses the dialog entirely — invalid forms can never confirm-confi
 their way into a request.</p>
 <h2 id="action-pipelines-fx-on-success-fx-on-error">Action pipelines — fx-on-success / fx-on-error<a class="headerlink" href="#action-pipelines-fx-on-success-fx-on-error" title="Permanent link">&para;</a></h2>
 <p>Declarative post-request actions, executed in order:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">&lt;</span><span class="nt">form</span> <span class="na">fx-submit</span><span class="o">=</span><span class="s">"/users"</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>      <span class="na">fx-on-success</span><span class="o">=</span><span class="s">"toast:User saved; reset; refresh:#user-list"</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>      <span class="na">fx-on-error</span><span class="o">=</span><span class="s">"toast:Save failed"</span><span class="p">&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">&lt;</span><span class="nt">form</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>  <span class="na">fx-submit</span><span class="o">=</span><span class="s">"/users"</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>  <span class="na">fx-on-success</span><span class="o">=</span><span class="s">"toast:User saved; reset; refresh:#user-list"</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>  <span class="na">fx-on-error</span><span class="o">=</span><span class="s">"toast:Save failed"</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">&gt;&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
 </code></pre></div>
 <p>Built-in actions: <code>close</code> (close dialog), <code>open</code> (open dialog), <code>reset</code> (reset form),
 <code>refresh</code> (htmx-trigger a re-request of a target), <code>remove</code> (remove an element),
@@ -2337,18 +2392,37 @@ until the form is dirty (or <code>fx-disable-clean</code> re-disables the clean 
 <p>The value survives reloads via <code>localStorage</code> under <code>fx-persist:&lt;key&gt;</code>. Restoration
 dispatches <code>flux:persist:restored</code> (bubbling) — <strong>not</strong> a synthetic <code>change</code>, so
 autosave/triggers don't fire unintended requests on page load.</p>
+<h2 id="server-field-errors-fx-field-errors">Server field errors — fx-field-errors<a class="headerlink" href="#server-field-errors-fx-field-errors" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="p">&lt;</span><span class="nt">form</span> <span class="na">fx-submit</span><span class="o">=</span><span class="s">"/users"</span> <span class="na">fx-field-errors</span><span class="p">&gt;</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>  <span class="p">&lt;</span><span class="nt">input</span> <span class="na">name</span><span class="o">=</span><span class="s">"email"</span> <span class="p">/&gt;&lt;</span><span class="nt">span</span> <span class="na">data-field-error</span><span class="o">=</span><span class="s">"email"</span><span class="p">&gt;&lt;/</span><span class="nt">span</span><span class="p">&gt;</span> <span class="p">&lt;</span><span class="nt">input</span> <span class="na">name</span><span class="o">=</span><span class="s">"port"</span> <span class="p">/&gt;&lt;</span><span class="nt">span</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="na">data-field-error</span><span class="o">=</span><span class="s">"port"</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>  <span class="p">&gt;&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
+</code></pre></div>
+<p>Server responds <code>422</code> (or <code>400</code>) with JSON <code>{"email":"already taken","port":"1-65535"}</code>
+— Flux fills each <code>[data-field-error=&lt;name&gt;]</code>, marks invalid inputs
+<code>aria-invalid="true"</code> + <code>data-invalid</code>, focuses the first invalid field, and clears
+errors when the user edits any field. A Go handler is a <code>map[string]string</code>; Rust, a
+<code>HashMap&lt;String, String&gt;</code>.</p>
 <h2 id="password-toggle">Password toggle<a class="headerlink" href="#password-toggle" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">"password"</span> <span class="na">id</span><span class="o">=</span><span class="s">"pw"</span> <span class="p">/&gt;</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-password-toggle</span><span class="o">=</span><span class="s">"pw"</span> <span class="na">aria-pressed</span><span class="o">=</span><span class="s">"false"</span><span class="p">&gt;</span>Show<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">"password"</span> <span class="na">id</span><span class="o">=</span><span class="s">"pw"</span> <span class="p">/&gt;</span> <span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-password-toggle</span><span class="o">=</span><span class="s">"pw"</span> <span class="na">aria-pressed</span><span class="o">=</span><span class="s">"false"</span><span class="p">&gt;</span>Show<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
 </code></pre></div>
 <p>Toggles <code>type</code> between <code>password</code> and <code>text</code> and mirrors state in <code>aria-pressed</code>.</p>
 <h2 id="tables-bulk-updates">Tables — bulk updates<a class="headerlink" href="#tables-bulk-updates" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="p">&lt;</span><span class="nt">table</span> <span class="na">fx-table</span><span class="p">&gt;</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>  <span class="p">&lt;</span><span class="nt">thead</span><span class="p">&gt;&lt;</span><span class="nt">tr</span><span class="p">&gt;&lt;</span><span class="nt">th</span><span class="p">&gt;&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">"checkbox"</span> <span class="na">data-flux-select-all</span> <span class="p">/&gt;&lt;/</span><span class="nt">th</span><span class="p">&gt;</span>…<span class="p">&lt;/</span><span class="nt">tr</span><span class="p">&gt;&lt;/</span><span class="nt">thead</span><span class="p">&gt;</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>  <span class="p">&lt;</span><span class="nt">tbody</span><span class="p">&gt;</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="p">&lt;</span><span class="nt">tr</span><span class="p">&gt;&lt;</span><span class="nt">td</span><span class="p">&gt;&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">"checkbox"</span> <span class="na">name</span><span class="o">=</span><span class="s">"id"</span> <span class="na">value</span><span class="o">=</span><span class="s">"1"</span> <span class="p">/&gt;&lt;/</span><span class="nt">td</span><span class="p">&gt;&lt;</span><span class="nt">td</span><span class="p">&gt;</span>…<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;&lt;/</span><span class="nt">tr</span><span class="p">&gt;</span>
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>  <span class="p">&lt;/</span><span class="nt">tbody</span><span class="p">&gt;</span>
-<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="p">&lt;/</span><span class="nt">table</span><span class="p">&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="p">&lt;</span><span class="nt">table</span> <span class="na">fx-table</span><span class="p">&gt;</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>  <span class="p">&lt;</span><span class="nt">thead</span><span class="p">&gt;</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="p">&lt;</span><span class="nt">tr</span><span class="p">&gt;</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>      <span class="p">&lt;</span><span class="nt">th</span><span class="p">&gt;&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">"checkbox"</span> <span class="na">data-flux-select-all</span> <span class="p">/&gt;&lt;/</span><span class="nt">th</span><span class="p">&gt;</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>      …
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    <span class="p">&lt;/</span><span class="nt">tr</span><span class="p">&gt;</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>  <span class="p">&lt;/</span><span class="nt">thead</span><span class="p">&gt;</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>  <span class="p">&lt;</span><span class="nt">tbody</span><span class="p">&gt;</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>    <span class="p">&lt;</span><span class="nt">tr</span><span class="p">&gt;</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>      <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">"checkbox"</span> <span class="na">name</span><span class="o">=</span><span class="s">"id"</span> <span class="na">value</span><span class="o">=</span><span class="s">"1"</span> <span class="p">/&gt;&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>      <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>…<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>    <span class="p">&lt;/</span><span class="nt">tr</span><span class="p">&gt;</span>
+<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>  <span class="p">&lt;/</span><span class="nt">tbody</span><span class="p">&gt;</span>
+<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="p">&lt;/</span><span class="nt">table</span><span class="p">&gt;</span>
 </code></pre></div>
 <p>The select-all checkbox updates every row checkbox in <strong>one pass</strong> and emits a single
 <code>change</code> — no 100-request accident on a 100-row table.</p>

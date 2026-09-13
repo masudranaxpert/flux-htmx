@@ -258,6 +258,8 @@
       
         
       
+        
+      
     
     
     
@@ -696,6 +698,8 @@
       
         
       
+        
+      
     
     
     
@@ -862,6 +866,33 @@
     
   
   Status targeting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../attributes/widgets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Admin widgets
 
     
   </span>
@@ -2154,9 +2185,7 @@
 
 <h1 id="toasts-feedback">Toasts &amp; feedback<a class="headerlink" href="#toasts-feedback" title="Permanent link">&para;</a></h1>
 <h2 id="built-in-toasts">Built-in toasts<a class="headerlink" href="#built-in-toasts" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-delete</span><span class="o">=</span><span class="s">"/item/1"</span> <span class="na">fx-toast</span> <span class="na">fx-success</span><span class="o">=</span><span class="s">"Deleted!"</span> <span class="na">fx-error</span><span class="o">=</span><span class="s">"Failed."</span><span class="p">&gt;</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  Delete
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-delete</span><span class="o">=</span><span class="s">"/item/1"</span> <span class="na">fx-toast</span> <span class="na">fx-success</span><span class="o">=</span><span class="s">"Deleted!"</span> <span class="na">fx-error</span><span class="o">=</span><span class="s">"Failed."</span><span class="p">&gt;</span>Delete<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
 </code></pre></div>
 <p><code>fx-toast</code> shows a slide-in toast bottom-right on completion. <code>fx-success</code> and
 <code>fx-error</code> override the messages; with <code>fx-error</code> alone, only errors toast.</p>
@@ -2199,8 +2228,13 @@
 </tr>
 </tbody>
 </table>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="o">[</span><span class="nt">data-flux-loading</span><span class="o">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">opacity</span><span class="p">:</span><span class="w"> </span><span class="mf">.6</span><span class="p">;</span><span class="w"> </span><span class="k">pointer-events</span><span class="p">:</span><span class="w"> </span><span class="kc">none</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="o">[</span><span class="nt">data-flux-error</span><span class="o">]</span><span class="w">   </span><span class="p">{</span><span class="w"> </span><span class="k">border-color</span><span class="p">:</span><span class="w"> </span><span class="mh">#dc2626</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="o">[</span><span class="nt">data-flux-loading</span><span class="o">]</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="k">opacity</span><span class="p">:</span><span class="w"> </span><span class="mf">0.6</span><span class="p">;</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="k">pointer-events</span><span class="p">:</span><span class="w"> </span><span class="kc">none</span><span class="p">;</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="p">}</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="o">[</span><span class="nt">data-flux-error</span><span class="o">]</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="k">border-color</span><span class="p">:</span><span class="w"> </span><span class="mh">#dc2626</span><span class="p">;</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">}</span>
 </code></pre></div>
 <p>New requests clear the previous outcome first — no stale error borders.</p>
 <h2 id="global-indicator">Global indicator<a class="headerlink" href="#global-indicator" title="Permanent link">&para;</a></h2>

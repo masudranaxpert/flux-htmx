@@ -258,6 +258,8 @@
       
         
       
+        
+      
     
     
     
@@ -696,6 +698,8 @@
       
         
       
+        
+      
     
     
     
@@ -862,6 +866,33 @@
     
   
   Status targeting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../attributes/widgets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Admin widgets
 
     
   </span>
@@ -1699,6 +1730,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#server-driven-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Server-driven actions
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#example-alpine-bridge" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2124,6 +2166,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#server-driven-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Server-driven actions
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#example-alpine-bridge" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2223,8 +2276,16 @@ with <code>@flux:…</code>.</p>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">removeAttribute</span><span class="p">(</span><span class="s1">'data-busy'</span><span class="p">);</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">});</span>
 </code></pre></div>
+<h2 id="server-driven-actions">Server-driven actions<a class="headerlink" href="#server-driven-actions" title="Permanent link">&para;</a></h2>
+<p>htmx dispatches events from the <code>HX-Trigger</code> response header. Flux binds
+<code>flux:action</code> to its action pipeline, so the server can orchestrate the client:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">"HX-Trigger"</span><span class="p">,</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="s">`{"flux:action":"toast:Saved; close:#edit; invalidate:GET:/containers*"}`</span><span class="p">)</span>
+</code></pre></div>
+<p>Built-in actions: <code>toast</code>, <code>close</code>, <code>open</code>, <code>reset</code>, <code>refresh</code>, <code>remove</code>,
+<code>invalidate</code> — plus anything registered via <code>Flux.registerAction()</code>.</p>
 <h2 id="example-alpine-bridge">Example: Alpine bridge<a class="headerlink" href="#example-alpine-bridge" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">&lt;</span><span class="nt">div</span> <span class="na">x-data</span> <span class="err">@</span><span class="na">flux:persist:restored</span><span class="o">=</span><span class="s">"console.log('restored', $event.target.name)"</span><span class="p">&gt;&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">&lt;</span><span class="nt">div</span> <span class="na">x-data</span> <span class="err">@</span><span class="na">flux:persist:restored</span><span class="o">=</span><span class="s">"console.log('restored', $event.target.name)"</span><span class="p">&gt;&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
 </code></pre></div>
 
 

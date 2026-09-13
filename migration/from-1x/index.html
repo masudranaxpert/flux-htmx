@@ -258,6 +258,8 @@
       
         
       
+        
+      
     
     
     
@@ -696,6 +698,8 @@
       
         
       
+        
+      
     
     
     
@@ -862,6 +866,33 @@
     
   
   Status targeting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../attributes/widgets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Admin widgets
 
     
   </span>
@@ -2269,9 +2300,9 @@ changes, with the 2.x replacement.</p>
 <p>The pure <code>fx-*</code> → <code>hx-*</code> option aliases are gone. Write the native htmx attribute:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="cm">&lt;!-- 1.x --&gt;</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="p">&lt;</span><span class="nt">a</span> <span class="na">fx-get</span><span class="o">=</span><span class="s">"/x"</span> <span class="na">fx-target</span><span class="o">=</span><span class="s">"#main"</span> <span class="na">fx-swap</span><span class="o">=</span><span class="s">"outerHTML"</span> <span class="na">fx-trigger</span><span class="o">=</span><span class="s">"click"</span><span class="p">&gt;</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="cm">&lt;!-- 2.x --&gt;</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">&lt;</span><span class="nt">a</span> <span class="na">fx-get</span><span class="o">=</span><span class="s">"/x"</span> <span class="na">hx-target</span><span class="o">=</span><span class="s">"#main"</span> <span class="na">hx-swap</span><span class="o">=</span><span class="s">"outerHTML"</span> <span class="na">hx-trigger</span><span class="o">=</span><span class="s">"click"</span><span class="p">&gt;</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  <span class="cm">&lt;!-- 2.x --&gt;</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  <span class="p">&lt;</span><span class="nt">a</span> <span class="na">fx-get</span><span class="o">=</span><span class="s">"/x"</span> <span class="na">hx-target</span><span class="o">=</span><span class="s">"#main"</span> <span class="na">hx-swap</span><span class="o">=</span><span class="s">"outerHTML"</span> <span class="na">hx-trigger</span><span class="o">=</span><span class="s">"click"</span><span class="p">&gt;&lt;/</span><span class="nt">a</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">&gt;&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
 </code></pre></div>
 <p>Removed aliases: <code>fx-target</code><em>, <code>fx-swap</code>, <code>fx-trigger</code>, <code>fx-select</code>, <code>fx-sync</code>,
 <code>fx-include</code>, <code>fx-vals</code>, <code>fx-headers</code>, <code>fx-confirm</code></em>, <code>fx-boost</code>, <code>fx-preload</code>,
@@ -2281,9 +2312,9 @@ preset/verb: <code>&lt;input fx-search="/s" fx-target="#r"&gt;</code> still work
 <h2 id="fx-delete-fx-remove">fx-delete + fx-remove<a class="headerlink" href="#fx-delete-fx-remove" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="cm">&lt;!-- 1.x (buggy: could remove the button on page load) --&gt;</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-delete</span><span class="o">=</span><span class="s">"/i/1"</span> <span class="na">fx-remove</span><span class="o">=</span><span class="s">"closest li"</span><span class="p">&gt;</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="cm">&lt;!-- 2.x --&gt;</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-delete</span><span class="o">=</span><span class="s">"/i/1"</span> <span class="na">fx-remove-target</span><span class="o">=</span><span class="s">"closest li"</span><span class="p">&gt;</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  <span class="cm">&lt;!-- 2.x --&gt;</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>  <span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-delete</span><span class="o">=</span><span class="s">"/i/1"</span> <span class="na">fx-remove-target</span><span class="o">=</span><span class="s">"closest li"</span><span class="p">&gt;&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
 </code></pre></div>
 <p><code>fx-remove</code> is now duration-only self-removal: <code>fx-remove="3s"</code>.</p>
 <h2 id="visibility">Visibility<a class="headerlink" href="#visibility" title="Permanent link">&para;</a></h2>

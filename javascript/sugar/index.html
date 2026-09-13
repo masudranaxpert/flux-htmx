@@ -258,6 +258,8 @@
       
         
       
+        
+      
     
     
     
@@ -696,6 +698,8 @@
       
         
       
+        
+      
     
     
     
@@ -862,6 +866,33 @@
     
   
   Status targeting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../attributes/widgets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Admin widgets
 
     
   </span>
@@ -2213,7 +2244,9 @@ cloning:</p>
 </tbody>
 </table>
 <p>All methods return the element, so they chain:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nx">me</span><span class="p">(</span><span class="s1">'#toast'</span><span class="p">).</span><span class="nx">classAdd</span><span class="p">(</span><span class="s1">'show'</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">'transitionend'</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">me</span><span class="p">(</span><span class="s1">'#toast'</span><span class="p">).</span><span class="nx">classRemove</span><span class="p">(</span><span class="s1">'show'</span><span class="p">));</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nx">me</span><span class="p">(</span><span class="s1">'#toast'</span><span class="p">)</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="p">.</span><span class="nx">classAdd</span><span class="p">(</span><span class="s1">'show'</span><span class="p">)</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'transitionend'</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">me</span><span class="p">(</span><span class="s1">'#toast'</span><span class="p">).</span><span class="nx">classRemove</span><span class="p">(</span><span class="s1">'show'</span><span class="p">));</span>
 </code></pre></div>
 <h2 id="global-install">Global install<a class="headerlink" href="#global-install" title="Permanent link">&para;</a></h2>
 <p><code>Flux</code> installs <code>me</code>, <code>any</code>, <code>tick</code> and <code>sleep</code> on <code>window</code> and <code>document</code>

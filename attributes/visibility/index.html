@@ -260,6 +260,8 @@
       
         
       
+        
+      
     
     
     
@@ -698,6 +700,8 @@
       
         
       
+        
+      
     
     
     
@@ -913,10 +917,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#dismissable-overlays" class="md-nav__link">
+  <a href="#modals-canonical-path" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Dismissable overlays
+        Modals — canonical path
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dismissable-overlays-legacy-div-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Dismissable overlays (legacy div pattern)
       </span>
     </span>
   </a>
@@ -958,6 +973,33 @@
     
   
   Status targeting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../widgets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Admin widgets
 
     
   </span>
@@ -2113,10 +2155,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#dismissable-overlays" class="md-nav__link">
+  <a href="#modals-canonical-path" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Dismissable overlays
+        Modals — canonical path
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dismissable-overlays-legacy-div-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Dismissable overlays (legacy div pattern)
       </span>
     </span>
   </a>
@@ -2189,13 +2242,26 @@ Tailwind-compatible and composable — a panel hidden by <code>fx-hide</code> is
 <p>One handler coordinates everything: the trigger toggles the menu, clicking outside
 the trigger/menu closes it, <span class="keys"><kbd class="key-escape">Esc</kbd></span> closes it, and the trigger's <code>aria-expanded</code>
 stays in sync. The click that opens the menu can never immediately close it.</p>
-<h2 id="dismissable-overlays">Dismissable overlays<a class="headerlink" href="#dismissable-overlays" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">"my-modal"</span> <span class="na">class</span><span class="o">=</span><span class="s">"hidden"</span><span class="p">&gt;</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>  <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">"modal-content"</span> <span class="na">fx-hide-outside</span><span class="o">=</span><span class="s">"#my-modal"</span> <span class="na">fx-hide-escape</span><span class="o">=</span><span class="s">"#my-modal"</span><span class="p">&gt;</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="p">&lt;</span><span class="nt">h2</span><span class="p">&gt;</span>Hello Modal<span class="p">&lt;/</span><span class="nt">h2</span><span class="p">&gt;</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-hide</span><span class="o">=</span><span class="s">"#my-modal"</span><span class="p">&gt;</span>Close<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<h2 id="modals-canonical-path">Modals — canonical path<a class="headerlink" href="#modals-canonical-path" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-open</span><span class="o">=</span><span class="s">"#edit"</span><span class="p">&gt;</span>Edit<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="p">&lt;</span><span class="nt">dialog</span> <span class="na">id</span><span class="o">=</span><span class="s">"edit"</span> <span class="na">fx-modal</span><span class="p">&gt;</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>  <span class="p">&lt;</span><span class="nt">form</span> <span class="na">method</span><span class="o">=</span><span class="s">"dialog"</span><span class="p">&gt;</span>...<span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  <span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-close</span><span class="p">&gt;</span>Cancel<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">&lt;/</span><span class="nt">dialog</span><span class="p">&gt;</span>
+</code></pre></div>
+<p><code>&lt;dialog&gt;</code> + <code>fx-open</code> / <code>fx-close</code> is the <strong>canonical modal path</strong>: focus trap and
+restoration are native, and <code>fx-modal</code> closes on backdrop click (available in both
+the core and full bundles — the logic lives in the core dialog controller). A
+<code>fx-open</code> target must be a <code>&lt;dialog&gt;</code> or declare the <code>popover</code> attribute; anything
+else logs a warning instead of throwing.</p>
+<h2 id="dismissable-overlays-legacy-div-pattern">Dismissable overlays (legacy div pattern)<a class="headerlink" href="#dismissable-overlays-legacy-div-pattern" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">"my-modal"</span> <span class="na">class</span><span class="o">=</span><span class="s">"hidden"</span><span class="p">&gt;</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>  <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">"modal-content"</span> <span class="na">fx-hide-outside</span><span class="o">=</span><span class="s">"#my-modal"</span> <span class="na">fx-hide-escape</span><span class="o">=</span><span class="s">"#my-modal"</span><span class="p">&gt;</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="p">&lt;</span><span class="nt">h2</span><span class="p">&gt;</span>Hello Modal<span class="p">&lt;/</span><span class="nt">h2</span><span class="p">&gt;</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-hide</span><span class="o">=</span><span class="s">"#my-modal"</span><span class="p">&gt;</span>Close<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>  <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
 </code></pre></div>
 <ul>
 <li><code>fx-hide-outside="#id"</code> — hide the target when a click lands outside the content box</li>
@@ -2203,6 +2269,13 @@ stays in sync. The click that opens the menu can never immediately close it.</p>
 </ul>
 <p>The two attributes do not conflict with each other or with <code>fx-show</code>/<code>fx-hide</code> on the
 same elements — conflict detection only flags genuinely contradictory pairs.</p>
+<div class="admonition warning">
+<p class="admonition-title">Define the <code>hidden</code> class</p>
+<p>Every visibility action drives the <code>hidden</code> class. With Tailwind you already have
+it; otherwise load <code>flux.css</code> (which ships <code>.hidden{display:none!important}</code>).
+Without a definition, hide actions would silently no-op — Flux warns in the
+console the first time it detects that.</p>
+</div>
 <h2 id="disconnection-contract">Disconnection contract<a class="headerlink" href="#disconnection-contract" title="Permanent link">&para;</a></h2>
 <p>Re-processing an element (htmx swaps, <code>Flux.process()</code>) replaces the previous
 listener instead of stacking: signature changes disconnect the old registration. A

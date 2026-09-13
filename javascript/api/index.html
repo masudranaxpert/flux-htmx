@@ -258,6 +258,8 @@
       
         
       
+        
+      
     
     
     
@@ -696,6 +698,8 @@
       
         
       
+        
+      
     
     
     
@@ -862,6 +866,33 @@
     
   
   Status targeting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../attributes/widgets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Admin widgets
 
     
   </span>
@@ -2218,12 +2249,12 @@ is a clean first boot — nothing stacks.</p>
 <h2 id="cache">Cache<a class="headerlink" href="#cache" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">cache</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">'GET:/stats'</span><span class="p">);</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">cache</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">'GET:/stats'</span><span class="p">,</span><span class="w"> </span><span class="s1">'&lt;div&gt;…&lt;/div&gt;'</span><span class="p">);</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">cache</span><span class="p">.</span><span class="nx">invalidate</span><span class="p">(</span><span class="s1">'/users/*'</span><span class="p">);</span><span class="w">  </span><span class="c1">// wildcard</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">cache</span><span class="p">.</span><span class="nx">invalidate</span><span class="p">(</span><span class="s1">'/users/*'</span><span class="p">);</span><span class="w"> </span><span class="c1">// wildcard</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">cache</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
 </code></pre></div>
 <h2 id="diagnostics">Diagnostics<a class="headerlink" href="#diagnostics" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">doctor</span><span class="p">();</span><span class="w">                        </span><span class="c1">// whole-page health report</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">inspect</span><span class="p">(</span><span class="nx">element</span><span class="p">);</span><span class="w">                </span><span class="c1">// per-element view: presets, conflicts, status rules</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">doctor</span><span class="p">();</span><span class="w"> </span><span class="c1">// whole-page health report</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">inspect</span><span class="p">(</span><span class="nx">element</span><span class="p">);</span><span class="w"> </span><span class="c1">// per-element view: presets, conflicts, status rules</span>
 </code></pre></div>
 <p><code>doctor()</code> reports the detected htmx version, registered presets/plugins, elements
 with conflicts, and configuration problems. Use it when something "just doesn't
@@ -2232,7 +2263,7 @@ fire".</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">bootstrapFlux</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'flux-htmx'</span><span class="p">;</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">api</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">bootstrapFlux</span><span class="p">({</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="nx">start</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">        </span><span class="c1">// don't auto-process; call api.start() yourself</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="nx">start</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="c1">// don't auto-process; call api.start() yourself</span>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="nx">config</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">csrf</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">strategy</span><span class="o">:</span><span class="w"> </span><span class="s1">'meta'</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span>
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">});</span>
 </code></pre></div>
@@ -2240,8 +2271,8 @@ fire".</p>
 (<code>reuse</code> | <code>warn</code> | <code>error</code>) and honours <code>&lt;meta name="flux-config" … autoStart&gt;</code>.
 Importing the module alone has <strong>no global side effects</strong>.</p>
 <h2 id="version-dependencies">Version &amp; dependencies<a class="headerlink" href="#version-dependencies" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">version</span><span class="p">;</span><span class="w">            </span><span class="c1">// "2.1.0"</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">dependencies</span><span class="p">;</span><span class="w">       </span><span class="c1">// { htmx: "4.0.0-beta6", … }</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">version</span><span class="p">;</span><span class="w"> </span><span class="c1">// "2.1.0"</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">dependencies</span><span class="p">;</span><span class="w"> </span><span class="c1">// { htmx: "4.0.0-beta6", … }</span>
 </code></pre></div>
 
 
