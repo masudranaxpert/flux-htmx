@@ -37,13 +37,13 @@ Flux.unuse('my-plugin');
 
 ## The plugin API
 
-| Member | Description |
-| --- | --- |
-| `registerPreset(name, def)` | Register a preset attribute with `connect(el)` returning a disconnect |
-| `registerAction(name, handler)` | Add an action usable in `fx-on-success` pipelines |
-| `setGeneratedAttribute(el, name, value)` | Write an `hx-*` attribute owned by Flux |
-| `safeQuery(selector, root?)` | Query that never throws on invalid selectors |
-| `log` | Structured logger (`log.info/warn/error`) |
+| Member                                   | Description                                                           |
+| ---------------------------------------- | --------------------------------------------------------------------- |
+| `registerPreset(name, def)`              | Register a preset attribute with `connect(el)` returning a disconnect |
+| `registerAction(name, handler)`          | Add an action usable in `fx-on-success` pipelines                     |
+| `setGeneratedAttribute(el, name, value)` | Write an `hx-*` attribute owned by Flux                               |
+| `safeQuery(selector, root?)`             | Query that never throws on invalid selectors                          |
+| `log`                                    | Structured logger (`log.info/warn/error`)                             |
 
 ## Contract
 

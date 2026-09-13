@@ -13,16 +13,19 @@ Transient failures (network errors, timeouts, 502/503/504) are retried with
 exponential backoff and jitter.
 
 ```html
-<meta name="flux-config" content='{
+<meta
+  name="flux-config"
+  content='{
   "retry": { "maxRetries": 3, "baseDelayMs": 500, "maxDelayMs": 8000 }
-}' />
+}'
+/>
 ```
 
-| Option | Default | Description |
-| --- | --- | --- |
-| `maxRetries` | `2` | Attempts after the first failure |
-| `baseDelayMs` | `500` | First backoff delay |
-| `maxDelayMs` | `8000` | Backoff ceiling |
+| Option        | Default | Description                      |
+| ------------- | ------- | -------------------------------- |
+| `maxRetries`  | `2`     | Attempts after the first failure |
+| `baseDelayMs` | `500`   | First backoff delay              |
+| `maxDelayMs`  | `8000`  | Backoff ceiling                  |
 
 Guarantees:
 

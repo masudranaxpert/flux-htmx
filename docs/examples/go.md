@@ -35,9 +35,7 @@ func main() {
 ## Polling dashboard
 
 ```html
-<div fx-poll="/stats" hx-trigger="every 5s" hx-target="this">
-  {{template "stats" .}}
-</div>
+<div fx-poll="/stats" hx-trigger="every 5s" hx-target="this">{{template "stats" .}}</div>
 ```
 
 Runnable app: [`examples/go/`](https://github.com/masudranaxpert/flux-htmx/tree/master/examples/go)

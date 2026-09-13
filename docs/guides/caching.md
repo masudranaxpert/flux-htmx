@@ -35,8 +35,8 @@ even when listed.
 
 ```js
 Flux.cache.invalidate('/products/*'); // wildcard
-Flux.cache.clear();                   // everything
-Flux.cache.get('GET:/stats');         // read
+Flux.cache.clear(); // everything
+Flux.cache.get('GET:/stats'); // read
 Flux.cache.set('GET:/stats', '<div>…</div>');
 ```
 

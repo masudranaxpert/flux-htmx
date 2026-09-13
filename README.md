@@ -240,19 +240,24 @@ close it. The trigger's `aria-expanded` stays in sync.
 </ul>
 ```
 
-### Modals
+### Modals — canonical path: `<dialog>` + fx-open/fx-close
 
 ```html
-<button fx-show="#my-modal">Open Modal</button>
+<button fx-open="#edit">Edit</button>
 
-<div id="my-modal" class="hidden">
-  <!-- Close when clicking outside this specific content box -->
-  <div class="modal-content" fx-hide-outside="#my-modal" fx-hide-escape="#my-modal">
-    <h2>Hello Modal</h2>
-    <button fx-hide="#my-modal">Close</button>
-  </div>
-</div>
+<dialog id="edit" fx-modal>
+  <form method="dialog">...</form>
+  <button fx-close>Cancel</button>
+</dialog>
 ```
+
+`fx-modal` closes the dialog on backdrop click. Focus handling and restoration are
+built in. The old div-based pattern (`fx-show` + `fx-hide-outside` + `fx-hide-escape`)
+still works — treat it as legacy for when you cannot use `<dialog>`.
+
+**CSS requirement:** the visibility layer drives one `.hidden` class. Without
+Tailwind, load `flux.css` (or add `.hidden{display:none}` yourself) — `flux.css`
+defines it for you.
 
 ### Inline DOM helpers (Surreal-style)
 
@@ -292,6 +297,62 @@ them — two requests differing only in a secret get distinct entries, and the s
 itself never appears in the key.
 
 ---
+
+## Server-driven actions (HX-Trigger)
+
+The server can run any client pipeline through htmx's own `HX-Trigger` header —
+one header closes modals, refreshes tables, invalidates caches and toasts:
+
+```go
+w.Header().Set("HX-Trigger",
+  `{"flux:action":"toast:Saved; close:#edit; invalidate:GET:/containers*"}`)
+```
+
+Built-in server-callable actions: `toast`, `close`, `open`, `reset`, `refresh`,
+`remove`, `invalidate` (cache wildcard) — plus anything registered via
+`Flux.registerAction()`.
+
+## Datagrid: sort, sync-url, bulk selection
+
+```html
+<table fx-sort-url="/containers" hx-target="tbody">
+  <thead>
+    <tr>
+      <th fx-sort="name">Name</th>
+    </tr>
+  </thead>
+  …
+</table>
+
+<form fx-search="/containers" fx-target="#rows" fx-sync-url>…</form>
+<button fx-post="/containers/stop" fx-include-selection="#table">Stop selected</button>
+```
+
+- `fx-sort` on `<th>`: click cycles asc → desc → none, appends `?sort=&dir=` to the
+  request, keeps `aria-sort` in sync.
+- `fx-sync-url` on a filter form: state lives in the address bar — shareable links,
+  refresh-safe, back/forward re-requests.
+- `fx-include-selection="#id"` on a button: sends checked `input[fx-select]` values
+  as parameters; disables the button when nothing is selected.
+
+## Field validation errors from the server
+
+```html
+<form fx-submit="/users" fx-field-errors>
+  <input name="email" /><span data-field-error="email"></span>
+</form>
+```
+
+Server returns `422` with `{"email": "already taken"}` → Flux fills the slots, marks
+inputs `aria-invalid`, focuses the first invalid field, clears on next edit.
+
+## Reliability extras
+
+- **`fx-poll` pauses when the tab is hidden** and fires once on return — no wasted
+  server load from abandoned admin tabs.
+- **`fx-idempotency-key`** on a form/button: attaches a stable `Idempotency-Key`
+  header reused across retries, so a double-clicked "Deploy" cannot create two
+  containers.
 
 ## Offline Queue, Upload & Optimistic UI (optional `net` entry)
 

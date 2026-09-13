@@ -34,7 +34,7 @@ When the request fails because the browser is offline, it is queued in `localSto
 and flushed automatically when connectivity returns.
 
 ```js
-FluxNet.offline.pending;  // number of queued requests
+FluxNet.offline.pending; // number of queued requests
 await FluxNet.offline.flush();
 FluxNet.offline.clear();
 ```
@@ -67,10 +67,12 @@ Flux.use(optimisticPlugin);
 ```
 
 ```html
-<button fx-post="/like"
-        fx-optimistic-add-class="liked"
-        hx-target="closest button"
-        fx-optimistic-remove="closest tr">
+<button
+  fx-post="/like"
+  fx-optimistic-add-class="liked"
+  hx-target="closest button"
+  fx-optimistic-remove="closest tr"
+>
   Like
 </button>
 ```

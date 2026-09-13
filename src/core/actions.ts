@@ -2,6 +2,7 @@
 // Executes declarative actions defined in fx-on-success, fx-on-error, etc.
 
 import { queryMany } from './selectors.js';
+import { cache } from '../cache/instance.js';
 import { showBuiltInToast } from './feedback.js';
 
 export type ActionHandler = (
@@ -117,5 +118,33 @@ registerAction('toast', (targetArg, _source) => {
     new CustomEvent('flux:toast', { detail: { message: targetArg, type: 'success' } }),
   );
 });
+
+registerAction('invalidate', (pattern) => {
+  if (!pattern) return;
+  if (pattern.includes('*')) cache.invalidateMatching(pattern);
+  else cache.invalidate(pattern);
+});
+
+/**
+ * Server-driven actions: htmx dispatches events from the HX-Trigger response header,
+ * so a server can run any client pipeline —
+ *   HX-Trigger: {"flux:action": "toast:Saved; close:#edit; invalidate:GET:/containers*"}
+ */
+export function installServerActions(): () => void {
+  if (typeof document === 'undefined') return () => {};
+  const onServerAction = (evt: Event) => {
+    const detail = (evt as CustomEvent).detail as unknown;
+    const pipeline =
+      typeof detail === 'string'
+        ? detail
+        : ((detail as { actions?: unknown })?.actions ??
+          (detail as { pipeline?: unknown })?.pipeline);
+    if (typeof pipeline === 'string' && pipeline.trim()) {
+      void executePipeline(pipeline, document.body, detail);
+    }
+  };
+  document.addEventListener('flux:action', onServerAction);
+  return () => document.removeEventListener('flux:action', onServerAction);
+}
 
 // We can add more built-ins as needed (add-class, remove-class, focus, etc.)

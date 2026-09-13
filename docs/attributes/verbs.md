@@ -16,7 +16,7 @@ so everything htmx documents about verbs applies verbatim.
 <button fx-delete="/item/42" hx-confirm="Really delete?">Delete</button>
 ```
 
-!!! tip "Mix raw hx-* freely"
+!!! tip "Mix raw hx-\* freely"
 
     Since 2.0 the pure `fx-target` / `fx-swap` / `fx-trigger` aliases are gone on
     purpose. Write the native `hx-*` attribute next to any `fx-*` preset — htmx
@@ -30,11 +30,11 @@ so everything htmx documents about verbs applies verbatim.
 
 Without an explicit `hx-trigger`, Flux matches htmx's own defaults:
 
-| Element | Default trigger |
-| --- | --- |
-| `a`, `button`, `[role=button]`, `form`-less clickable | `click` |
-| `form` | `submit` |
-| `input` | `change` |
+| Element                                               | Default trigger |
+| ----------------------------------------------------- | --------------- |
+| `a`, `button`, `[role=button]`, `form`-less clickable | `click`         |
+| `form`                                                | `submit`        |
+| `input`                                               | `change`        |
 
 Override with `hx-trigger`:
 
@@ -54,7 +54,10 @@ outcome attributes `data-flux-success` / `data-flux-error` after completion — 
 them with plain CSS:
 
 ```css
-[data-flux-loading] { opacity: 0.6; pointer-events: none; }
+[data-flux-loading] {
+  opacity: 0.6;
+  pointer-events: none;
+}
 ```
 
 ## Disable while requesting

@@ -289,3 +289,74 @@ export function disconnectDropdown(element: Element): void {
   document.removeEventListener('keydown', c.escapeKey);
   dropdownControllers.delete(element);
 }
+
+const hiddenGuardWarned = new WeakSet<Element>();
+
+/**
+ * Dev-mode safety net: Flux's visibility layer drives the `hidden` class. If no CSS
+ * defines it (no Tailwind, flux.css not loaded), hide actions silently no-op. Warn
+ * once per element instead of failing silently.
+ */
+export function installHiddenClassGuard(): () => void {
+  if (typeof document === 'undefined') return () => {};
+  const onAbort = (evt: Event) => {
+    const el = evt.target as Element | null;
+    if (
+      !el ||
+      !(evt as CustomEvent).detail?.fluxHiddenGuard ||
+      hiddenGuardWarned.has(el) ||
+      typeof getComputedStyle !== 'function'
+    ) {
+      return;
+    }
+    if (el.classList.contains('hidden') && getComputedStyle(el as HTMLElement).display !== 'none') {
+      hiddenGuardWarned.add(el);
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[flux] fx-hide ran but the element is still visible. Flux uses the `hidden` ' +
+          'class; add `.hidden{display:none}` to your CSS or load flux.css.',
+      );
+    }
+  };
+  document.addEventListener('flux:hidden-guard', onAbort);
+  const onClickCapture = (evt: Event) => {
+    const trigger = (evt.target as HTMLElement | null)?.closest(
+      '[fx-hide],[fx-toggle],[fx-dropdown],[fx-hide-outside],[fx-hide-escape]',
+    );
+    if (!trigger) return;
+    // evaluate after the action handler ran
+    setTimeout(() => {
+      const sel =
+        trigger.getAttribute('fx-hide') ||
+        trigger.getAttribute('fx-toggle') ||
+        trigger.getAttribute('fx-dropdown') ||
+        trigger.getAttribute('fx-hide-outside') ||
+        trigger.getAttribute('fx-hide-escape');
+      const targets: Element[] = [];
+      if (sel && sel !== 'this' && !trigger.hasAttribute('fx-toggle')) {
+        try {
+          targets.push(...Array.from(document.querySelectorAll(sel)));
+        } catch {
+          /* invalid */
+        }
+      } else {
+        targets.push(trigger);
+      }
+      for (const el of targets) {
+        if (el.classList.contains('hidden')) {
+          el.dispatchEvent(
+            new CustomEvent('flux:hidden-guard', {
+              detail: { fluxHiddenGuard: true },
+              bubbles: false,
+            }),
+          );
+        }
+      }
+    }, 0);
+  };
+  document.addEventListener('click', onClickCapture, true);
+  return () => {
+    document.removeEventListener('flux:hidden-guard', onAbort);
+    document.removeEventListener('click', onClickCapture, true);
+  };
+}

@@ -21,15 +21,15 @@ first-class throughout.
 
 ## What Flux adds to htmx
 
-| Layer | What you get |
-| --- | --- |
-| **Request presets** | `fx-search`, `fx-poll`, `fx-submit`, `fx-delete`, `fx-infinite`, `fx-realtime`… |
-| **Safety** | CSRF token injection, HTML5 validation gate, confirm dialogs — no eval, CSP-safe |
-| **Resilience** | Automatic retry with backoff, in-flight dedupe, fragment caching |
-| **Speed** | Hover/touch prefetch into the cache, so the next click is instant |
-| **Feedback** | Built-in toasts, loading indicators, `data-flux-*` state attributes, ARIA live region |
-| **Status targeting** | `fx-on-404="#notfound"` — retarget swaps per response status code |
-| **Visibility** | `fx-show / fx-hide / fx-toggle / fx-class / fx-dropdown` — one `hidden` class, nothing more |
+| Layer                | What you get                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------------- |
+| **Request presets**  | `fx-search`, `fx-poll`, `fx-submit`, `fx-delete`, `fx-infinite`, `fx-realtime`…             |
+| **Safety**           | CSRF token injection, HTML5 validation gate, confirm dialogs — no eval, CSP-safe            |
+| **Resilience**       | Automatic retry with backoff, in-flight dedupe, fragment caching                            |
+| **Speed**            | Hover/touch prefetch into the cache, so the next click is instant                           |
+| **Feedback**         | Built-in toasts, loading indicators, `data-flux-*` state attributes, ARIA live region       |
+| **Status targeting** | `fx-on-404="#notfound"` — retarget swaps per response status code                           |
+| **Visibility**       | `fx-show / fx-hide / fx-toggle / fx-class / fx-dropdown` — one `hidden` class, nothing more |
 
 Everything is declarative `fx-*` / `hx-*` attributes processed at htmx's own pipeline
 points. No build step, no virtual DOM, no client-side template language.

@@ -75,8 +75,13 @@ See [CSRF guide](guides/csrf.md) for Django, FastAPI and Go specifics.
 <input fx-search="/search" fx-target="#results" hx-trigger="input changed delay:300ms" />
 
 <!-- Flux verb: delete with confirm + toast + row removal -->
-<button fx-delete="/item/42" fx-confirm="Delete this item?" fx-toast
-        fx-success="Deleted!" fx-remove-target="closest tr">
+<button
+  fx-delete="/item/42"
+  fx-confirm="Delete this item?"
+  fx-toast
+  fx-success="Deleted!"
+  fx-remove-target="closest tr"
+>
   Delete
 </button>
 ```

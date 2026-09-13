@@ -49,7 +49,24 @@ One handler coordinates everything: the trigger toggles the menu, clicking outsi
 the trigger/menu closes it, ++escape++ closes it, and the trigger's `aria-expanded`
 stays in sync. The click that opens the menu can never immediately close it.
 
-## Dismissable overlays
+## Modals — canonical path
+
+```html
+<button fx-open="#edit">Edit</button>
+
+<dialog id="edit" fx-modal>
+  <form method="dialog">...</form>
+  <button fx-close>Cancel</button>
+</dialog>
+```
+
+`<dialog>` + `fx-open` / `fx-close` is the **canonical modal path**: focus trap and
+restoration are native, and `fx-modal` closes on backdrop click (available in both
+the core and full bundles — the logic lives in the core dialog controller). A
+`fx-open` target must be a `<dialog>` or declare the `popover` attribute; anything
+else logs a warning instead of throwing.
+
+## Dismissable overlays (legacy div pattern)
 
 ```html
 <div id="my-modal" class="hidden">
@@ -65,6 +82,13 @@ stays in sync. The click that opens the menu can never immediately close it.
 
 The two attributes do not conflict with each other or with `fx-show`/`fx-hide` on the
 same elements — conflict detection only flags genuinely contradictory pairs.
+
+!!! warning "Define the `hidden` class"
+
+    Every visibility action drives the `hidden` class. With Tailwind you already have
+    it; otherwise load `flux.css` (which ships `.hidden{display:none!important}`).
+    Without a definition, hide actions would silently no-op — Flux warns in the
+    console the first time it detects that.
 
 ## Disconnection contract
 

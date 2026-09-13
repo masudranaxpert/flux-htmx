@@ -65,9 +65,11 @@ their way into a request.
 Declarative post-request actions, executed in order:
 
 ```html
-<form fx-submit="/users"
-      fx-on-success="toast:User saved; reset; refresh:#user-list"
-      fx-on-error="toast:Save failed">
+<form
+  fx-submit="/users"
+  fx-on-success="toast:User saved; reset; refresh:#user-list"
+  fx-on-error="toast:Save failed"
+></form>
 ```
 
 Built-in actions: `close` (close dialog), `open` (open dialog), `reset` (reset form),
@@ -106,11 +108,26 @@ The value survives reloads via `localStorage` under `fx-persist:<key>`. Restorat
 dispatches `flux:persist:restored` (bubbling) — **not** a synthetic `change`, so
 autosave/triggers don't fire unintended requests on page load.
 
+## Server field errors — fx-field-errors
+
+```html
+<form fx-submit="/users" fx-field-errors>
+  <input name="email" /><span data-field-error="email"></span> <input name="port" /><span
+    data-field-error="port"
+  ></span>
+</form>
+```
+
+Server responds `422` (or `400`) with JSON `{"email":"already taken","port":"1-65535"}`
+— Flux fills each `[data-field-error=<name>]`, marks invalid inputs
+`aria-invalid="true"` + `data-invalid`, focuses the first invalid field, and clears
+errors when the user edits any field. A Go handler is a `map[string]string`; Rust, a
+`HashMap<String, String>`.
+
 ## Password toggle
 
 ```html
-<input type="password" id="pw" />
-<button fx-password-toggle="pw" aria-pressed="false">Show</button>
+<input type="password" id="pw" /> <button fx-password-toggle="pw" aria-pressed="false">Show</button>
 ```
 
 Toggles `type` between `password` and `text` and mirrors state in `aria-pressed`.
@@ -119,9 +136,17 @@ Toggles `type` between `password` and `text` and mirrors state in `aria-pressed`
 
 ```html
 <table fx-table>
-  <thead><tr><th><input type="checkbox" data-flux-select-all /></th>…</tr></thead>
+  <thead>
+    <tr>
+      <th><input type="checkbox" data-flux-select-all /></th>
+      …
+    </tr>
+  </thead>
   <tbody>
-    <tr><td><input type="checkbox" name="id" value="1" /></td><td>…</td></tr>
+    <tr>
+      <td><input type="checkbox" name="id" value="1" /></td>
+      <td>…</td>
+    </tr>
   </tbody>
 </table>
 ```

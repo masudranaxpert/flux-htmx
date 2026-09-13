@@ -60,13 +60,13 @@ installNet();
 
 ### Bundle matrix
 
-| File | Contents | Size (gzip) |
-| --- | --- | --- |
-| `flux.full.iife.js` | htmx 4 + core + UI plugins + net extras | ~35 kB |
-| `flux.iife.js` | core + UI plugins, htmx from `globalThis.htmx` | ~20 kB |
-| `net.iife.js` | offline queue + upload/optimistic (optional) | ~3 kB |
-| `flux.js` / `flux.cjs` | modular ESM / CJS, htmx as peer | ~20–22 kB |
-| `flux.full.js` | standalone ESM with everything | ~40 kB |
+| File                   | Contents                                       | Size (gzip) |
+| ---------------------- | ---------------------------------------------- | ----------- |
+| `flux.full.iife.js`    | htmx 4 + core + UI plugins + net extras        | ~35 kB      |
+| `flux.iife.js`         | core + UI plugins, htmx from `globalThis.htmx` | ~20 kB      |
+| `net.iife.js`          | offline queue + upload/optimistic (optional)   | ~3 kB       |
+| `flux.js` / `flux.cjs` | modular ESM / CJS, htmx as peer                | ~20–22 kB   |
+| `flux.full.js`         | standalone ESM with everything                 | ~40 kB      |
 
 !!! warning "Don't mix bundles"
 

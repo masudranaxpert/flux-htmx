@@ -9,8 +9,7 @@ title: Django
 ```html
 <!-- base.html -->
 <meta name="csrf-token" content="{% csrf_token %}" />
-<meta name="flux-config"
-      content='{"csrf":{"strategy":"meta","headerName":"X-CSRFToken"}}' />
+<meta name="flux-config" content='{"csrf":{"strategy":"meta","headerName":"X-CSRFToken"}}' />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flux-htmx@2/dist/flux.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/flux-htmx@2/dist/flux.full.iife.js" defer></script>
 ```
@@ -28,9 +27,15 @@ def item_delete(request, pk):
 ```
 
 ```html
-<button fx-delete="{% url 'item-delete' item.pk %}"
-        fx-confirm="Delete?" fx-toast fx-success="Deleted"
-        fx-remove-target="closest tr">Delete</button>
+<button
+  fx-delete="{% url 'item-delete' item.pk %}"
+  fx-confirm="Delete?"
+  fx-toast
+  fx-success="Deleted"
+  fx-remove-target="closest tr"
+>
+  Delete
+</button>
 ```
 
 ## Search with partials

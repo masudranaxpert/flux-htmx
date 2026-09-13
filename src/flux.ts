@@ -53,6 +53,11 @@ import {
 import { installRetrySupport, disposeRetrySupport } from './core/retry.js';
 import { installDeduplication } from './core/dedupe.js';
 import { removeScopeAttributes } from './core/expand.js';
+import { installServerActions } from './core/actions.js';
+import { installPollVisibilityPause } from './presets/poll.js';
+import { installDatagrid } from './core/datagrid.js';
+import { installFieldErrors } from './core/field-errors.js';
+import { installHiddenClassGuard } from './presets/ui.js';
 import { me, any, sugar, installDomSugar } from './core/sugar.js';
 
 export { type FluxConfig } from './core/config.js';
@@ -199,6 +204,11 @@ export function configure(userConfig?: FluxConfig): ResolvedConfig {
     teardowns.push(installCleanupHook());
     teardowns.push(installRetrySupport());
     teardowns.push(installDeduplication());
+    teardowns.push(installServerActions());
+    teardowns.push(installPollVisibilityPause());
+    teardowns.push(installDatagrid());
+    teardowns.push(installFieldErrors());
+    teardowns.push(installHiddenClassGuard());
     installDomSugar();
     activatePlugins(pluginApi());
     configured = true;
@@ -289,10 +299,31 @@ function installRequestHooks(
     if (shouldAttach(request.method, request.action, token) && token.value) {
       setHeader(request.headers, token.headerName, token.value);
     }
+
+    // Opt-in idempotency: one key per declaring element, reused across retries so a
+    // retried POST cannot create the resource twice server-side.
+    const source = (evt as CustomEvent).detail?.ctx?.source;
+    const idemEl = source instanceof Element ? source.closest('[fx-idempotency-key]') : null;
+    if (idemEl) {
+      let key = idempotencyKeys.get(idemEl);
+      if (!key) {
+        key = newIdempotencyKey();
+        idempotencyKeys.set(idemEl, key);
+      }
+      setHeader(request.headers, 'Idempotency-Key', key);
+    }
   };
 
   document.addEventListener('htmx:config:request', handler);
   return () => document.removeEventListener('htmx:config:request', handler);
+}
+
+const idempotencyKeys = new WeakMap<Element, string>();
+
+function newIdempotencyKey(): string {
+  const c = globalThis.crypto as Crypto | undefined;
+  if (c?.randomUUID) return c.randomUUID();
+  return `idem-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 
 function installCleanupHook(): () => void {

@@ -14,13 +14,13 @@ The pure `fx-*` → `hx-*` option aliases are gone. Write the native htmx attrib
 ```html
 <!-- 1.x -->
 <a fx-get="/x" fx-target="#main" fx-swap="outerHTML" fx-trigger="click">
-
-<!-- 2.x -->
-<a fx-get="/x" hx-target="#main" hx-swap="outerHTML" hx-trigger="click">
+  <!-- 2.x -->
+  <a fx-get="/x" hx-target="#main" hx-swap="outerHTML" hx-trigger="click"></a
+></a>
 ```
 
-Removed aliases: `fx-target`*, `fx-swap`, `fx-trigger`, `fx-select`, `fx-sync`,
-`fx-include`, `fx-vals`, `fx-headers`, `fx-confirm`*, `fx-boost`, `fx-preload`,
+Removed aliases: `fx-target`_, `fx-swap`, `fx-trigger`, `fx-select`, `fx-sync`,
+`fx-include`, `fx-vals`, `fx-headers`, `fx-confirm`_, `fx-boost`, `fx-preload`,
 `fx-preserve`.
 
 \* These names still exist as **preset options** — they only mean something next to a
@@ -31,9 +31,9 @@ preset/verb: `<input fx-search="/s" fx-target="#r">` still works.
 ```html
 <!-- 1.x (buggy: could remove the button on page load) -->
 <button fx-delete="/i/1" fx-remove="closest li">
-
-<!-- 2.x -->
-<button fx-delete="/i/1" fx-remove-target="closest li">
+  <!-- 2.x -->
+  <button fx-delete="/i/1" fx-remove-target="closest li"></button>
+</button>
 ```
 
 `fx-remove` is now duration-only self-removal: `fx-remove="3s"`.
@@ -77,12 +77,12 @@ CDN/IIFE builds call it for you — script-tag users change nothing.
 
 ## JS API
 
-| 1.x | 2.x |
-| --- | --- |
-| `Flux.recipe(name, cfg)` | removed — presets + raw `hx-*` cover it |
-| `Flux.action(name, steps)` | removed — use inline pipelines `fx-on-success="a; b"` |
-| `main` → IIFE | real CJS: `require('flux-htmx')` works |
-| `htmx.org` `4.0.0-beta6` exact pin | `^4.0.0` range (4.0.0 stable supported) |
+| 1.x                                | 2.x                                                   |
+| ---------------------------------- | ----------------------------------------------------- |
+| `Flux.recipe(name, cfg)`           | removed — presets + raw `hx-*` cover it               |
+| `Flux.action(name, steps)`         | removed — use inline pipelines `fx-on-success="a; b"` |
+| `main` → IIFE                      | real CJS: `require('flux-htmx')` works                |
+| `htmx.org` `4.0.0-beta6` exact pin | `^4.0.0` range (4.0.0 stable supported)               |
 
 ## Version compatibility
 

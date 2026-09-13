@@ -16,9 +16,11 @@ open the login prompt, a 422 should render validation errors, a 404 should show 
 (`hx-status:<code>`) — one canonical attribute per code, processed by htmx itself:
 
 ```html
-<form fx-submit="/login"
-      hx-status:401='{"target":"#login-prompt"}'
-      hx-status:422='{"target":"#errors"}'>
+<form
+  fx-submit="/login"
+  hx-status:401='{"target":"#login-prompt"}'
+  hx-status:422='{"target":"#errors"}'
+></form>
 ```
 
 ## How it behaves
@@ -33,9 +35,7 @@ open the login prompt, a 422 should render validation errors, a 404 should show 
   `fx-on-error` pipelines for imperative side effects:
 
 ```html
-<form fx-submit="/login"
-      fx-on-401="#login-prompt"
-      fx-on-error="toast:Login failed">
+<form fx-submit="/login" fx-on-401="#login-prompt" fx-on-error="toast:Login failed"></form>
 ```
 
 ## Doctor integration

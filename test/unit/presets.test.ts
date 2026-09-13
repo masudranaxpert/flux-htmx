@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import './setup.js';
 import { applyLoad } from '../../src/presets/load.js';
 import { applyPoll } from '../../src/presets/poll.js';
 import { applyInfinite } from '../../src/presets/infinite.js';

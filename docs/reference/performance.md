@@ -6,12 +6,12 @@ title: Performance
 
 ## Bundle sizes (gzip, v2.1)
 
-| File | gzip | Contents |
-| --- | --- | --- |
-| `flux.iife.js` | ~19.5 kB | core + UI plugins (htmx external) |
-| `flux.js` / `flux.cjs` | ~21.7 / 19.7 kB | modular ESM / CJS |
-| `net.iife.js` | ~3.2 kB | offline + upload + optimistic |
-| `flux.full.iife.js` | ~35 kB | everything incl. htmx 4 |
+| File                   | gzip            | Contents                          |
+| ---------------------- | --------------- | --------------------------------- |
+| `flux.iife.js`         | ~19.5 kB        | core + UI plugins (htmx external) |
+| `flux.js` / `flux.cjs` | ~21.7 / 19.7 kB | modular ESM / CJS                 |
+| `net.iife.js`          | ~3.2 kB         | offline + upload + optimistic     |
+| `flux.full.iife.js`    | ~35 kB          | everything incl. htmx 4           |
 
 For comparison: htmx 4 alone is ~22 kB gz. The core + presets layer costs about the
 same as htmx itself.

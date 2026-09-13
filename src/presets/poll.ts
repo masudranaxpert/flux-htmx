@@ -1,4 +1,6 @@
 import { setGeneratedAttribute, removeGeneratedAttribute } from '../core/generated-attributes.js';
+import { resolveHtmx } from '../core/startup.js';
+import htmx from 'htmx.org';
 
 export interface PollOptions {
   url: string;
@@ -55,4 +57,40 @@ function syncOptionalAttribute(element: Element, name: string, value?: string): 
 function normalizeInterval(value: string): string {
   const trimmed = value.trim();
   return /^\d+$/.test(trimmed) ? `${trimmed}ms` : trimmed;
+}
+
+/**
+ * Pauses `every`-style polling while the tab is hidden (htmx 4 does not do this
+ * itself). On return to visibility each polled element fires once immediately and
+ * its polling timer restarts.
+ */
+export function installPollVisibilityPause(): () => void {
+  if (typeof document === 'undefined') return () => {};
+
+  const polled = () => Array.from(document.querySelectorAll('[data-flux-preset="poll"]'));
+  type Loose = {
+    remove?: (el: Element) => void;
+    ajax?: (m: string, u: string, el: Element) => unknown;
+    process?: (el: Element) => void;
+  };
+  const htmxApi = (): Loose | undefined =>
+    (window as { htmx?: Loose }).htmx ?? (htmx as unknown as Loose);
+
+  const onVisibility = () => {
+    const api = htmxApi();
+    if (!api) return;
+    const elements = polled();
+    if (document.visibilityState === 'hidden') {
+      for (const el of elements) api.remove?.(el); // cancels the internal poll timer
+    } else if (elements.length > 0) {
+      for (const el of elements) {
+        const url = el.getAttribute('hx-get');
+        if (url && api.ajax) void api.ajax('GET', url, el);
+        api.process?.(el); // restarts the every-N timer
+      }
+    }
+  };
+
+  document.addEventListener('visibilitychange', onVisibility);
+  return () => document.removeEventListener('visibilitychange', onVisibility);
 }

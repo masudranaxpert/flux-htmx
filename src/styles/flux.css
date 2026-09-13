@@ -1,3 +1,9 @@
+/* The visibility contract: every fx-show/hide/toggle/dropdown drives this class.
+   Without it (no Tailwind), the whole visibility layer would silently no-op. */
+.hidden {
+  display: none !important;
+}
+
 /* Flux design tokens and component styles. CSS-first, framework-agnostic.
    Load via <link rel="stylesheet" href="flux.css">. Tailwind is NOT required. */
 

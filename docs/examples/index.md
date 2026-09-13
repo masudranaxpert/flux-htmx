@@ -6,13 +6,13 @@ title: Examples
 
 Minimal but complete integration recipes. The repository also ships runnable apps:
 
-| Stack | Path | What it shows |
-| --- | --- | --- |
-| Vanilla (Node) | [`examples/vanilla/`](https://github.com/masudranaxpert/flux-htmx/tree/master/examples/vanilla) | search, poll, delete+toast, caching |
-| Django | [`examples/django/`](https://github.com/masudranaxpert/flux-htmx/tree/master/examples/django) | CSRF meta + header mapping, partials |
-| FastAPI | [`examples/fastapi/`](https://github.com/masudranaxpert/flux-htmx/tree/master/examples/fastapi) | Jinja partials, CSRF dependency |
-| Go | [`examples/go/`](https://github.com/masudranaxpert/flux-htmx/tree/master/examples/go) | html/template fragments |
-| File monitor | [`examples/file-monitor/`](https://github.com/masudranaxpert/flux-htmx/tree/master/examples/file-monitor) | SSE realtime + polling compared |
+| Stack          | Path                                                                                                      | What it shows                        |
+| -------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| Vanilla (Node) | [`examples/vanilla/`](https://github.com/masudranaxpert/flux-htmx/tree/master/examples/vanilla)           | search, poll, delete+toast, caching  |
+| Django         | [`examples/django/`](https://github.com/masudranaxpert/flux-htmx/tree/master/examples/django)             | CSRF meta + header mapping, partials |
+| FastAPI        | [`examples/fastapi/`](https://github.com/masudranaxpert/flux-htmx/tree/master/examples/fastapi)           | Jinja partials, CSRF dependency      |
+| Go             | [`examples/go/`](https://github.com/masudranaxpert/flux-htmx/tree/master/examples/go)                     | html/template fragments              |
+| File monitor   | [`examples/file-monitor/`](https://github.com/masudranaxpert/flux-htmx/tree/master/examples/file-monitor) | SSE realtime + polling compared      |
 
 ## The universal pattern
 

@@ -14,10 +14,10 @@ PATCH, DELETE) — retries included.
 <meta name="flux-config" content='{"csrf":{"strategy":"meta"}}' />
 ```
 
-| Option | Default | Description |
-| --- | --- | --- |
-| `headerName` | `X-CSRF-Token` | Header the token is sent in |
-| `metaName` | `csrf-token` | Meta tag to read the token from |
+| Option       | Default        | Description                     |
+| ------------ | -------------- | ------------------------------- |
+| `headerName` | `X-CSRF-Token` | Header the token is sent in     |
+| `metaName`   | `csrf-token`   | Meta tag to read the token from |
 
 ## Framework recipes
 

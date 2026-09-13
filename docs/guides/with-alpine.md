@@ -6,22 +6,26 @@ title: Using Flux with Alpine.js
 
 Flux and Alpine solve different problems and compose cleanly.
 
-| Concern | Owner |
-| --- | --- |
-| Requests, swaps, caching, retries, toasts | **htmx + Flux** |
-| Show/hide primitives, dropdowns | **Flux** (visibility layer) |
-| Two-way binding (`x-model`), derived state | **Alpine** |
-| Client-side list rendering, scoped stores | **Alpine** |
-| Where the source of truth lives | **The server** |
+| Concern                                    | Owner                       |
+| ------------------------------------------ | --------------------------- |
+| Requests, swaps, caching, retries, toasts  | **htmx + Flux**             |
+| Show/hide primitives, dropdowns            | **Flux** (visibility layer) |
+| Two-way binding (`x-model`), derived state | **Alpine**                  |
+| Client-side list rendering, scoped stores  | **Alpine**                  |
+| Where the source of truth lives            | **The server**              |
 
 ## The division of labour
 
 ```html
 <!-- Flux: the request layer (validation, CSRF, toast, cache invalidation) -->
-<form fx-submit="/users" fx-validate fx-toast fx-success="Saved!"
-      x-data="{ saving: false }"
-      @flux:success="saving = false">
-
+<form
+  fx-submit="/users"
+  fx-validate
+  fx-toast
+  fx-success="Saved!"
+  x-data="{ saving: false }"
+  @flux:success="saving = false"
+>
   <!-- Alpine: pure widget state for this screen -->
   <div x-data="{ step: 1, total: 3 }">
     <section x-show="step === 1">…</section>

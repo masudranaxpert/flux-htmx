@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import './setup.js';
 import { expandElement, hasFluxAttributes } from '../../src/core/expand.js';
 
 function makeEl(html: string): Element {

@@ -14,11 +14,11 @@ attribute still applies.
 <input fx-search="/search" fx-target="#results" hx-trigger="input changed delay:300ms" />
 ```
 
-| Option | Default | Description |
-| --- | --- | --- |
-| `fx-delay="300ms"` | — | Debounce window |
-| `fx-min-length="3"` | — | Skip requests until N characters |
-| `fx-search-clear="#clearme"` | — | Selector(s) cleared when the query empties |
+| Option                       | Default | Description                                |
+| ---------------------------- | ------- | ------------------------------------------ |
+| `fx-delay="300ms"`           | —       | Debounce window                            |
+| `fx-min-length="3"`          | —       | Skip requests until N characters           |
+| `fx-search-clear="#clearme"` | —       | Selector(s) cleared when the query empties |
 
 ## fx-poll — periodic refresh
 
@@ -31,25 +31,28 @@ attribute still applies.
 ## fx-submit — form submission
 
 ```html
-<form fx-submit="/users" fx-validate fx-reset fx-indicator="#save-spin">
-  …
-</form>
+<form fx-submit="/users" fx-validate fx-reset fx-indicator="#save-spin">…</form>
 ```
 
-| Option | Description |
-| --- | --- |
-| `fx-validate` | Run HTML5 constraint validation first; abort silently if invalid |
-| `fx-reset` | Reset the form after success |
-| `fx-invalidate="/users/*"` | Clear matching cache entries after success |
-| `fx-focus-error` | Focus the first invalid field on validation failure |
+| Option                     | Description                                                      |
+| -------------------------- | ---------------------------------------------------------------- |
+| `fx-validate`              | Run HTML5 constraint validation first; abort silently if invalid |
+| `fx-reset`                 | Reset the form after success                                     |
+| `fx-invalidate="/users/*"` | Clear matching cache entries after success                       |
+| `fx-focus-error`           | Focus the first invalid field on validation failure              |
 
 Full details in the [forms guide](../guides/forms.md).
 
 ## fx-delete — destructive actions
 
 ```html
-<button fx-delete="/item/1" fx-confirm="Delete?" fx-toast
-        fx-success="Deleted" fx-remove-target="closest tr">
+<button
+  fx-delete="/item/1"
+  fx-confirm="Delete?"
+  fx-toast
+  fx-success="Deleted"
+  fx-remove-target="closest tr"
+>
   Delete
 </button>
 ```
@@ -88,8 +91,8 @@ next page link (server returns the next `fx-infinite` element).
 <div fx-realtime="/events" fx-event="ticket">…</div>
 ```
 
-| Option | Description |
-| --- | --- |
+| Option            | Description                                          |
+| ----------------- | ---------------------------------------------------- |
 | `fx-event="name"` | SSE event name to listen for (defaults to `message`) |
 
 ## fx-page — pagination
@@ -110,9 +113,71 @@ Fetches on hover/touch/focus into the fragment cache with the **same conventions
 real requests** (credentials, CSRF, HX-Target headers, parameters in the cache key),
 so the click is a guaranteed cache hit. See [prefetch guide](../guides/prefetch.md).
 
+## fx-sort — table sorting
+
+```html
+<table fx-sort-url="/containers" hx-target="tbody">
+  <thead>
+    <tr>
+      <th fx-sort="name">Name</th>
+      <th fx-sort="status">Status</th>
+    </tr>
+  </thead>
+</table>
+```
+
+Click cycles `asc → desc → none`, requests the URL with `?sort=<key>&dir=<dir>`, and
+syncs `aria-sort` on the headers.
+
+## fx-sync-url — shareable filter state
+
+```html
+<form fx-search="/containers" fx-target="#rows" fx-sync-url>…</form>
+```
+
+After each request the form's parameters are written to the address bar
+(`history.replaceState`) — filtered views become shareable links, survive refresh,
+and back/forward re-requests (`popstate` re-fires). Inputs are prefilled from the
+URL on load.
+
+## fx-include-selection — bulk actions
+
+```html
+<button fx-post="/containers/stop" fx-include-selection="#table" fx-confirm="Stop?">
+  Stop selected
+</button>
+```
+
+Checked `input[fx-select]` values join the request parameters; the button disables
+itself while nothing is selected.
+
+## fx-field-errors — server validation errors
+
+```html
+<form fx-submit="/users" fx-field-errors>
+  <input name="email" /><span data-field-error="email"></span>
+</form>
+```
+
+Server answers `422` with `{"email":"already taken"}` → the message lands in
+`[data-field-error=email]`, the input gets `aria-invalid="true"`, focus moves to the
+first invalid field, and errors clear on the next edit. See the
+[forms guide](../guides/forms.md).
+
+## fx-idempotency-key
+
+```html
+<form fx-post="/deploy" fx-idempotency-key>…</form>
+```
+
+Attaches a stable `Idempotency-Key` header reused across retries — a double-clicked
+or retried POST cannot create the resource twice.
+
 ## fx-history and fx-morph
 
 ```html
-<a fx-get="/inbox" fx-history>…</a>   <!-- hx-push-url shorthand -->
-<section fx-load="/rows" fx-morph>…</section>  <!-- hx-swap="innerMorph" -->
+<a fx-get="/inbox" fx-history>…</a>
+<!-- hx-push-url shorthand -->
+<section fx-load="/rows" fx-morph>…</section>
+<!-- hx-swap="innerMorph" -->
 ```

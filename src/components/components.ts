@@ -38,8 +38,33 @@ export function installOpenController(): () => void {
   if (typeof document === 'undefined') return () => {};
 
   const onClick = (evt: Event) => {
-    const targetEl = evt.target as Element | null;
+    const targetEl = evt.target as HTMLElement | null;
     if (!targetEl) return;
+
+    // Canonical modal: <dialog fx-modal> closes on backdrop click. htmx/keyboard-
+    // activated clicks (e.detail === 0) carry (0,0) coordinates — never treat those
+    // as "outside" the content box.
+    if (evt instanceof MouseEvent && evt.detail === 0) {
+      // fall through: synthetic click on the dialog itself is a real interaction
+    }
+    if (
+      targetEl.tagName === 'DIALOG' &&
+      (targetEl.hasAttribute('fx-modal') || targetEl.hasAttribute('fx-drawer'))
+    ) {
+      const dialog = targetEl as HTMLDialogElement;
+      const me = evt as MouseEvent;
+      const rect = dialog.getBoundingClientRect();
+      const inside =
+        rect.top <= me.clientY &&
+        me.clientY <= rect.top + rect.height &&
+        rect.left <= me.clientX &&
+        me.clientX <= rect.left + rect.width;
+      if (!inside && dialog.open) {
+        dialog.close();
+      }
+      // backdrop click must not also trigger fx-open beneath it
+      if (!inside) return;
+    }
 
     // Handle fx-open. An empty value must not short-circuit the handler: the fx-close
     // handling below still needs to run for clicks inside this element.
@@ -88,16 +113,24 @@ export function installOpenController(): () => void {
           focusable?.focus();
           evt.preventDefault();
           return;
-        } else if (el instanceof HTMLElement && typeof el.showPopover === 'function') {
+        } else if (el instanceof HTMLElement && el.hasAttribute('popover')) {
+          // showPopover exists on every modern HTMLElement but THROWS InvalidStateError
+          // unless the element actually declares the popover attribute.
           const opener = (document.activeElement as HTMLElement) ?? (openTarget as HTMLElement);
           if (!openers.has(el as unknown as HTMLDialogElement)) {
             openers.set(el as unknown as HTMLDialogElement, opener);
           }
-          if (!el.matches(':popover-open')) {
-            el.showPopover();
+          try {
+            if (!el.matches(':popover-open')) el.showPopover();
+          } catch {
+            /* already open (or :popover-open unsupported) — treat as open */
           }
           evt.preventDefault();
           return;
+        } else if (selector) {
+          log.warn(
+            `[flux] fx-open="${selector}" — target must be a <dialog> or declare the popover attribute`,
+          );
         }
       }
     }

@@ -35,15 +35,15 @@ Flux.unuse('my-plugin');   // remove it again
 ```js
 Flux.cache.get('GET:/stats');
 Flux.cache.set('GET:/stats', '<div>…</div>');
-Flux.cache.invalidate('/users/*');  // wildcard
+Flux.cache.invalidate('/users/*'); // wildcard
 Flux.cache.clear();
 ```
 
 ## Diagnostics
 
 ```js
-Flux.doctor();                        // whole-page health report
-Flux.inspect(element);                // per-element view: presets, conflicts, status rules
+Flux.doctor(); // whole-page health report
+Flux.inspect(element); // per-element view: presets, conflicts, status rules
 ```
 
 `doctor()` reports the detected htmx version, registered presets/plugins, elements
@@ -56,7 +56,7 @@ fire".
 import { bootstrapFlux } from 'flux-htmx';
 
 const api = bootstrapFlux({
-  start: false,        // don't auto-process; call api.start() yourself
+  start: false, // don't auto-process; call api.start() yourself
   config: { csrf: { strategy: 'meta' } },
 });
 ```
@@ -68,6 +68,6 @@ Importing the module alone has **no global side effects**.
 ## Version & dependencies
 
 ```js
-Flux.version;            // "2.1.0"
-Flux.dependencies;       // { htmx: "4.0.0-beta6", … }
+Flux.version; // "2.1.0"
+Flux.dependencies; // { htmx: "4.0.0-beta6", … }
 ```
