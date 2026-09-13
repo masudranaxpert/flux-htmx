@@ -1,5 +1,6 @@
-export function installModal() {
+export function installModal(): () => void {
   document.addEventListener('click', handleModalClick);
+  return () => document.removeEventListener('click', handleModalClick);
 }
 
 function handleModalClick(e: MouseEvent) {

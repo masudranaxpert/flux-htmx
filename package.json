@@ -1,6 +1,6 @@
 {
   "name": "flux-htmx",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Thin server-driven frontend layer on HTMX 4. Shorthand fx-* verbs, presets, lifecycle, prefetch, and toast — without reimplementing htmx.",
   "keywords": [
     "htmx",
@@ -84,6 +84,7 @@
     "test:watch": "vitest",
     "size": "node scripts/size.mjs",
     "example": "node examples/vanilla/server.mjs",
-    "prepack": "npm run build && npm test"
+    "prepack": "npm run build && npm test",
+    "size:check": "node scripts/size.mjs --check"
   }
 }

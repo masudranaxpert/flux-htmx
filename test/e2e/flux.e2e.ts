@@ -145,19 +145,21 @@ test('activates pre-installed plugin once on start', async ({ page }) => {
   expect(count).toBe(1);
 });
 
-test('cleans removed recipe presets and empty preset URLs in one process pass', async ({
+test('cleans removed presets and empty preset URLs in one process pass', async ({
   page,
 }) => {
   const result = await page.evaluate(() => {
     const Flux = (window as any).Flux;
-    Flux.recipe('browser-admin', { submit: '/recipe', target: '#result1' });
 
-    const recipeForm = document.createElement('form');
-    recipeForm.setAttribute('fx-recipe', 'browser-admin');
-    document.body.appendChild(recipeForm);
-    Flux.process(recipeForm);
-    recipeForm.removeAttribute('fx-recipe');
-    Flux.process(recipeForm);
+    const form = document.createElement('form');
+    form.setAttribute('fx-submit', '/gone');
+    form.setAttribute('fx-target', '#result1');
+    document.body.appendChild(form);
+    Flux.process(form);
+
+    form.removeAttribute('fx-submit');
+    form.removeAttribute('fx-target');
+    Flux.process(form);
 
     const emptyForm = document.createElement('form');
     emptyForm.setAttribute('fx-submit', '/ok');
@@ -167,16 +169,18 @@ test('cleans removed recipe presets and empty preset URLs in one process pass', 
     Flux.process(emptyForm);
 
     return {
-      recipePost: recipeForm.getAttribute('hx-post'),
-      recipePreset: recipeForm.getAttribute('data-flux-preset'),
+      removedPost: form.getAttribute('hx-post'),
+      removedTarget: form.getAttribute('hx-target'),
+      removedPreset: form.getAttribute('data-flux-preset'),
       emptyPost: emptyForm.getAttribute('hx-post'),
       emptyPreset: emptyForm.getAttribute('data-flux-preset'),
     };
   });
 
   expect(result).toEqual({
-    recipePost: null,
-    recipePreset: null,
+    removedPost: null,
+    removedTarget: null,
+    removedPreset: null,
     emptyPost: null,
     emptyPreset: null,
   });

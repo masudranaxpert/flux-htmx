@@ -133,7 +133,7 @@ export function installStatusTargeting(): () => void {
     const root = (evt as CustomEvent).target;
     if (root instanceof Element) {
       statusCleanups.get(root)?.disconnect();
-      for (const el of Array.from(root.querySelectorAll('*'))) {
+      for (const el of root.querySelectorAll('*')) {
         statusCleanups.get(el)?.disconnect();
       }
     }
@@ -173,9 +173,11 @@ function elementsWithStatusRules(root: Element): Element[] {
   return out;
 }
 
+/** Allocation-free scan: walks the live NamedNodeMap without materialising arrays. */
 function hasStatusRule(el: Element): boolean {
-  for (const attr of Array.from(el.attributes)) {
-    if (attr.name.startsWith(ON_PREFIX)) return true;
+  const attrs = el.attributes;
+  for (let i = 0; i < attrs.length; i++) {
+    if (attrs[i]!.name.startsWith(ON_PREFIX)) return true;
   }
   return false;
 }

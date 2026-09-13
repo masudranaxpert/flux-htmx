@@ -41,5 +41,5 @@ jobs:
       - name: Browser tests
         run: npm run test:browser
 
-      - name: Bundle size report
-        run: npm run size
+      - name: Bundle size budget
+        run: npm run size:check

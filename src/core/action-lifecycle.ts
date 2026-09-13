@@ -1,4 +1,4 @@
-import { executePipeline, executeNamedPipeline } from './actions.js';
+import { executePipeline } from './actions.js';
 import { getRequestContext } from './events.js';
 
 export function installActionPipeline(): () => void {
@@ -14,10 +14,6 @@ export function installActionPipeline(): () => void {
       const successPipeline = element.getAttribute('fx-on-success');
       if (successPipeline) {
         await executePipeline(successPipeline, element, ctx.detail);
-      }
-      const successNamedAction = element.getAttribute('fx-success-action');
-      if (successNamedAction) {
-        await executeNamedPipeline(successNamedAction, element, ctx.detail);
       }
     } else {
       const errorPipeline = element.getAttribute('fx-on-error');

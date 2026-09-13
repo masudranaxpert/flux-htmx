@@ -1,7 +1,8 @@
 import { queryAllSafely } from '../core/selectors.js';
 
-export function installTable() {
+export function installTable(): () => void {
   document.addEventListener('change', handleTableChange);
+  return () => document.removeEventListener('change', handleTableChange);
 }
 
 function handleTableChange(e: Event) {

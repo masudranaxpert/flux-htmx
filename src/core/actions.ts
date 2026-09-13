@@ -11,7 +11,6 @@ export type ActionHandler = (
 ) => void | Promise<void>;
 
 const actionHandlers = new Map<string, ActionHandler>();
-const namedActionPipelines = new Map<string, string[]>();
 
 /** Registers a custom action handler and returns an ownership-safe unregister function. */
 export function registerAction(name: string, handler: ActionHandler): () => void {
@@ -22,43 +21,6 @@ export function registerAction(name: string, handler: ActionHandler): () => void
     if (previous) actionHandlers.set(name, previous);
     else actionHandlers.delete(name);
   };
-}
-
-/** Registers a reusable pipeline of actions under a name. */
-export function defineActionPipeline(name: string, pipeline: string[] | string): void {
-  const steps = Array.isArray(pipeline)
-    ? pipeline
-    : pipeline
-        .split(';')
-        .map((s) => s.trim())
-        .filter(Boolean);
-  namedActionPipelines.set(name, steps);
-}
-
-/** Executes a named pipeline */
-export async function executeNamedPipeline(
-  name: string,
-  sourceElement: Element,
-  eventDetail?: any,
-): Promise<void> {
-  const pipeline = namedActionPipelines.get(name);
-  if (pipeline) {
-    for (const action of pipeline) {
-      try {
-        await executeAction(action, sourceElement, eventDetail);
-      } catch (err) {
-        console.warn(`[flux] Action "${action}" failed:`, err);
-        sourceElement.dispatchEvent(
-          new CustomEvent('flux:action:error', {
-            bubbles: true,
-            detail: { action, error: err },
-          }),
-        );
-      }
-    }
-  } else {
-    console.warn(`[flux] Unknown action pipeline: "${name}"`);
-  }
 }
 
 /** Parses and executes a single action string (e.g. "close:#modal" or "reset") */

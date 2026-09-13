@@ -1,7 +1,8 @@
 import { queryAllSafely } from '../core/selectors.js';
 
-export function installState() {
+export function installState(): () => void {
   document.addEventListener('click', handleStateClick);
+  return () => document.removeEventListener('click', handleStateClick);
 }
 
 function handleStateClick(e: MouseEvent) {

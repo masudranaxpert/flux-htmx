@@ -6,6 +6,6 @@
     "outDir": "dist",
     "rootDir": "src"
   },
-  "include": ["src", "src/cli"],
+  "include": ["src"],
   "exclude": ["test", "**/*.test.ts"]
 }

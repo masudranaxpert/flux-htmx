@@ -1,4 +1,4 @@
-export function installTransitions() {
+export function installTransitions(): () => void {
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       if (mutation.type === 'childList') {
@@ -14,7 +14,11 @@ export function installTransitions() {
     }
   });
 
-  observer.observe(document.body, { childList: true, subtree: true });
+  // A script in <head> (or a moved script) runs before <body> exists; observing the
+  // document root instead of throwing keeps bootstrap from dying silently.
+  const root = document.body ?? document.documentElement;
+  observer.observe(root, { childList: true, subtree: true });
+  return () => observer.disconnect();
 }
 
 function applyEnterTransition(node: HTMLElement) {

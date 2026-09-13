@@ -1,9 +1,13 @@
 import { queryAllSafely } from '../core/selectors.js';
 import { log } from '../core/logger.js';
 
-export function installTabs() {
+export function installTabs(): () => void {
   document.addEventListener('click', handleTabClick);
   document.addEventListener('keydown', handleTabKeydown);
+  return () => {
+    document.removeEventListener('click', handleTabClick);
+    document.removeEventListener('keydown', handleTabKeydown);
+  };
 }
 
 function handleTabClick(e: MouseEvent) {

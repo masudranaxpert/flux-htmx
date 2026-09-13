@@ -9,7 +9,31 @@ import {
   removeGeneratedAttribute,
   hasGeneratedAttribute,
 } from './generated-attributes.js';
-import { applyRecipe, attributeForKey, hasExplicitAttribute } from './recipes.js';
+// Keys whose fx-* alias forms were removed in 2.0 map straight to raw htmx attributes.
+const RAW_HX_KEYS = new Set([
+  'target',
+  'swap',
+  'trigger',
+  'select',
+  'sync',
+  'include',
+  'vals',
+  'headers',
+  'confirm',
+  'boost',
+  'preload',
+  'preserve',
+]);
+
+/** Resolves a config key to its final attribute: raw hx-* for htmx options, fx-* otherwise. */
+export function attributeForKey(key: string): string {
+  return RAW_HX_KEYS.has(key) ? `hx-${key}` : `fx-${key}`;
+}
+
+/** True when the element already declares the key (either form counts as explicit). */
+export function hasExplicitAttribute(element: Element, key: string): boolean {
+  return element.hasAttribute(`fx-${key}`) || element.hasAttribute(`hx-${key}`);
+}
 
 // Verbs make an element actionable (matched by HTMX's `[hx-get],[hx-post],...` selector).
 const VERBS = ['get', 'post', 'put', 'patch', 'delete'] as const;
@@ -55,7 +79,7 @@ export function fluxSelector(): string {
 export function expandElement(element: Element): number {
   if (!(element instanceof Element)) return 0;
 
-  applyRecipeAndScope(element);
+  applyScopes(element);
 
   let written = 0;
   for (const verb of VERBS) written += syncShorthand(element, verb);
@@ -135,52 +159,39 @@ function syncShorthand(element: Element, name: string): 0 | 1 {
   return written ? 1 : 0;
 }
 
-const recipeOwnedAttributes = new WeakMap<Element, Map<string, string>>();
 const scopeOwnedAttributes = new WeakMap<Element, Map<string, string>>();
 // WeakRef registry — strong Set references leaked detached elements (sugar remove,
 // fx-remove). Dead refs are dropped lazily during iteration.
-const recipeAndScopeRefs = new Set<WeakRef<Element>>();
+const scopeRefs = new Set<WeakRef<Element>>();
 
-function trackRecipeScopeElement(element: Element): void {
-  recipeAndScopeRefs.add(new WeakRef(element));
+function trackScopeElement(element: Element): void {
+  scopeRefs.add(new WeakRef(element));
 }
 
-function trackedRecipeScopeElements(): Element[] {
+function trackedScopeElements(): Element[] {
   const live: Element[] = [];
-  for (const ref of recipeAndScopeRefs) {
+  for (const ref of scopeRefs) {
     const el = ref.deref();
     if (el) live.push(el);
-    else recipeAndScopeRefs.delete(ref);
+    else scopeRefs.delete(ref);
   }
   return live;
 }
 
-function untrackRecipeScopeElement(element: Element): void {
-  for (const ref of recipeAndScopeRefs) {
+function untrackScopeElement(element: Element): void {
+  for (const ref of scopeRefs) {
     if (ref.deref() === element) {
-      recipeAndScopeRefs.delete(ref);
+      scopeRefs.delete(ref);
       return;
     }
   }
 }
 
-export function applyRecipeAndScope(element: Element): void {
-  clearOwnedAttributes(element, recipeOwnedAttributes, 'data-flux-recipe-owned');
+/** Applies `fx-default-*` inheritance from ancestor `fx-scope` containers. */
+export function applyScopes(element: Element): void {
   clearOwnedAttributes(element, scopeOwnedAttributes, 'data-flux-scope-owned');
-  untrackRecipeScopeElement(element);
+  untrackScopeElement(element);
 
-  // Apply Recipe
-  if (element.hasAttribute('fx-recipe')) {
-    const writtenKeys = new Map<string, string>();
-    applyRecipe(element, element.getAttribute('fx-recipe') || '', writtenKeys);
-    if (writtenKeys.size > 0) {
-      recipeOwnedAttributes.set(element, writtenKeys);
-      trackRecipeScopeElement(element);
-      element.setAttribute('data-flux-recipe-owned', '1');
-    }
-  }
-
-  // Apply Scope(s) Bottom-Up
   const scopes = getScopesBottomUp(element);
   if (scopes.length > 0) {
     const writtenKeys = new Map<string, string>();
@@ -189,18 +200,17 @@ export function applyRecipeAndScope(element: Element): void {
     }
     if (writtenKeys.size > 0) {
       scopeOwnedAttributes.set(element, writtenKeys);
-      trackRecipeScopeElement(element);
+      trackScopeElement(element);
       element.setAttribute('data-flux-scope-owned', '1');
     }
   }
 }
 
-export function removeRecipeAndScopeAttributes(root?: Element): void {
-  for (const element of trackedRecipeScopeElements()) {
+export function removeScopeAttributes(root?: Element): void {
+  for (const element of trackedScopeElements()) {
     if (root && element !== root && !root.contains(element)) continue;
-    clearOwnedAttributes(element, recipeOwnedAttributes, 'data-flux-recipe-owned');
     clearOwnedAttributes(element, scopeOwnedAttributes, 'data-flux-scope-owned');
-    untrackRecipeScopeElement(element);
+    untrackScopeElement(element);
   }
 }
 

@@ -1,4 +1,5 @@
 // Honest bundle-size report: raw, gzip, and which dependencies are bundled per output.
+// Run with --check to fail on gzip budget regressions (used by CI as a size gate).
 import { readFile } from 'node:fs/promises';
 import { gzip } from 'node:zlib';
 import { promisify } from 'node:util';
@@ -9,6 +10,21 @@ import { dirname } from 'node:path';
 const gzipAsync = promisify(gzip);
 const here = dirname(fileURLToPath(import.meta.url));
 const dist = join(here, '..', 'dist');
+const check = process.argv.includes('--check');
+
+// Gzip byte budgets. Bump a budget ONLY deliberately, in the PR that grows the
+// bundle, with a note — never to silence a failure.
+const BUDGETS_GZIP = {
+  'flux.js': 23 * 1024,
+  'flux.cjs': 21 * 1024,
+  'flux.iife.js': 21 * 1024,
+  'net.js': 4 * 1024,
+  'net.iife.js': 4 * 1024,
+  'flux.full.js': 41 * 1024,
+  'flux.full.iife.js': 37 * 1024,
+  'flux.css': 3 * 1024,
+  'flux.min.css': 2 * 1024,
+};
 
 const FILES = [
   { name: 'flux.js', bundled: 'Flux core (HTMX external)' },
@@ -23,6 +39,7 @@ const FILES = [
 ];
 
 let anyMissing = false;
+let anyOver = false;
 const rows = [];
 for (const f of FILES) {
   try {
@@ -34,6 +51,7 @@ for (const f of FILES) {
       gzip: gz.length,
       bundled: f.bundled,
     });
+    if (gz.length > BUDGETS_GZIP[f.name]) anyOver = true;
   } catch {
     anyMissing = true;
     rows.push({ file: f.name, raw: '— (not built)', gzip: '—', bundled: f.bundled });
@@ -43,11 +61,16 @@ for (const f of FILES) {
 process.stdout.write('\nFlux bundle-size report\n========================\n');
 for (const r of rows) {
   if (typeof r.raw === 'number') {
+    const budget = (BUDGETS_GZIP[r.file] / 1024).toFixed(0);
+    const flag = r.gzip > BUDGETS_GZIP[r.file] ? '  << OVER BUDGET' : '';
     process.stdout.write(
-      `${r.file.padEnd(22)} raw ${(r.raw / 1024).toFixed(2)}kB  gzip ${(r.gzip / 1024).toFixed(2)}kB  [${r.bundled}]\n`,
+      `${r.file.padEnd(22)} raw ${(r.raw / 1024).toFixed(2)}kB  gzip ${(r.gzip / 1024).toFixed(2)}kB / ${budget}kB  [${r.bundled}]${flag}\n`,
     );
   } else {
     process.stdout.write(`${r.file.padEnd(22)} ${r.raw}  [${r.bundled}]\n`);
   }
 }
 if (anyMissing) process.stdout.write('\nSome outputs are missing — run `npm run build` first.\n');
+if (anyOver)
+  process.stderr.write('\nBundle size budget exceeded. Bump budgets only deliberately.\n');
+if (check && (anyOver || anyMissing)) process.exit(1);

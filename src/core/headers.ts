@@ -24,25 +24,15 @@ export function readHeader(headers: unknown, name: string): string | null {
 /** Copies `Headers`-or-record into a plain record for reuse in retry/replay calls. */
 export function headersToRecord(headers: unknown): Record<string, string> {
   if (!headers) return {};
-  if (
-    typeof headers === 'object' &&
-    'entries' in headers &&
-    typeof headers.entries === 'function'
-  ) {
-    const out: Record<string, string> = {};
-    for (const [k, v] of (headers.entries as () => Iterable<[string, string]>)()) {
-      out[k] = v;
-    }
-    return out;
+  const entries = (headers as Headers).entries?.bind(headers as Headers);
+  if (typeof entries === 'function') {
+    return Object.fromEntries(entries());
   }
-  if (typeof headers === 'object') {
-    const out: Record<string, string> = {};
-    for (const [k, v] of Object.entries(headers as Record<string, unknown>)) {
-      if (v !== undefined && v !== null) out[k] = String(v);
-    }
-    return out;
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(headers as Record<string, unknown>)) {
+    if (v !== undefined && v !== null) out[k] = String(v);
   }
-  return {};
+  return out;
 }
 
 /** Merges extra headers onto an unknown headers shape, preserving all existing values. */

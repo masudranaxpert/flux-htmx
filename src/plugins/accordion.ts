@@ -1,8 +1,9 @@
 import { queryAllSafely } from '../core/selectors.js';
 import { log } from '../core/logger.js';
 
-export function installAccordion() {
+export function installAccordion(): () => void {
   document.addEventListener('click', handleAccordionClick);
+  return () => document.removeEventListener('click', handleAccordionClick);
 }
 
 function handleAccordionClick(e: MouseEvent) {

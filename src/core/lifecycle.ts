@@ -3,7 +3,7 @@
 // Dynamic Preset Registry Integration: Scans root and descendants dynamically using
 // registered preset attributes, then expands generic shorthand attributes.
 
-import { expandElement, fluxSelector, applyRecipeAndScope } from './expand.js';
+import { expandElement, fluxSelector, applyScopes } from './expand.js';
 import { getPresetRegistry, applyPreset } from '../presets/index.js';
 import { reconcileGeneratedAttributes } from './generated-attributes.js';
 
@@ -16,14 +16,13 @@ export function expandPresets(root: Element): number {
   const candidateSelector = [
     fluxSelector(),
     ...Array.from(registry.keys(), (attr) => `[${attr}]`),
-    '[data-flux-recipe-owned]',
     '[data-flux-scope-owned]',
   ].join(',');
   const candidates = matching(root, candidateSelector);
 
-  // Apply recipes/scopes before presets so inherited preset options are visible to connect().
+  // Apply scopes before presets so inherited preset options are visible to connect().
   for (const el of candidates) {
-    applyRecipeAndScope(el);
+    applyScopes(el);
   }
 
   for (const [attr] of registry) {

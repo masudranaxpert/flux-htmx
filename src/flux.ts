@@ -11,13 +11,11 @@ import { resolveToken, shouldAttach } from './core/csrf.js';
 import { installFeedback, resetFeedbackForTests } from './core/feedback.js';
 import { installValidation } from './core/validation.js';
 import { installStatusTargeting, disposeStatusTargeting } from './core/status.js';
-import { registerRecipe } from './core/recipes.js';
 import { setHeader } from './core/headers.js';
 import { setRuntimeConfig } from './core/runtime.js';
 import { installActionPipeline } from './core/action-lifecycle.js';
-import { registerAction, defineActionPipeline } from './core/actions.js';
-export { registerRecipe as recipe } from './core/recipes.js';
-export { registerAction, defineActionPipeline as action } from './core/actions.js';
+import { registerAction } from './core/actions.js';
+export { registerAction } from './core/actions.js';
 import type { FragmentCache } from './cache/cache.js';
 import { cache } from './cache/instance.js';
 import { installCacheIntegration } from './cache/cacheWire.js';
@@ -54,7 +52,7 @@ import {
 } from './core/generated-attributes.js';
 import { installRetrySupport, disposeRetrySupport } from './core/retry.js';
 import { installDeduplication } from './core/dedupe.js';
-import { removeRecipeAndScopeAttributes } from './core/expand.js';
+import { removeScopeAttributes } from './core/expand.js';
 import { me, any, sugar, installDomSugar } from './core/sugar.js';
 
 export { type FluxConfig } from './core/config.js';
@@ -79,8 +77,6 @@ export interface FluxApi {
   reconfigure(userConfig?: FluxConfig, root?: Element): ResolvedConfig;
   process(element?: Element): void;
   dispose(options?: DisposeOptions): void;
-  recipe: typeof registerRecipe;
-  action: typeof defineActionPipeline;
   registerAction: typeof registerAction;
   cache: FragmentCache;
   htmx: HtmxGlobal | undefined;
@@ -232,7 +228,7 @@ export function dispose(options?: DisposeOptions): void {
   disposePresetControllers();
 
   if (options?.removeGeneratedAttributes) {
-    removeRecipeAndScopeAttributes();
+    removeScopeAttributes();
     removeGeneratedAttributes(undefined, true);
   }
 
@@ -306,7 +302,7 @@ function installCleanupHook(): () => void {
     const target = (evt as CustomEvent).detail?.ctx?.targetElement ?? evt.target;
     if (target instanceof Element) {
       disconnectPresetTree(target);
-      removeRecipeAndScopeAttributes(target);
+      removeScopeAttributes(target);
       removeGeneratedAttributes(target);
       const children = Array.from(target.querySelectorAll('*'));
       for (const child of children) {
@@ -339,8 +335,6 @@ function createFluxApi(): FluxApi {
     reconfigure,
     process,
     dispose,
-    recipe: registerRecipe,
-    action: defineActionPipeline,
     registerAction,
     cache,
     htmx: activeHtmx,

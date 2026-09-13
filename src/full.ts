@@ -13,8 +13,6 @@ import {
   cache,
   use,
   unuse,
-  action,
-  recipe,
   registerAction,
   bootstrapFlux,
   onBodyReady,
@@ -54,20 +52,25 @@ function bootstrap(): FluxApi {
 
   let started = false;
 
+  let pluginTeardowns: Array<() => void> = [];
+
   const startAll = (element?: Element) => {
     if (!started) {
       installNet();
       configure(metaConfig.flux);
 
-      // Install UI plugins
-      installTabs();
-      installAccordion();
-      installModal();
-      installTransitions();
-      installState();
-      installPersist();
-      installTable();
-      installForm();
+      // Install UI plugins; keep their teardowns so dispose() never leaves
+      // duplicate listeners or MutationObservers behind on a re-start.
+      pluginTeardowns = [
+        installTabs(),
+        installAccordion(),
+        installModal(),
+        installTransitions(),
+        installState(),
+        installPersist(),
+        installTable(),
+        installForm(),
+      ];
 
       started = true;
     }
@@ -90,6 +93,8 @@ function bootstrap(): FluxApi {
     reconfigure,
     process,
     dispose: (opts?: DisposeOptions) => {
+      for (const teardown of pluginTeardowns.reverse()) teardown();
+      pluginTeardowns = [];
       dispose(opts);
       started = false;
     },
@@ -99,8 +104,6 @@ function bootstrap(): FluxApi {
     doctor,
     use,
     unuse,
-    action,
-    recipe,
     registerAction,
     offline,
     plugins: { upload: uploadPlugin, optimistic: optimisticPlugin },

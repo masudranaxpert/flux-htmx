@@ -191,10 +191,11 @@ export function installRetrySupport(): () => void {
           // every existing header (CSRF, auth) either way.
           headers: withHeaders(requestHeaders, { 'X-Flux-Retry': 'true' }),
         });
-      } else if (typeof activeHtmx?.trigger === 'function') {
-        activeHtmx.trigger(element, 'click');
-      } else if (element instanceof HTMLElement && typeof element.click === 'function') {
-        element.click();
+      } else {
+        // Never fall back to element.click() / trigger('click'): a re-click replays
+        // hx-confirm dialogs and re-runs native htmx triggers with unexpected semantics.
+        // Skipping (with a warning) is the safe last resort.
+        log.warn(`[flux] retry skipped — htmx.ajax unavailable:`, element);
       }
     }, backoffDelay);
 

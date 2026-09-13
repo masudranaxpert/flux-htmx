@@ -7,20 +7,25 @@ import { getPresetRegistry, reconcilePresetController } from '../presets/index.j
 
 const generatedAttributes = new WeakMap<Element, Map<string, string>>();
 // WeakRef registry: strong Set references leaked detached elements (fx-remove, sugar
-// remove, plugin DOM ops never went through htmx:before:cleanup). Dead refs are dropped
-// lazily during iteration; elements still referenced by the app keep working.
+// remove, plugin DOM ops never went through htmx:before:cleanup). A WeakMap index makes
+// track/untrack O(1) and deduplicates refs per element; dead refs are dropped lazily
+// during iteration. Elements still referenced by the app keep working.
 const generatedRefs = new Set<WeakRef<Element>>();
+const generatedRefIndex = new WeakMap<Element, WeakRef<Element>>();
 
 function trackGeneratedElement(element: Element): void {
-  generatedRefs.add(new WeakRef(element));
+  const existing = generatedRefIndex.get(element);
+  if (existing) return;
+  const ref = new WeakRef(element);
+  generatedRefIndex.set(element, ref);
+  generatedRefs.add(ref);
 }
 
 function untrackGeneratedElement(element: Element): void {
-  for (const ref of generatedRefs) {
-    if (ref.deref() === element) {
-      generatedRefs.delete(ref);
-      return;
-    }
+  const ref = generatedRefIndex.get(element);
+  if (ref) {
+    generatedRefIndex.delete(element);
+    generatedRefs.delete(ref);
   }
 }
 

@@ -9,15 +9,21 @@ function onReady(fn: () => void): void {
   }
 }
 
-export function installPersist() {
+export function installPersist(): () => void {
   document.addEventListener('change', handlePersistChange);
 
   // Restore on load and on htmx swaps. readyState-aware: deferred or dynamic scripts
   // load after DOMContentLoaded has already fired.
   onReady(() => restorePersisted());
-  document.addEventListener('htmx:after:settle', (e: Event) => {
-    restorePersisted((e as CustomEvent).detail.el);
-  });
+  document.addEventListener('htmx:after:settle', handlePersistSettle);
+  return () => {
+    document.removeEventListener('change', handlePersistChange);
+    document.removeEventListener('htmx:after:settle', handlePersistSettle);
+  };
+}
+
+function handlePersistSettle(e: Event) {
+  restorePersisted((e as CustomEvent).detail.el);
 }
 
 function handlePersistChange(e: Event) {

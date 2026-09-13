@@ -259,26 +259,27 @@ export function cacheKey(
     const qIndex = rawAction.indexOf('?');
     const existingParams = new URLSearchParams(rawAction.slice(qIndex + 1));
     for (const [k, v] of Array.from(existingParams.entries())) {
-      if (isSensitiveFieldName(k, formElement)) continue;
       if (allowedVaryFields && !allowedVaryFields.has(k.toLowerCase())) continue;
-      params.append(k, v);
+      // Sensitive values are hashed into the key (never written verbatim) so two
+      // requests differing only in a secret still get distinct cache entries.
+      params.append(k, isSensitiveFieldName(k, formElement) ? hashCacheValue(v) : v);
     }
   }
 
   if (request.parameters) {
     for (const [k, v] of Object.entries(request.parameters)) {
-      if (v !== undefined && v !== null) {
-        if (isSensitiveFieldName(k, formElement)) continue;
-        if (allowedVaryFields && !allowedVaryFields.has(k.toLowerCase())) continue;
-
-        params.delete(k);
-        if (Array.isArray(v)) {
-          for (let i = 0; i < v.length; i++) {
-            params.append(`${k}[${i}]`, String(v[i]));
-          }
-        } else {
-          params.append(k, String(v));
+      if (v === undefined || v === null) continue;
+      if (allowedVaryFields && !allowedVaryFields.has(k.toLowerCase())) continue;
+      params.delete(k);
+      if (Array.isArray(v)) {
+        for (let i = 0; i < v.length; i++) {
+          params.append(`${k}[${i}]`, String(v[i]));
         }
+      } else {
+        params.append(
+          k,
+          isSensitiveFieldName(k, formElement) ? hashCacheValue(String(v)) : String(v),
+        );
       }
     }
   } else if (isFormSource && formElement) {
@@ -287,13 +288,12 @@ export function cacheKey(
       const seenKeys = new Set<string>();
       for (const [k, v] of Array.from(formData.entries())) {
         if (typeof v === 'string') {
-          if (isSensitiveFieldName(k, formElement)) continue;
           if (allowedVaryFields && !allowedVaryFields.has(k.toLowerCase())) continue;
           if (!seenKeys.has(k)) {
             params.delete(k);
             seenKeys.add(k);
           }
-          params.append(k, v);
+          params.append(k, isSensitiveFieldName(k, formElement) ? hashCacheValue(v) : v);
         }
       }
     } catch {
@@ -312,6 +312,15 @@ export function cacheKey(
 
   const qStr = canonicalParams.toString();
   return `${method}:${basePath}${qStr ? `?${qStr}` : ''}`;
+}
+/** Short non-reversible hash so sensitive values shape the key without leaking into it. */
+function hashCacheValue(value: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < value.length; i++) {
+    h ^= value.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return `~${(h >>> 0).toString(36)}`;
 }
 
 function isSensitiveFieldName(name: string, form: HTMLFormElement | null): boolean {

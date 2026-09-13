@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { FragmentCache, isCacheableMethod } from '../../src/cache/cache.js';
+import { cacheKey } from '../../src/cache/cacheWire.js';
 
 describe('FragmentCache — basic', () => {
   let cache: FragmentCache;
@@ -93,5 +94,29 @@ describe('isCacheableMethod', () => {
     expect(isCacheableMethod('get')).toBe(true);
     expect(isCacheableMethod('POST')).toBe(false);
     expect(isCacheableMethod('DELETE')).toBe(false);
+  });
+});
+
+describe('cacheKey — sensitive value hashing', () => {
+  const make = (value: string) => {
+    const form = document.createElement('form');
+    form.innerHTML = `<input type="password" name="password" value="${value}" />`;
+    return form;
+  };
+
+  it('gives distinct keys per secret without ever writing the secret', () => {
+    const a = cacheKey(make('hunter2'), { method: 'GET', action: '/login' });
+    const b = cacheKey(make('letmein'), { method: 'GET', action: '/login' });
+    expect(a).not.toBe(b);
+    expect(a).not.toContain('hunter2');
+    expect(b).not.toContain('letmein');
+    expect(a).toContain('password=%7E');
+  });
+
+  it('produces a stable key for identical secrets', () => {
+    const form = make('hunter2');
+    expect(cacheKey(form, { method: 'GET', action: '/login' })).toBe(
+      cacheKey(form, { method: 'GET', action: '/login' }),
+    );
   });
 });

@@ -22,6 +22,12 @@ Flux adds a preset layer on top of htmx: request presets (`fx-search`, `fx-poll`
 
 No build step required.
 
+## What's New in v2.1
+
+- **Clean teardown contract** — every UI plugin (`installTabs()`, `installPersist()`, …) returns a teardown; `Flux.dispose()` removes plugin listeners and MutationObservers, so dispose → start cycles can no longer stack them. `installTransitions()` no longer crashes when the script runs before `<body>` exists.
+- **Safer internals** — retry never falls back to re-clicking the element (no surprise `hx-confirm` replays); cache keys hash sensitive values instead of dropping them (distinct cache entries per secret, secrets never appear in keys); sugar helpers are thin native delegates (`offAll` node-cloning removed); generated-attribute registry is deduplicated and O(1).
+- **Less weight** — dead code cut (undocumented CLI, recipe system, named action pipelines); core gzip dropped ~0.5 kB. CI now fails on bundle-size budget regressions (`npm run size:check`).
+
 ## What's New in v2.0
 
 - **Reliable bootstrap contract** — importing the module has zero global side effects; `bootstrapFlux()` publishes `window.Flux` and auto-starts. The CDN bundles call it for you (fixes UI plugins not installing in 1.x full bundles).

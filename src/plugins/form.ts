@@ -1,19 +1,30 @@
 import { queryAllSafely } from '../core/selectors.js';
 
-export function installForm() {
+export function installForm(): () => void {
   document.addEventListener('click', handleFormClick);
   document.addEventListener('input', handleFormInput);
 
   // Track original values. readyState-aware: deferred or dynamic scripts load after
   // DOMContentLoaded has already fired.
+  onReadyForm(() => initializeDirtyState());
+  document.addEventListener('htmx:after:settle', handleFormSettle);
+  return () => {
+    document.removeEventListener('click', handleFormClick);
+    document.removeEventListener('input', handleFormInput);
+    document.removeEventListener('htmx:after:settle', handleFormSettle);
+  };
+}
+
+function handleFormSettle(e: Event) {
+  initializeDirtyState((e as CustomEvent).detail.el);
+}
+
+function onReadyForm(fn: () => void): void {
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => initializeDirtyState(), { once: true });
+    document.addEventListener('DOMContentLoaded', fn, { once: true });
   } else {
-    initializeDirtyState();
+    fn();
   }
-  document.addEventListener('htmx:after:settle', (e: Event) => {
-    initializeDirtyState((e as CustomEvent).detail.el);
-  });
 }
 
 function handleFormClick(e: MouseEvent) {
