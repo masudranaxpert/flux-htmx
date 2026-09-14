@@ -164,6 +164,7 @@ describe('fx-realtime — SSE preset', () => {
     listeners: Map<string, RealtimeListener>;
     addEventListener: ReturnType<typeof vi.fn>;
     close: ReturnType<typeof vi.fn>;
+    readyState: number;
   }
 
   let MockEventSource: ReturnType<typeof vi.fn>;
@@ -176,11 +177,14 @@ describe('fx-realtime — SSE preset', () => {
 
     // Mock native EventSource
     class EventSourceMock implements MockEventSourceInstance {
+      readyState = 0;
       listeners = new Map<string, RealtimeListener>();
       addEventListener = vi.fn((event: string, cb: RealtimeListener) => {
         this.listeners.set(event, cb);
       });
-      close = vi.fn();
+      close = vi.fn(() => {
+        this.readyState = 2;
+      });
 
       constructor(
         public url: string,
@@ -329,5 +333,80 @@ describe('fx-realtime — SSE preset', () => {
 
     Flux.dispose();
     expect(disposedSource.close).toHaveBeenCalledOnce();
+  });
+
+  it('tracks connection state via data-flux-sse and dispatches flux:realtime:closed on terminal error', () => {
+    const el = document.createElement('div');
+    document.body.appendChild(el);
+
+    let closedEventFired = false;
+    el.addEventListener('flux:realtime:closed', () => {
+      closedEventFired = true;
+    });
+
+    applyRealtime(el, { url: '/events/status' });
+    const instance = getLastInstance();
+    expect(el.getAttribute('data-flux-sse')).toBe('connecting');
+
+    // simulate open
+    instance.readyState = 1;
+    instance.listeners.get('open')?.({ data: '' });
+    expect(el.getAttribute('data-flux-sse')).toBe('open');
+
+    // simulate terminal error (readyState 2)
+    instance.readyState = 2;
+    instance.listeners.get('error')?.({ data: '' });
+    expect(el.getAttribute('data-flux-sse')).toBe('closed');
+    expect(closedEventFired).toBe(true);
+
+    // disconnect leaves state closed
+    disconnectRealtime(el);
+    expect(el.getAttribute('data-flux-sse')).toBe('closed');
+  });
+
+  it('resolves target dynamically per message so swapped targets receive updates', () => {
+    const container = document.createElement('div');
+    container.innerHTML = '<div id="log">initial</div>';
+    document.body.appendChild(container);
+
+    const el = document.createElement('div');
+    document.body.appendChild(el);
+    applyRealtime(el, { url: '/events/log', target: '#log' });
+
+    const cb = getLastInstance().listeners.get('message')!;
+    cb({ data: 'first message' });
+    expect(document.getElementById('log')?.innerHTML).toBe('first message');
+
+    // replace #log with a new element (simulating an outer swap)
+    container.innerHTML = '<div id="log">fresh</div>';
+    const newLog = document.getElementById('log')!;
+
+    cb({ data: 'second message' });
+    expect(newLog.innerHTML).toBe('second message');
+  });
+
+  it('calls activeHtmx.process on target during fallback innerHTML swap so nested fx-* works', () => {
+    const processSpy = vi.fn();
+    const win = window as unknown as { htmx?: { process?: typeof processSpy } };
+    const origHtmx = win.htmx;
+    win.htmx = { process: processSpy };
+
+    try {
+      const target = document.createElement('div');
+      target.id = 'nested-feed';
+      document.body.appendChild(target);
+
+      const el = document.createElement('div');
+      document.body.appendChild(el);
+      applyRealtime(el, { url: '/events/nested', target: '#nested-feed' });
+
+      const cb = getLastInstance().listeners.get('message')!;
+      cb({ data: '<button fx-toggle="#panel">Toggle</button>' });
+
+      expect(target.innerHTML).toBe('<button fx-toggle="#panel">Toggle</button>');
+      expect(processSpy).toHaveBeenCalledWith(target);
+    } finally {
+      win.htmx = origHtmx;
+    }
   });
 });

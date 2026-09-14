@@ -9,7 +9,7 @@ export interface HtmxGlobal {
   VERSION?: string;
   config?: { defaultSwap?: string; defaultTimeout?: number };
   process?: (element: Element) => void;
-  swap?: (opts: { target: Element; text: string; swap?: string }) => void;
+  swap?: (opts: { target: Element; text: string; swap?: string; sourceElement?: Element }) => void;
 }
 
 export function verifyHtmxVersion(htmx: HtmxGlobal | undefined): void {

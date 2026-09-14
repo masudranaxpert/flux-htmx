@@ -2,6 +2,9 @@
 // Connects an element to an SSE endpoint; on each message HTMX swaps content into fx-target.
 // No third-party deps. Native EventSource only.
 
+import htmxImport from 'htmx.org';
+import { resolveHtmx, type HtmxGlobal } from '../core/startup.js';
+import { queryOne } from '../core/selectors.js';
 import { log } from '../core/logger.js';
 
 export interface RealtimeOptions {
@@ -29,11 +32,13 @@ export function applyRealtime(element: Element, options: RealtimeOptions): boole
 
   disconnectRealtime(element);
 
-  const target = options.target
-    ? (document.querySelector(options.target) as HTMLElement | null)
-    : element;
+  const resolveTarget = (): HTMLElement | null => {
+    if (!options.target) return element;
+    const found = queryOne(options.target);
+    return found instanceof HTMLElement ? found : null;
+  };
 
-  if (!target) {
+  if (options.target && !resolveTarget()) {
     log.warn(`fx-realtime: target "${options.target}" not found`);
     return false;
   }
@@ -45,25 +50,39 @@ export function applyRealtime(element: Element, options: RealtimeOptions): boole
     withCredentials: options.withCredentials ?? false,
   });
 
+  const activeHtmx = resolveHtmx(htmxImport as unknown as HtmxGlobal);
+
+  const syncStatus = () => {
+    const state = es.readyState === 0 ? 'connecting' : es.readyState === 1 ? 'open' : 'closed';
+    element.setAttribute('data-flux-sse', state);
+  };
+  syncStatus();
+
   const onMessage = (evt: MessageEvent) => {
     const html = evt.data as string;
     if (!html) return;
 
-    // Prefer htmx.swap for full HTMX lifecycle; fall back to direct innerHTML.
-    const htmx = (window as any).htmx;
-    if (typeof htmx?.swap === 'function') {
-      void htmx.swap({
-        target,
+    const currentTarget = resolveTarget();
+    if (!currentTarget) {
+      log.warn(`fx-realtime: target "${options.target}" not found`);
+      return;
+    }
+
+    // Prefer htmx.swap for full HTMX lifecycle; fall back to direct innerHTML + process.
+    if (typeof activeHtmx?.swap === 'function') {
+      void activeHtmx.swap({
+        target: currentTarget,
         text: html,
         swap: swapStyle,
         sourceElement: element,
       });
     } else {
       if (swapStyle === 'outerHTML') {
-        target.outerHTML = html;
+        currentTarget.outerHTML = html;
       } else {
-        target.innerHTML = html;
+        currentTarget.innerHTML = html;
       }
+      activeHtmx?.process?.(currentTarget);
     }
 
     element.dispatchEvent(
@@ -75,12 +94,19 @@ export function applyRealtime(element: Element, options: RealtimeOptions): boole
   };
 
   const onError = () => {
+    syncStatus();
     log.warn(`fx-realtime: SSE connection error on "${options.url}"`);
     element.dispatchEvent(
       new CustomEvent('flux:realtime:error', { bubbles: true, detail: { url: options.url } }),
     );
+    if (es.readyState === 2) {
+      element.dispatchEvent(
+        new CustomEvent('flux:realtime:closed', { bubbles: true, detail: { url: options.url } }),
+      );
+    }
   };
 
+  es.addEventListener('open', syncStatus);
   es.addEventListener(eventName, onMessage as EventListener);
   es.addEventListener('error', onError);
 
@@ -97,6 +123,7 @@ export function disconnectRealtime(element: Element): void {
   if (es) {
     es.close();
     realtimeControllers.delete(element);
-    log.info(`fx-realtime: disconnected`);
+    element.setAttribute('data-flux-sse', 'closed');
+    log.info('fx-realtime: disconnected');
   }
 }
