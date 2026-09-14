@@ -646,7 +646,9 @@ describe('plugin teardown contract', () => {
 
     // Named module-level handler: DOM dedupes the second add, so still one restore
     // per settle event even when installed twice...
-    document.dispatchEvent(new CustomEvent('htmx:after:settle', { detail: { el: box } }));
+    document.dispatchEvent(
+      new CustomEvent('htmx:after:settle', { detail: { ctx: { target: box } } }),
+    );
     expect(restored).toBe(1);
 
     // ...but after teardown, the settle listener is gone entirely. (installPersist
@@ -654,7 +656,9 @@ describe('plugin teardown contract', () => {
     const td = installPersist();
     td();
     restored = 0;
-    document.dispatchEvent(new CustomEvent('htmx:after:settle', { detail: { el: box } }));
+    document.dispatchEvent(
+      new CustomEvent('htmx:after:settle', { detail: { ctx: { target: box } } }),
+    );
     expect(restored).toBe(0);
     box.remove();
   });

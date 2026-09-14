@@ -37,11 +37,11 @@ function wireDialogControllers(dialog: HTMLDialogElement): void {
   if (dialogControllers.has(dialog)) return;
 
   const onCancel = (e: Event) => {
-    if (dialog.querySelector('form[fx-dirty][data-dirty="true"]')) {
-      const form = dialog.querySelector('form[fx-dirty][data-dirty="true"]');
+    const form = dialog.querySelector('form[fx-dirty][data-dirty="true"]');
+    if (form) {
       const msg =
         dialog.getAttribute('fx-dirty-message') ??
-        form?.getAttribute('fx-dirty-message') ??
+        form.getAttribute('fx-dirty-message') ??
         runtimeConfig()?.messages?.unsavedChanges ??
         'Discard unsaved changes?';
       if (!confirm(msg)) {
@@ -93,7 +93,18 @@ export function installOpenController(): () => void {
       // If author declared closedby ("none", "closerequest", or "any"), Flux steps aside
       // completely and lets the native platform handle (or block) dismissal.
       const declaredClosedBy = dialog.getAttribute('closedby');
-      if (declaredClosedBy) return;
+      if (
+        declaredClosedBy === 'none' ||
+        declaredClosedBy === 'closerequest' ||
+        declaredClosedBy === 'any'
+      ) {
+        return;
+      }
+      if (declaredClosedBy) {
+        log.warn(
+          `[flux] invalid closedby="${declaredClosedBy}" on dialog; expected "any", "closerequest", or "none"`,
+        );
+      }
 
       const rect = dialog.getBoundingClientRect();
       const inside =

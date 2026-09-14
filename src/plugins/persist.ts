@@ -1,4 +1,5 @@
 import { queryAllSafely } from '../core/selectors.js';
+import { getRequestContext } from '../core/events.js';
 
 /** Runs `fn` now, or on DOMContentLoaded when the document is still loading. */
 function onReady(fn: () => void): void {
@@ -23,7 +24,9 @@ export function installPersist(): () => void {
 }
 
 function handlePersistSettle(e: Event) {
-  restorePersisted((e as CustomEvent).detail.el);
+  const ctx = getRequestContext(e);
+  const root = ctx.target ?? ctx.source ?? document;
+  restorePersisted(root);
 }
 
 function handlePersistChange(e: Event) {

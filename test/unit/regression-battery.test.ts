@@ -357,8 +357,9 @@ describe('regression battery (past-release bugs)', () => {
     `;
     const form = document.getElementById('test-dirty-core')!;
     // HTMX swaps dispatch htmx:after:settle to record original values
-    document.dispatchEvent(new CustomEvent('htmx:after:settle', { detail: { el: form } }));
-
+    document.dispatchEvent(
+      new CustomEvent('htmx:after:settle', { detail: { ctx: { target: form } } }),
+    );
     const input = form.querySelector('input')!;
     expect(form.hasAttribute('data-dirty')).toBe(false);
 
@@ -377,6 +378,74 @@ describe('regression battery (past-release bugs)', () => {
     expect(form.hasAttribute('data-dirty')).toBe(false);
   });
 
+  it('dirty tracking: unrelated htmx settle does not overwrite data-fx-original baseline', () => {
+    Flux.configure();
+    document.body.innerHTML = `
+      <form id="keep-baseline" fx-dirty>
+        <input name="item" value="clean" />
+      </form>
+      <div id="unrelated-target">toast</div>
+    `;
+    const form = document.getElementById('keep-baseline')!;
+    const input = form.querySelector('input')!;
+    // Initial settle records baseline
+    document.dispatchEvent(
+      new CustomEvent('htmx:after:settle', { detail: { ctx: { target: form } } }),
+    );
+
+    // User types into input -> form becomes dirty
+    input.value = 'half typed';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(form.getAttribute('data-dirty')).toBe('true');
+
+    // An unrelated settle occurs (e.g. fx-poll tick, toast, table row swap)
+    const other = document.getElementById('unrelated-target')!;
+    document.dispatchEvent(
+      new CustomEvent('htmx:after:settle', { detail: { ctx: { target: other } } }),
+    );
+    // Baseline MUST NOT be rewritten to "half typed"
+    expect(input.getAttribute('data-fx-original')).toBe('clean');
+
+    // Restoring to clean baseline cleans the form
+    input.value = 'clean';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(form.hasAttribute('data-dirty')).toBe(false);
+  });
+
+  it('modal: invalid closedby value warns and falls back to standard backdrop dismiss', () => {
+    Flux.configure();
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    document.body.innerHTML = `<dialog id="m-bad" fx-modal closedby="nono" open><p>x</p></dialog>`;
+    const dialog = document.getElementById('m-bad') as HTMLDialogElement;
+    dialog.close = function () {
+      this.open = false;
+      this.removeAttribute('open');
+    };
+    dialog.getBoundingClientRect = () =>
+      ({
+        left: 100,
+        top: 100,
+        right: 400,
+        bottom: 300,
+        width: 300,
+        height: 200,
+        x: 100,
+        y: 100,
+      }) as DOMRect;
+
+    // Outside click
+    dialog.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, detail: 1, clientX: 5, clientY: 5 }),
+    );
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[flux]'),
+      expect.stringContaining('invalid closedby="nono"'),
+    );
+    expect(dialog.open).toBe(false); // does not silently freeze
+    warnSpy.mockRestore();
+  });
+
   it('persist: repeated installs leave one listener, not four', () => {
     installPersist();
     installPersist();
@@ -386,8 +455,9 @@ describe('regression battery (past-release bugs)', () => {
     const input = document.querySelector('input')!;
     let restored = 0;
     input.addEventListener('flux:persist:restored', () => restored++);
-    document.dispatchEvent(new CustomEvent('htmx:after:settle', { detail: { el: document.body } }));
-    expect(restored).toBe(1);
+    document.dispatchEvent(
+      new CustomEvent('htmx:after:settle', { detail: { ctx: { target: document.body } } }),
+    );
   });
 
   it('fx-delete + fx-remove: button with selector remains in DOM (NaN does not remove)', () => {

@@ -3,6 +3,7 @@
 // data-dirty="true", and toggles data-dirty="true" on the parent form.
 
 import { queryAllSafely } from './selectors.js';
+import { getRequestContext } from './events.js';
 
 export function initializeDirtyState(root: Element | Document = document): void {
   const forms: Element[] = [];
@@ -14,6 +15,7 @@ export function initializeDirtyState(root: Element | Document = document): void 
     const inputs = queryAllSafely('input, select, textarea', form);
     for (const el of inputs) {
       const input = el as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+      if (input.hasAttribute('data-fx-original')) continue;
       const val =
         input.type === 'checkbox' ? (input as HTMLInputElement).checked.toString() : input.value;
       input.setAttribute('data-fx-original', val);
@@ -23,6 +25,23 @@ export function initializeDirtyState(root: Element | Document = document): void 
       const submitBtn = form.querySelector('[type="submit"]') as HTMLButtonElement;
       if (submitBtn) submitBtn.setAttribute('disabled', 'true');
     }
+  }
+}
+
+/** Explicitly resets form inputs to clean baseline and disables submit button if fx-disable-clean. */
+export function resetDirtyState(form: Element): void {
+  const inputs = queryAllSafely('input, select, textarea', form);
+  for (const el of inputs) {
+    const input = el as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+    const val =
+      input.type === 'checkbox' ? (input as HTMLInputElement).checked.toString() : input.value;
+    input.setAttribute('data-fx-original', val);
+    input.removeAttribute('data-dirty');
+  }
+  form.removeAttribute('data-dirty');
+  if (form.hasAttribute('fx-disable-clean')) {
+    const submitBtn = form.querySelector('[type="submit"]') as HTMLButtonElement | null;
+    if (submitBtn) submitBtn.setAttribute('disabled', 'true');
   }
 }
 
@@ -72,8 +91,9 @@ export function installDirtyTracking(): () => void {
   }
 
   const onSettle = (e: Event) => {
-    const el = (e as CustomEvent).detail?.el;
-    initializeDirtyState(el instanceof Element ? el : document);
+    const ctx = getRequestContext(e);
+    const root = ctx.target ?? ctx.source ?? document;
+    initializeDirtyState(root);
   };
   document.addEventListener('htmx:after:settle', onSettle);
 

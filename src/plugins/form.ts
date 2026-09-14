@@ -1,4 +1,5 @@
 import { handleFormInput, initializeDirtyState, installDirtyTracking } from '../core/dirty.js';
+import { getRequestContext } from '../core/events.js';
 
 export { handleFormInput, initializeDirtyState, installDirtyTracking };
 
@@ -17,7 +18,9 @@ export function installForm(): () => void {
 }
 
 function handleFormSettle(e: Event) {
-  initializeDirtyState((e as CustomEvent).detail.el);
+  const ctx = getRequestContext(e);
+  const root = ctx.target ?? ctx.source ?? document;
+  initializeDirtyState(root);
 }
 
 function onReadyForm(fn: () => void): void {

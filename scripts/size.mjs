@@ -17,11 +17,11 @@ const check = process.argv.includes('--check');
 const BUDGETS_GZIP = {
   'flux.js': 26 * 1024,
   'flux.cjs': 24 * 1024,
-  'flux.iife.js': 23 * 1024,
+  'flux.iife.js': 24 * 1024,
   'net.js': 4 * 1024,
   'net.iife.js': 4 * 1024,
-  'flux.full.js': 43 * 1024,
-  'flux.full.iife.js': 39 * 1024,
+  'flux.full.js': 44 * 1024,
+  'flux.full.iife.js': 40 * 1024,
   'flux.css': 3 * 1024,
   'flux.min.css': 2 * 1024,
 };
