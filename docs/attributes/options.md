@@ -38,12 +38,13 @@ native `hx-*` attributes.
 
 ## Confirmation and validation
 
-| Attribute           | Example | Description                                     |
-| ------------------- | ------- | ----------------------------------------------- |
-| `fx-confirm`        | `Sure?` | Native `confirm()` before issuing the request   |
-| `fx-confirm-dialog` | `#dlg`  | Use your own `<dialog id="dlg">` instead        |
-| `fx-validate`       | —       | HTML5 constraint validation before submit       |
-| `fx-focus-error`    | —       | Focus first invalid field on validation failure |
+| Attribute           | Example      | Description                                                         |
+| ------------------- | ------------ | ------------------------------------------------------------------- |
+| `fx-confirm`        | `Sure?`      | Native `confirm()` before issuing the request                       |
+| `fx-confirm-dialog` | `#dlg`       | Use your own `<dialog id="dlg">` instead                            |
+| `fx-validate`       | —            | HTML5 constraint validation before submit                           |
+| `fx-focus-error`    | —            | Focus first invalid field on validation failure                     |
+| `fx-dirty-message`  | `Custom msg` | Custom confirmation prompt when leaving or dismissing unsaved edits |
 
 ## Result side effects
 

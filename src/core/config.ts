@@ -29,6 +29,10 @@ export interface FluxConfig {
     /** Global indicator selector shown for any in-flight request. */
     indicator?: string;
   };
+  messages?: {
+    /** Confirmation message when discarding unsaved form changes. */
+    unsavedChanges?: string;
+  };
 }
 
 export interface ResolvedConfig {
@@ -36,6 +40,7 @@ export interface ResolvedConfig {
   requests: { timeoutMs: number; credentials: RequestCredentials };
   csrf: CsrfConfig;
   feedback: { indicator: string | undefined };
+  messages: { unsavedChanges: string };
 }
 
 const DEFAULTS: ResolvedConfig = {
@@ -48,8 +53,10 @@ const DEFAULTS: ResolvedConfig = {
     headerName: 'X-CSRFToken',
   },
   feedback: { indicator: undefined },
+  messages: {
+    unsavedChanges: 'Discard unsaved changes?',
+  },
 };
-
 const STRATEGIES: ReadonlySet<CsrfStrategy> = new Set(['meta', 'cookie', 'none']);
 const CREDENTIALS: ReadonlySet<RequestCredentials> = new Set(['omit', 'same-origin', 'include']);
 
@@ -66,12 +73,14 @@ export function resolveConfig(user?: FluxConfig): ResolvedConfig {
     requests: { ...DEFAULTS.requests },
     csrf: { ...DEFAULTS.csrf },
     feedback: { ...DEFAULTS.feedback },
+    messages: { ...DEFAULTS.messages },
   };
 
   mergeHtmx(out, user?.htmx);
   mergeRequests(out, user?.requests);
   mergeCsrf(out, user?.csrf);
   mergeFeedback(out, user?.feedback);
+  mergeMessages(out, user?.messages);
 
   return out;
 }
@@ -120,5 +129,12 @@ function mergeCsrf(out: ResolvedConfig, csrf?: Partial<CsrfConfig>): void {
 function mergeFeedback(out: ResolvedConfig, feedback?: FluxConfig['feedback']): void {
   if (feedback?.indicator !== undefined) {
     out.feedback.indicator = String(feedback.indicator);
+  }
+}
+
+function mergeMessages(out: ResolvedConfig, messages?: FluxConfig['messages']): void {
+  if (!messages) return;
+  if (typeof messages.unsavedChanges === 'string') {
+    out.messages.unsavedChanges = messages.unsavedChanges;
   }
 }

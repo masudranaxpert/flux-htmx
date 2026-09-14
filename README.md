@@ -258,7 +258,7 @@ close it. The trigger's `aria-expanded` stays in sync.
 `fx-modal` and `fx-drawer` close on backdrop click and on ++escape++. Focus trap and restoration are built in.
 
 - **Dismissal control (`closedby`)**: Honors standard `closedby="any"` (backdrop + Escape), `closedby="closerequest"` (Escape dismisses, backdrop blocked — ideal for forms), and `closedby="none"` (no light-dismiss).
-- **Unsaved changes guard**: If the modal contains a dirty form (`form[fx-dirty][data-dirty]`), backdrop click prompts `"Discard unsaved changes?"` before dismissing.
+- **Unsaved changes guard**: If the modal contains a dirty form (`form[fx-dirty][data-dirty]`), backdrop click prompts `"Discard unsaved changes?"` before dismissing. Override message via `fx-dirty-message="Custom text"` or global `messages.unsavedChanges` config.
 - **Legacy div pattern**: The old div-based pattern (`fx-show` + `fx-hide-outside` + `fx-hide-escape`) still works when `<dialog>` cannot be used.
 - **CSS requirement:** The visibility layer drives one `.hidden` class. Load `flux.css` (which defines `.hidden { display: none !important; }`) or include it in your stylesheet.
 

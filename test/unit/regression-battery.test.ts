@@ -249,6 +249,134 @@ describe('regression battery (past-release bugs)', () => {
     confirmSpy.mockRestore();
   });
 
+  it('modal: custom fx-dirty-message attribute and config messages are honored on backdrop dismiss', () => {
+    Flux.configure({ messages: { unsavedChanges: 'Global unsaved prompt' } });
+    document.body.innerHTML = `
+      <dialog id="m-attr" fx-modal fx-dirty-message="Local modal prompt" open>
+        <form fx-dirty data-dirty="true"><input name="x" /></form>
+      </dialog>
+      <dialog id="m-global" fx-modal open>
+        <form fx-dirty data-dirty="true"><input name="y" /></form>
+      </dialog>
+    `;
+    const mAttr = document.getElementById('m-attr') as HTMLDialogElement;
+    const mGlobal = document.getElementById('m-global') as HTMLDialogElement;
+    const fakeRect = () =>
+      ({
+        left: 100,
+        top: 100,
+        right: 400,
+        bottom: 300,
+        width: 300,
+        height: 200,
+        x: 100,
+        y: 100,
+      }) as DOMRect;
+    mAttr.getBoundingClientRect = fakeRect;
+    mGlobal.getBoundingClientRect = fakeRect;
+
+    const confirmSpy = vi.spyOn(window, 'confirm');
+
+    // 1. Attribute override
+    confirmSpy.mockReturnValueOnce(false);
+    mAttr.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, detail: 1, clientX: 5, clientY: 5 }),
+    );
+    expect(confirmSpy).toHaveBeenCalledWith('Local modal prompt');
+
+    // 2. Global config message
+    confirmSpy.mockReturnValueOnce(false);
+    mGlobal.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, detail: 1, clientX: 5, clientY: 5 }),
+    );
+    expect(confirmSpy).toHaveBeenCalledWith('Global unsaved prompt');
+
+    confirmSpy.mockRestore();
+  });
+
+  it('widgets: onGuardedRequest allows submitting dirty form itself, but prompts on navigation away', () => {
+    Flux.configure();
+    document.body.innerHTML = `
+      <form id="df" fx-dirty data-dirty="true" action="/save" method="post">
+        <button type="submit" id="submit-btn">Save</button>
+        <a href="/dashboard" id="cancel-link">Cancel and leave</a>
+      </form>
+      <button id="other-btn" hx-get="/other">Other</button>
+    `;
+    const form = document.getElementById('df')!;
+    const submitBtn = document.getElementById('submit-btn')!;
+    const cancelLink = document.getElementById('cancel-link')!;
+    const otherBtn = document.getElementById('other-btn')!;
+
+    const confirmSpy = vi.spyOn(window, 'confirm');
+
+    // A. Submitting the dirty form directly via submit button -> NO confirm prompt
+    submitBtn.dispatchEvent(
+      new CustomEvent('htmx:before:request', { bubbles: true, detail: htmx4(submitBtn) }),
+    );
+    expect(confirmSpy).not.toHaveBeenCalled();
+
+    // B. Submitting the form element itself -> NO confirm prompt
+    form.dispatchEvent(
+      new CustomEvent('htmx:before:request', { bubbles: true, detail: htmx4(form) }),
+    );
+    expect(confirmSpy).not.toHaveBeenCalled();
+
+    // C. Navigating away via boosted link inside the form -> prompts with default message
+    confirmSpy.mockReturnValueOnce(false);
+    const leaveEvt = new CustomEvent('htmx:before:request', {
+      cancelable: true,
+      bubbles: true,
+      detail: htmx4(cancelLink),
+    });
+    cancelLink.dispatchEvent(leaveEvt);
+    expect(confirmSpy).toHaveBeenCalledWith('Discard unsaved changes?');
+    expect(leaveEvt.defaultPrevented).toBe(true);
+
+    // D. Custom fx-dirty-message on the form is honored when navigating away
+    form.setAttribute('fx-dirty-message', 'Custom leave prompt');
+    confirmSpy.mockReturnValueOnce(true);
+    const otherEvt = new CustomEvent('htmx:before:request', {
+      cancelable: true,
+      bubbles: true,
+      detail: htmx4(otherBtn),
+    });
+    otherBtn.dispatchEvent(otherEvt);
+    expect(confirmSpy).toHaveBeenCalledWith('Custom leave prompt');
+    expect(otherEvt.defaultPrevented).toBe(false);
+
+    confirmSpy.mockRestore();
+  });
+
+  it('core dirty tracking: form[fx-dirty] tracks input changes in core without full bundle', () => {
+    Flux.configure();
+    document.body.innerHTML = `
+      <form id="test-dirty-core" fx-dirty>
+        <input name="username" value="initial" />
+      </form>
+    `;
+    const form = document.getElementById('test-dirty-core')!;
+    // HTMX swaps dispatch htmx:after:settle to record original values
+    document.dispatchEvent(new CustomEvent('htmx:after:settle', { detail: { el: form } }));
+
+    const input = form.querySelector('input')!;
+    expect(form.hasAttribute('data-dirty')).toBe(false);
+
+    // Change input value
+    input.value = 'mutated';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(input.getAttribute('data-dirty')).toBe('true');
+    expect(form.getAttribute('data-dirty')).toBe('true');
+
+    // Restore original value
+    input.value = 'initial';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(input.hasAttribute('data-dirty')).toBe(false);
+    expect(form.hasAttribute('data-dirty')).toBe(false);
+  });
+
   it('persist: repeated installs leave one listener, not four', () => {
     installPersist();
     installPersist();

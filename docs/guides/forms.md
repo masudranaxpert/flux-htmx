@@ -90,6 +90,11 @@ Inputs get `data-dirty="true"` when their value differs from the initial one; th
 form gets `data-dirty` when any input is dirty; the submit button stays disabled
 until the form is dirty (or `fx-disable-clean` re-disables the clean state).
 
+Unsaved changes automatically warn on window close/refresh (`beforeunload`), on
+htmx-boosted navigation away from the dirty form, and when dismissing a modal
+containing the form. Configure the warning message globally or override it on the
+form with `fx-dirty-message="You have unsaved changes in this form."`.
+
 ## Autosave — fx-autosave
 
 ```html

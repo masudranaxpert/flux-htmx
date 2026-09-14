@@ -2,7 +2,7 @@
 // upload progress surfacing. Pure event delegation + one shared observer/interval.
 
 import { getRequestContext } from './events.js';
-
+import { runtimeConfig } from './runtime.js';
 const LOG_CAP_DEFAULT = 1000;
 
 function targetOf(el: Element, selector: string | null): HTMLElement | null {
@@ -174,7 +174,25 @@ function onGuardedRequest(evt: Event): void {
   // htmx-boosted navigation away with unsaved forms (htmx 4 shape via context)
   if (!hasUnsavedForms()) return;
   const source = getRequestContext(evt).source;
-  if (source && !source.closest('form[fx-dirty]') && !confirm('Leave without saving changes?')) {
+  if (!source) return;
+
+  const submittingDirtyForm =
+    source instanceof HTMLFormElement && source.matches('form[fx-dirty][data-dirty="true"]');
+  const isSubmitBtn =
+    (source.tagName === 'BUTTON' || source.tagName === 'INPUT') &&
+    (source as HTMLButtonElement).type === 'submit';
+  const submittingDirtyFormViaButton =
+    isSubmitBtn && source.closest('form[fx-dirty][data-dirty="true"]') !== null;
+
+  // Submitting the dirty form itself is allowed without prompt
+  if (submittingDirtyForm || submittingDirtyFormViaButton) return;
+
+  const dirtyForm = document.querySelector('form[fx-dirty][data-dirty="true"]');
+  const msg =
+    dirtyForm?.getAttribute('fx-dirty-message') ??
+    runtimeConfig()?.messages?.unsavedChanges ??
+    'Leave without saving changes?';
+  if (!confirm(msg)) {
     evt.preventDefault();
   }
 }
