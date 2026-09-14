@@ -1383,17 +1383,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#upload-progress-uploadplugin" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Upload progress — uploadPlugin
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#optimistic-ui-optimisticplugin" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2122,17 +2111,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#upload-progress-uploadplugin" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Upload progress — uploadPlugin
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#optimistic-ui-optimisticplugin" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2195,26 +2173,17 @@ and flushed automatically when connectivity returns.</p>
 custom headers, target/swap metadata, expiry, or sensitive-field filtering. Do not
 use it for sensitive or file-bearing requests.</p>
 </div>
-<h2 id="upload-progress-uploadplugin">Upload progress — uploadPlugin<a class="headerlink" href="#upload-progress-uploadplugin" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">uploadPlugin</span><span class="p">);</span>
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">&lt;</span><span class="nt">form</span> <span class="na">fx-submit</span><span class="o">=</span><span class="s">"/upload"</span> <span class="na">hx-encoding</span><span class="o">=</span><span class="s">"multipart/form-data"</span><span class="p">&gt;</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>  <span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">"file"</span> <span class="na">name</span><span class="o">=</span><span class="s">"file"</span> <span class="p">/&gt;</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>  <span class="p">&lt;</span><span class="nt">progress</span> <span class="na">class</span><span class="o">=</span><span class="s">"htmx-indicator"</span> <span class="na">max</span><span class="o">=</span><span class="s">"100"</span><span class="p">&gt;&lt;/</span><span class="nt">progress</span><span class="p">&gt;</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
-</code></pre></div>
-<p>Wires <code>htmx:xhr:progress</code> to a <code>&lt;progress&gt;</code> indicator for file uploads.</p>
 <h2 id="optimistic-ui-optimisticplugin">Optimistic UI — optimisticPlugin<a class="headerlink" href="#optimistic-ui-optimisticplugin" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">optimisticPlugin</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nx">Flux</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">optimisticPlugin</span><span class="p">);</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">&lt;</span><span class="nt">button</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>  <span class="na">fx-post</span><span class="o">=</span><span class="s">"/like"</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>  <span class="na">fx-optimistic-add-class</span><span class="o">=</span><span class="s">"liked"</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>  <span class="na">hx-target</span><span class="o">=</span><span class="s">"closest button"</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>  <span class="na">fx-optimistic-remove</span><span class="o">=</span><span class="s">"closest tr"</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="p">&gt;</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>  Like
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">&lt;</span><span class="nt">button</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>  <span class="na">fx-post</span><span class="o">=</span><span class="s">"/like"</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>  <span class="na">fx-optimistic-add-class</span><span class="o">=</span><span class="s">"liked"</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>  <span class="na">hx-target</span><span class="o">=</span><span class="s">"closest button"</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>  <span class="na">fx-optimistic-remove</span><span class="o">=</span><span class="s">"closest tr"</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="p">&gt;</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>  Like
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
 </code></pre></div>
 <p>Applies the visual change <strong>immediately</strong> on click and reconciles with the server's
 response. On failure, the change <strong>rolls back by default</strong> — the element is restored

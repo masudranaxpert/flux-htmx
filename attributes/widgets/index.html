@@ -993,17 +993,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#upload-progress" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Upload progress
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#unsaved-changes-guard" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2188,17 +2177,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#upload-progress" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Upload progress
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#unsaved-changes-guard" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2265,17 +2243,8 @@ unavailable.</p>
 </code></pre></div>
 <p>Modifiers: <code>ctrl</code> (or <code>cmd</code>/<code>mod</code>), <code>shift</code>, <code>alt</code>. Matching key <strong>clicks</strong> the
 element — composing with everything a click can do.</p>
-<h2 id="upload-progress">Upload progress<a class="headerlink" href="#upload-progress" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">&lt;</span><span class="nt">form</span> <span class="na">fx-submit</span><span class="o">=</span><span class="s">"/upload"</span> <span class="na">hx-encoding</span><span class="o">=</span><span class="s">"multipart/form-data"</span><span class="p">&gt;</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>  <span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">"file"</span> <span class="na">name</span><span class="o">=</span><span class="s">"file"</span> <span class="p">/&gt;</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>  <span class="p">&lt;</span><span class="nt">progress</span> <span class="na">max</span><span class="o">=</span><span class="s">"100"</span><span class="p">&gt;&lt;/</span><span class="nt">progress</span><span class="p">&gt;</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
-</code></pre></div>
-<p>Uses XHR upload progress (fetch cannot report uploads). The form gets
-<code>data-flux-progress="42"</code> during upload (styled however you like) and any <code>&lt;progress&gt;</code>
-inside the form fills automatically.</p>
 <h2 id="unsaved-changes-guard">Unsaved-changes guard<a class="headerlink" href="#unsaved-changes-guard" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">&lt;</span><span class="nt">form</span> <span class="na">fx-dirty</span> <span class="na">fx-submit</span><span class="o">=</span><span class="s">"/config"</span><span class="p">&gt;</span>…<span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">&lt;</span><span class="nt">form</span> <span class="na">fx-dirty</span> <span class="na">fx-submit</span><span class="o">=</span><span class="s">"/config"</span><span class="p">&gt;</span>…<span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
 </code></pre></div>
 <p>When a dirty form has unsaved edits: <code>beforeunload</code> warns on tab close/refresh, and
 htmx-boosted navigation away from the form asks for confirmation.</p>
