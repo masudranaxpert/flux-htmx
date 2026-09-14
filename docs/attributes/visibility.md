@@ -75,6 +75,44 @@ the same backdrop-dismiss behavior and represents slide-over side panels.
 A `fx-open` target must be a `<dialog>` or declare the `popover` attribute; anything
 else logs a warning instead of throwing.
 
+### Dismissal Control (`closedby`)
+
+Flux embraces the web standard `closedby` attribute (Chrome 134+, Firefox 137+, Safari 18.2+):
+
+```html
+<!-- Non-destructive modal / image preview: backdrop + Escape dismisses -->
+<dialog id="preview" fx-modal closedby="any">...</dialog>
+
+<!-- Form with inputs: Escape dismisses, backdrop click does NOT dismiss -->
+<dialog id="edit-form" fx-modal closedby="closerequest">...</dialog>
+
+<!-- Destructive action / mandatory choice: must click explicit button -->
+<dialog id="delete-confirm" fx-modal closedby="none">...</dialog>
+```
+
+| `closedby` Value | Escape Key  | Backdrop Click | Primary Use Case                                                 |
+| ---------------- | ----------- | -------------- | ---------------------------------------------------------------- |
+| `any`            | Dismisses   | Dismisses      | Image previews, lightweight menus, read-only sheets              |
+| `closerequest`   | Dismisses   | **Blocked**    | Forms with inputs, preventing accidental dismissals on misclicks |
+| `none`           | **Blocked** | **Blocked**    | Critical/destructive confirmations, payments, required choices   |
+
+In browsers supporting native `closedBy`, Flux delegates dismissal to the browser.
+In older browsers, `fx-modal` polyfills `closedby="any"` light-dismiss while strictly honoring `closedby="none"` and `closedby="closerequest"`.
+
+### Automatic Unsaved Changes Protection
+
+If a `<dialog fx-modal>` contains a dirty form (`form[fx-dirty][data-dirty]`), Flux intercepts backdrop dismissal (and native `cancel` events) and prompts:
+`"Discard unsaved changes?"`. If the user cancels the confirmation, the modal remains open and form inputs are preserved.
+
+!!! tip "Escape Key Handling"
+
+    ++escape++ dismissal is handled natively by the `<dialog>` element (which fires the native `cancel` event).
+    Use `closedby="none"` if you need to prevent Escape from closing the dialog.
+
+!!! warning "Avoid `width: 100%; height: 100%` on dialogs"
+
+    If a `<dialog>` is styled to cover 100% of the viewport width and height, backdrop clicks cannot land outside the element's bounding rectangle in fallback environments. Use `max-width`, `max-height`, or centered padding instead.
+
 ## Dismissable overlays (legacy div pattern)
 
 ```html

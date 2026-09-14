@@ -48,6 +48,17 @@ export function installOpenController(): () => void {
       const dialog = targetEl as HTMLDialogElement;
       const me = evt as MouseEvent;
       if (me.detail === 0) return; // keyboard/synthetic activation: (0,0) is not "outside"
+
+      // Respect standard closedby attribute (Chrome 134+, Firefox 137+, Safari 18.2+):
+      // - "none": no backdrop or Escape dismissal
+      // - "closerequest": Escape dismisses, backdrop does NOT
+      // - "any": light-dismiss on both Escape and backdrop (native handles it if supported)
+      const supportsClosedBy =
+        typeof HTMLDialogElement !== 'undefined' && 'closedBy' in HTMLDialogElement.prototype;
+      const declaredClosedBy = dialog.getAttribute('closedby');
+      if (declaredClosedBy === 'none' || declaredClosedBy === 'closerequest') return;
+      if (declaredClosedBy === 'any' && supportsClosedBy) return;
+
       const rect = dialog.getBoundingClientRect();
       const inside =
         rect.top <= me.clientY &&
@@ -55,6 +66,9 @@ export function installOpenController(): () => void {
         rect.left <= me.clientX &&
         me.clientX <= rect.left + rect.width;
       if (!inside && dialog.open) {
+        if (dialog.querySelector('form[fx-dirty][data-dirty]')) {
+          if (!confirm('Discard unsaved changes?')) return;
+        }
         dialog.close();
       }
       // backdrop click must not also trigger fx-open beneath it
@@ -75,11 +89,29 @@ export function installOpenController(): () => void {
           }
 
           if (!el.open && typeof el.showModal === 'function') {
+            const supportsClosedBy =
+              typeof HTMLDialogElement !== 'undefined' && 'closedBy' in HTMLDialogElement.prototype;
+            if (
+              supportsClosedBy &&
+              !el.hasAttribute('closedby') &&
+              (el.hasAttribute('fx-modal') || el.hasAttribute('fx-drawer'))
+            ) {
+              el.setAttribute('closedby', 'any');
+            }
             el.showModal();
           }
 
-          // Wire focus restoration on close event
+          // Wire focus restoration and unsaved-changes guard on close/cancel events
           if (!dialogControllers.has(el)) {
+            const onCancel = (e: Event) => {
+              if (el.querySelector('form[fx-dirty][data-dirty]')) {
+                if (!confirm('Discard unsaved changes?')) {
+                  e.preventDefault();
+                }
+              }
+            };
+            el.addEventListener('cancel', onCancel);
+
             const onClose = () => {
               const previousOpener = openers.get(el);
               if (previousOpener && document.body.contains(previousOpener)) {
@@ -90,6 +122,7 @@ export function installOpenController(): () => void {
             el.addEventListener('close', onClose);
 
             const cleanup = () => {
+              el.removeEventListener('cancel', onCancel);
               el.removeEventListener('close', onClose);
               el.removeAttribute('data-flux-close-wired');
               dialogControllers.delete(el);
@@ -100,7 +133,6 @@ export function installOpenController(): () => void {
             activeDialogDisposers.add(cleanup);
             el.setAttribute('data-flux-close-wired', '1');
           }
-
           // Move focus into the dialog for keyboard users.
           const focusable = el.querySelector<HTMLElement>(
             'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',

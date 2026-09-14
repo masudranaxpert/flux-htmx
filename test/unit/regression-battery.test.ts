@@ -171,6 +171,84 @@ describe('regression battery (past-release bugs)', () => {
     expect(dialog.open).toBe(false);
   });
 
+  it('modal: respects closedby="none" and closedby="closerequest" (does not dismiss on backdrop click)', () => {
+    Flux.configure();
+    document.body.innerHTML = `
+      <dialog id="m-none" fx-modal closedby="none" open><p>x</p></dialog>
+      <dialog id="m-req" fx-modal closedby="closerequest" open><p>y</p></dialog>
+    `;
+    const mNone = document.getElementById('m-none') as HTMLDialogElement;
+    const mReq = document.getElementById('m-req') as HTMLDialogElement;
+    const fakeRect = () =>
+      ({
+        left: 100,
+        top: 100,
+        right: 400,
+        bottom: 300,
+        width: 300,
+        height: 200,
+        x: 100,
+        y: 100,
+      }) as DOMRect;
+    mNone.getBoundingClientRect = fakeRect;
+    mReq.getBoundingClientRect = fakeRect;
+
+    // Outside click (clientX: 5, clientY: 5)
+    mNone.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, detail: 1, clientX: 5, clientY: 5 }),
+    );
+    expect(mNone.open).toBe(true); // closedby="none" protects it
+
+    mReq.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, detail: 1, clientX: 5, clientY: 5 }),
+    );
+    expect(mReq.open).toBe(true); // closedby="closerequest" protects it (only Escape should close)
+  });
+
+  it('modal: prompts before backdrop dismiss if dialog contains a dirty form', () => {
+    Flux.configure();
+    document.body.innerHTML = `
+      <dialog id="m-dirty" fx-modal open>
+        <form fx-dirty data-dirty="true"><input name="title" /></form>
+      </dialog>
+    `;
+    const dialog = document.getElementById('m-dirty') as HTMLDialogElement;
+    dialog.close = function () {
+      this.open = false;
+      this.removeAttribute('open');
+    };
+    dialog.getBoundingClientRect = () =>
+      ({
+        left: 100,
+        top: 100,
+        right: 400,
+        bottom: 300,
+        width: 300,
+        height: 200,
+        x: 100,
+        y: 100,
+      }) as DOMRect;
+
+    const confirmSpy = vi.spyOn(window, 'confirm');
+
+    // 1. User cancels confirm -> dialog stays open
+    confirmSpy.mockReturnValueOnce(false);
+    dialog.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, detail: 1, clientX: 5, clientY: 5 }),
+    );
+    expect(confirmSpy).toHaveBeenCalledWith('Discard unsaved changes?');
+    expect(dialog.open).toBe(true);
+
+    // 2. User accepts confirm -> dialog closes
+    confirmSpy.mockReturnValueOnce(true);
+    dialog.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, detail: 1, clientX: 5, clientY: 5 }),
+    );
+    expect(dialog.open).toBe(false);
+
+    confirmSpy.mockRestore();
+  });
+
   it('persist: repeated installs leave one listener, not four', () => {
     installPersist();
     installPersist();

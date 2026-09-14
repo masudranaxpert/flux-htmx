@@ -240,7 +240,7 @@ close it. The trigger's `aria-expanded` stays in sync.
 </ul>
 ```
 
-### Modals — canonical path: `<dialog>` + fx-open/fx-close
+### Modals & Drawers — canonical path: `<dialog>` + fx-open/fx-close
 
 ```html
 <button fx-open="#edit">Edit</button>
@@ -249,15 +249,18 @@ close it. The trigger's `aria-expanded` stays in sync.
   <form method="dialog">...</form>
   <button fx-close>Cancel</button>
 </dialog>
+
+<!-- Slide-over drawer panel -->
+<button fx-open="#drawer">Menu</button>
+<dialog id="drawer" fx-drawer>...</dialog>
 ```
 
-`fx-modal` closes the dialog on backdrop click. Focus handling and restoration are
-built in. The old div-based pattern (`fx-show` + `fx-hide-outside` + `fx-hide-escape`)
-still works — treat it as legacy for when you cannot use `<dialog>`.
+`fx-modal` and `fx-drawer` close on backdrop click and on ++escape++. Focus trap and restoration are built in.
 
-**CSS requirement:** the visibility layer drives one `.hidden` class. Without
-Tailwind, load `flux.css` (or add `.hidden{display:none}` yourself) — `flux.css`
-defines it for you.
+- **Dismissal control (`closedby`)**: Honors standard `closedby="any"` (backdrop + Escape), `closedby="closerequest"` (Escape dismisses, backdrop blocked — ideal for forms), and `closedby="none"` (no light-dismiss).
+- **Unsaved changes guard**: If the modal contains a dirty form (`form[fx-dirty][data-dirty]`), backdrop click prompts `"Discard unsaved changes?"` before dismissing.
+- **Legacy div pattern**: The old div-based pattern (`fx-show` + `fx-hide-outside` + `fx-hide-escape`) still works when `<dialog>` cannot be used.
+- **CSS requirement:** The visibility layer drives one `.hidden` class. Load `flux.css` (which defines `.hidden { display: none !important; }`) or include it in your stylesheet.
 
 ### Inline DOM helpers (Surreal-style)
 
