@@ -502,6 +502,43 @@ describe('regression battery (past-release bugs)', () => {
     expect(input.hasAttribute('data-dirty')).toBe(false);
   });
 
+  it('dirty tracking: missing ctx.request fails safe by keeping form dirty', () => {
+    Flux.configure();
+    document.body.innerHTML = `
+      <form id="failsafe-form" fx-dirty>
+        <input name="test" value="clean" />
+      </form>
+    `;
+    const form = document.getElementById('failsafe-form')!;
+    const input = form.querySelector('input')!;
+    document.dispatchEvent(
+      new CustomEvent('htmx:after:settle', { detail: { ctx: { target: form } } }),
+    );
+
+    input.value = 'dirty';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(form.getAttribute('data-dirty')).toBe('true');
+
+    // Successful response, but ctx.request is missing (synthetic / unexpected event)
+    form.dispatchEvent(
+      new CustomEvent('htmx:after:request', {
+        bubbles: true,
+        detail: {
+          ctx: {
+            sourceElement: form,
+            successful: true,
+            status: 200,
+            // request is omitted
+          },
+        },
+      }),
+    );
+
+    // Fail-safe: form remains dirty so unsaved user edits are never accidentally dropped
+    expect(form.getAttribute('data-dirty')).toBe('true');
+    expect(input.getAttribute('data-dirty')).toBe('true');
+  });
+
   it('dirty tracking: successful submit resets dirty state so closing modal does not false-prompt', () => {
     Flux.configure();
     document.body.innerHTML = `
