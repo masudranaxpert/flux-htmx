@@ -5,6 +5,7 @@ import { queryMany } from './selectors.js';
 import { cache } from '../cache/instance.js';
 import { log } from './logger.js';
 import { showBuiltInToast } from './feedback.js';
+import { resetDirtyState } from './dirty.js';
 
 export type ActionHandler = (
   targetArg: string,
@@ -91,7 +92,10 @@ registerAction('open', (targetArg, source) => {
 registerAction('reset', (targetArg, source) => {
   const targets = targetArg ? queryMany(targetArg, source.ownerDocument) : [source.closest('form')];
   targets.forEach((t) => {
-    if (t instanceof HTMLFormElement) t.reset();
+    if (t instanceof HTMLFormElement) {
+      t.reset();
+      resetDirtyState(t);
+    }
   });
 });
 

@@ -97,8 +97,17 @@ export function installDirtyTracking(): () => void {
   };
   document.addEventListener('htmx:after:settle', onSettle);
 
+  const onAfterRequest = (e: Event) => {
+    const ctx = getRequestContext(e);
+    if (!ctx.successful) return;
+    const form = ctx.source?.closest?.('form[fx-dirty]');
+    if (form) resetDirtyState(form);
+  };
+  document.addEventListener('htmx:after:request', onAfterRequest);
+
   return () => {
     document.removeEventListener('input', handleFormInput);
     document.removeEventListener('htmx:after:settle', onSettle);
+    document.removeEventListener('htmx:after:request', onAfterRequest);
   };
 }

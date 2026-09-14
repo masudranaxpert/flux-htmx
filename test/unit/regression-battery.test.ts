@@ -5,7 +5,7 @@ import { installDatagrid } from '../../src/core/datagrid.js';
 import { installPollVisibilityPause } from '../../src/presets/poll.js';
 import { setGeneratedAttribute } from '../../src/core/generated-attributes.js';
 import { installPersist } from '../../src/plugins/persist.js';
-
+import { executeAction } from '../../src/core/actions.js';
 const htmx4 = (source: Element, extra: Record<string, unknown> = {}) => ({
   ctx: { sourceElement: source, ...extra },
 });
@@ -410,6 +410,100 @@ describe('regression battery (past-release bugs)', () => {
     input.value = 'clean';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     expect(form.hasAttribute('data-dirty')).toBe(false);
+  });
+
+  it('dirty tracking: successful submit resets dirty state so closing modal does not false-prompt', () => {
+    Flux.configure();
+    document.body.innerHTML = `
+      <dialog id="m-save" fx-modal open>
+        <form id="save-form" fx-dirty>
+          <input name="email" value="clean" />
+          <button type="submit">Save</button>
+        </form>
+      </dialog>
+      <div id="table-target">rows</div>
+    `;
+    const dialog = document.getElementById('m-save') as HTMLDialogElement;
+    dialog.close = function () {
+      this.open = false;
+      this.removeAttribute('open');
+    };
+    dialog.getBoundingClientRect = () =>
+      ({
+        left: 100,
+        top: 100,
+        right: 400,
+        bottom: 300,
+        width: 300,
+        height: 200,
+        x: 100,
+        y: 100,
+      }) as DOMRect;
+
+    const form = document.getElementById('save-form')!;
+    const input = form.querySelector('input')!;
+
+    // Initial settle
+    document.dispatchEvent(
+      new CustomEvent('htmx:after:settle', { detail: { ctx: { target: form } } }),
+    );
+
+    // 1. User types into input -> form becomes dirty
+    input.value = 'new-value@example.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(form.getAttribute('data-dirty')).toBe('true');
+
+    // 2. Successful submit (target is table, not the form)
+    form.dispatchEvent(
+      new CustomEvent('htmx:after:request', {
+        bubbles: true,
+        detail: {
+          ctx: {
+            sourceElement: form,
+            target: document.getElementById('table-target'),
+            successful: true,
+          },
+        },
+      }),
+    );
+
+    // Form must NOT be dirty anymore
+    expect(form.hasAttribute('data-dirty')).toBe(false);
+    expect(input.hasAttribute('data-dirty')).toBe(false);
+    expect(input.getAttribute('data-fx-original')).toBe('new-value@example.com');
+
+    // 3. Closing the modal on backdrop click must NOT prompt confirm
+    const confirmSpy = vi.spyOn(window, 'confirm');
+    dialog.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, detail: 1, clientX: 5, clientY: 5 }),
+    );
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(dialog.open).toBe(false);
+    confirmSpy.mockRestore();
+  });
+
+  it('action: reset action resets input values and clears data-dirty', () => {
+    Flux.configure();
+    document.body.innerHTML = `
+      <form id="action-form" fx-dirty>
+        <input name="test" value="initial" />
+      </form>
+    `;
+    const form = document.getElementById('action-form') as HTMLFormElement;
+    const input = form.querySelector('input')!;
+    document.dispatchEvent(
+      new CustomEvent('htmx:after:settle', { detail: { ctx: { target: form } } }),
+    );
+
+    input.value = 'mutated';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(form.getAttribute('data-dirty')).toBe('true');
+
+    executeAction('reset', form);
+
+    expect(input.value).toBe('initial');
+    expect(form.hasAttribute('data-dirty')).toBe(false);
+    expect(input.hasAttribute('data-dirty')).toBe(false);
   });
 
   it('modal: invalid closedby value warns and falls back to standard backdrop dismiss', () => {
