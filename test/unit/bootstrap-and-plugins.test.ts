@@ -7,6 +7,9 @@ import {
   readFluxMetaConfig,
   reportDependencies,
   verifyHtmxVersion,
+  resolveHtmx,
+  resetStartupWarningsForTests,
+  type HtmxGlobal,
 } from '../../src/core/startup.js';
 import { FLUX_VERSION } from '../../src/core/version.js';
 import { registerPreset } from '../../src/presets/index.js';
@@ -654,5 +657,48 @@ describe('plugin teardown contract', () => {
     document.dispatchEvent(new CustomEvent('htmx:after:settle', { detail: { el: box } }));
     expect(restored).toBe(0);
     box.remove();
+  });
+});
+
+describe('resolveHtmx precedence and fallback order', () => {
+  beforeEach(() => resetStartupWarningsForTests());
+
+  it('(a) imported valid with process -> returns imported', () => {
+    const imported = { process: vi.fn() } as unknown as HtmxGlobal;
+    expect(resolveHtmx(imported)).toBe(imported);
+  });
+
+  it('(b) imported invalid (no process) + global exists -> returns global', () => {
+    const globalHtmx = { process: vi.fn() } as unknown as HtmxGlobal;
+    const win = window as unknown as { htmx?: HtmxGlobal };
+    win.htmx = globalHtmx;
+    try {
+      expect(resolveHtmx({} as unknown as HtmxGlobal)).toBe(globalHtmx);
+    } finally {
+      delete win.htmx;
+    }
+  });
+
+  it('(c) neither has process -> returns undefined or fallback', () => {
+    expect(resolveHtmx(null)).toBeUndefined();
+    expect(resolveHtmx(undefined)).toBeUndefined();
+  });
+
+  it('(d) warns once if both valid imported and global exist and differ', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const imported = { process: vi.fn() } as unknown as HtmxGlobal;
+    const globalHtmx = { process: vi.fn() } as unknown as HtmxGlobal;
+    const win = window as unknown as { htmx?: HtmxGlobal };
+    win.htmx = globalHtmx;
+    try {
+      expect(resolveHtmx(imported)).toBe(imported);
+      expect(warn).toHaveBeenCalledTimes(1);
+      // second call should not warn again
+      resolveHtmx(imported);
+      expect(warn).toHaveBeenCalledTimes(1);
+    } finally {
+      delete win.htmx;
+      warn.mockRestore();
+    }
   });
 });

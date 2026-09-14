@@ -120,18 +120,25 @@ describe('regression battery (past-release bugs)', () => {
   it('fx-open: non-dialog, non-popover target warns instead of throwing', () => {
     Flux.configure();
     const originalShowPopover = HTMLElement.prototype.showPopover;
-    HTMLElement.prototype.showPopover = function () {
+    const showPopoverSpy = vi.fn(function (this: HTMLElement) {
       if (!this.hasAttribute('popover')) {
         throw new DOMException('bad', 'InvalidStateError');
       }
-    };
+    });
+    HTMLElement.prototype.showPopover = showPopoverSpy;
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
     try {
       document.body.innerHTML = `<button fx-open="#plain">Open</button><div id="plain"></div>`;
-      expect(() =>
-        document.querySelector('button')!.dispatchEvent(new MouseEvent('click', { bubbles: true })),
-      ).not.toThrow();
+      document.querySelector('button')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      expect(showPopoverSpy).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[flux]'),
+        expect.stringContaining('target must be a <dialog> or declare the popover attribute'),
+      );
     } finally {
       HTMLElement.prototype.showPopover = originalShowPopover;
+      warnSpy.mockRestore();
     }
   });
 

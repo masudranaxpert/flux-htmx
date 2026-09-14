@@ -23,6 +23,12 @@ export function verifyHtmxVersion(htmx: HtmxGlobal | undefined): void {
   }
 }
 
+let dualInstanceWarned = false;
+
+export function resetStartupWarningsForTests(): void {
+  dualInstanceWarned = false;
+}
+
 /**
  * Resolves the active HTMX instance: the bundled import first, then the script-tag
  * global (set by htmx itself or by the full Flux bundle).
@@ -33,7 +39,13 @@ export function resolveHtmx(imported?: HtmxGlobal | null): HtmxGlobal | undefine
     (typeof window !== 'undefined' ? (window as unknown as { htmx?: HtmxGlobal }).htmx : undefined);
 
   if (imported && typeof (imported as unknown as { process?: unknown }).process === 'function') {
-    if (fromGlobal && typeof fromGlobal === 'object' && fromGlobal !== imported) {
+    if (
+      fromGlobal &&
+      typeof fromGlobal === 'object' &&
+      fromGlobal !== imported &&
+      !dualInstanceWarned
+    ) {
+      dualInstanceWarned = true;
       log.warn('[flux] Both bundled and global HTMX instances detected; using bundled instance.');
     }
     return imported;
