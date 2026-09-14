@@ -45,7 +45,6 @@ FluxNet.offline.clear();
     custom headers, target/swap metadata, expiry, or sensitive-field filtering. Do not
     use it for sensitive or file-bearing requests.
 
-
 ## Optimistic UI — optimisticPlugin
 
 ```js

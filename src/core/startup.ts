@@ -28,14 +28,16 @@ export function verifyHtmxVersion(htmx: HtmxGlobal | undefined): void {
  * global (set by htmx itself or by the full Flux bundle).
  */
 export function resolveHtmx(imported?: HtmxGlobal | null): HtmxGlobal | undefined {
-  if (imported && typeof (imported as unknown as { process?: unknown }).process === 'function') {
-    return imported;
-  }
   const fromGlobal =
     globalThis.htmx ??
-    (typeof window !== 'undefined'
-      ? (window as unknown as { htmx?: HtmxGlobal }).htmx
-      : undefined);
+    (typeof window !== 'undefined' ? (window as unknown as { htmx?: HtmxGlobal }).htmx : undefined);
+
+  if (imported && typeof (imported as unknown as { process?: unknown }).process === 'function') {
+    if (fromGlobal && typeof fromGlobal === 'object' && fromGlobal !== imported) {
+      log.warn('[flux] Both bundled and global HTMX instances detected; using bundled instance.');
+    }
+    return imported;
+  }
   return fromGlobal && typeof fromGlobal === 'object'
     ? (fromGlobal as HtmxGlobal)
     : (imported ?? undefined);

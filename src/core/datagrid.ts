@@ -69,9 +69,7 @@ function onSortClick(evt: Event): void {
 /** Keep checked `input[fx-select]` values flowing into bulk-action requests. */
 function onBulkConfigRequest(evt: Event): void {
   const ctx = getRequestContext(evt);
-  const request = ctx.request as
-    | { parameters?: Record<string, unknown> }
-    | undefined;
+  const request = ctx.request as { parameters?: Record<string, unknown> } | undefined;
   const btn = ctx.source?.closest?.('[fx-include-selection]') as HTMLElement | null;
   if (!btn || !request) return;
   const container = queryOne(btn.getAttribute('fx-include-selection') ?? '');

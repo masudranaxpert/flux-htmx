@@ -55,7 +55,6 @@ unavailable.
 Modifiers: `ctrl` (or `cmd`/`mod`), `shift`, `alt`. Matching key **clicks** the
 element — composing with everything a click can do.
 
-
 ## Unsaved-changes guard
 
 ```html

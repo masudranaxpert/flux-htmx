@@ -55,7 +55,12 @@ export function installOpenController(): () => void {
         rect.left <= me.clientX &&
         me.clientX <= rect.left + rect.width;
       if (!inside && dialog.open) {
-        dialog.close();
+        if (typeof dialog.close === 'function') {
+          dialog.close();
+        } else {
+          dialog.removeAttribute('open');
+          dialog.open = false;
+        }
       }
       // backdrop click must not also trigger fx-open beneath it
       if (!inside) return;

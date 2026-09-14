@@ -17,6 +17,9 @@ afterEach(() => {
 
 describe('regression battery (past-release bugs)', () => {
   it('poll: hidden -> visible cycle preserves hx-get', () => {
+    const htmxMock = { process: vi.fn(), ajax: vi.fn() };
+    const win = window as unknown as { htmx?: unknown };
+    win.htmx = htmxMock;
     const teardown = installPollVisibilityPause();
     document.body.innerHTML = '<div data-flux-preset="poll"></div>';
     const el = document.querySelector('[data-flux-preset="poll"]')!;
@@ -33,6 +36,7 @@ describe('regression battery (past-release bugs)', () => {
     expect(el.getAttribute('hx-get')).toBe('/status');
     expect(el.getAttribute('hx-trigger')).toBe('every 5s');
     teardown();
+    delete win.htmx;
   });
 
   it('fx-ago: ISO in textContent survives first render', () => {
@@ -62,7 +66,9 @@ describe('regression battery (past-release bugs)', () => {
     const pushes = vi.spyOn(history, 'pushState');
     for (let i = 0; i < 5; i++) {
       (form.querySelector('input') as HTMLInputElement).value = `n${i}`;
-      form.dispatchEvent(new CustomEvent('htmx:after:request', { bubbles: true, detail: htmx4(form) }));
+      form.dispatchEvent(
+        new CustomEvent('htmx:after:request', { bubbles: true, detail: htmx4(form) }),
+      );
     }
     expect(pushes).toHaveBeenCalledTimes(1);
     pushes.mockRestore();
@@ -82,7 +88,9 @@ describe('regression battery (past-release bugs)', () => {
     const fire = (headers: Record<string, string>) =>
       form.dispatchEvent(
         new CustomEvent('htmx:config:request', {
-          detail: { ctx: { sourceElement: form, request: { method: 'POST', action: '/go', headers } } },
+          detail: {
+            ctx: { sourceElement: form, request: { method: 'POST', action: '/go', headers } },
+          },
           bubbles: true,
         }),
       );
@@ -103,26 +111,57 @@ describe('regression battery (past-release bugs)', () => {
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', bubbles: true }));
     expect(spy).not.toHaveBeenCalled();
     // outside inputs it fires
-    document.getElementById('s')!.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'k', bubbles: true }),
-    );
+    document
+      .getElementById('s')!
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'k', bubbles: true }));
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
   it('fx-open: non-dialog, non-popover target warns instead of throwing', () => {
     Flux.configure();
-    document.body.innerHTML = `<button fx-open="#plain">Open</button><div id="plain"></div>`;
-    expect(() =>
-      document.querySelector('button')!.dispatchEvent(new MouseEvent('click', { bubbles: true })),
-    ).not.toThrow();
+    const originalShowPopover = HTMLElement.prototype.showPopover;
+    HTMLElement.prototype.showPopover = function () {
+      if (!this.hasAttribute('popover')) {
+        throw new DOMException('bad', 'InvalidStateError');
+      }
+    };
+    try {
+      document.body.innerHTML = `<button fx-open="#plain">Open</button><div id="plain"></div>`;
+      expect(() =>
+        document.querySelector('button')!.dispatchEvent(new MouseEvent('click', { bubbles: true })),
+      ).not.toThrow();
+    } finally {
+      HTMLElement.prototype.showPopover = originalShowPopover;
+    }
   });
 
   it('modal: detail===0 click does not close the dialog', () => {
     Flux.configure();
     document.body.innerHTML = `<dialog id="m" fx-modal open><p>x</p></dialog>`;
     const dialog = document.getElementById('m') as HTMLDialogElement;
-    dialog.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 0 }));
+    dialog.close = function () {
+      this.open = false;
+      this.removeAttribute('open');
+    };
+    dialog.getBoundingClientRect = () =>
+      ({
+        left: 100,
+        top: 100,
+        right: 400,
+        bottom: 300,
+        width: 300,
+        height: 200,
+        x: 100,
+        y: 100,
+      }) as DOMRect;
+    dialog.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, detail: 0, clientX: 0, clientY: 0 }),
+    );
     expect(dialog.open).toBe(true);
+    dialog.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, detail: 1, clientX: 5, clientY: 5 }),
+    );
+    expect(dialog.open).toBe(false);
   });
 
   it('persist: repeated installs leave one listener, not four', () => {
@@ -138,11 +177,15 @@ describe('regression battery (past-release bugs)', () => {
     expect(restored).toBe(1);
   });
 
-  it('fx-delete + fx-remove: the button is still in the DOM after 1s', async () => {
-    Flux.configure();
-    document.body.innerHTML = `<button fx-remove="3s">Toast</button>`;
-    const btn = document.querySelector('button')!;
-    await new Promise((r) => setTimeout(r, 1100));
-    expect(btn.isConnected).toBe(true);
+  it('fx-delete + fx-remove: button with selector remains in DOM (NaN does not remove)', () => {
+    vi.useFakeTimers();
+    try {
+      document.body.innerHTML = `<ul><li><button fx-delete="/i/1" fx-remove="closest li">del</button></li></ul>`;
+      Flux.process(document.body);
+      vi.advanceTimersByTime(700);
+      expect(document.querySelector('button')?.isConnected).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

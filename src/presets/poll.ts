@@ -83,6 +83,7 @@ export function installPollVisibilityPause(): () => void {
 
   const onVisibility = () => {
     const htmxInstance = api();
+    if (!htmxInstance?.process) return;
     const hidden = document.visibilityState === 'hidden';
     for (const el of document.querySelectorAll<HTMLElement>('[data-flux-preset="poll"]')) {
       const trigger = el.getAttribute('hx-trigger') ?? '';
@@ -104,6 +105,6 @@ export function installPollVisibilityPause(): () => void {
     }
   };
 
-    document.addEventListener('visibilitychange', onVisibility);
+  document.addEventListener('visibilitychange', onVisibility);
   return () => document.removeEventListener('visibilitychange', onVisibility);
 }

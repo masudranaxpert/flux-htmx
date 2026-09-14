@@ -361,7 +361,6 @@ inputs `aria-invalid`, focuses the first invalid field, clears on next edit.
 
 <!-- Eval-free keyboard shortcuts (triggers a click) -->
 <button fx-shortcut="ctrl+k">Command palette</button>
-
 ```
 
 Plus an **unsaved-changes guard**: a `form[fx-dirty]` with pending edits warns on
