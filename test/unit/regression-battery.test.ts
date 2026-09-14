@@ -397,11 +397,9 @@ describe('regression battery (past-release bugs)', () => {
     input.value = 'half typed';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     expect(form.getAttribute('data-dirty')).toBe('true');
-
-    // An unrelated settle occurs (e.g. fx-poll tick, toast, table row swap)
-    const other = document.getElementById('unrelated-target')!;
+    // An unrelated document-wide settle occurs (e.g. fx-poll tick, toast, or unscoped swap)
     document.dispatchEvent(
-      new CustomEvent('htmx:after:settle', { detail: { ctx: { target: other } } }),
+      new CustomEvent('htmx:after:settle', { detail: { ctx: {} }, bubbles: true }),
     );
     // Baseline MUST NOT be rewritten to "half typed"
     expect(input.getAttribute('data-fx-original')).toBe('clean');
@@ -410,6 +408,98 @@ describe('regression battery (past-release bugs)', () => {
     input.value = 'clean';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     expect(form.hasAttribute('data-dirty')).toBe(false);
+  });
+
+  it('dirty tracking: in-form GET request (search / autocomplete) does not reset dirty state', () => {
+    Flux.configure();
+    document.body.innerHTML = `
+      <form id="search-form" fx-dirty>
+        <input name="title" value="clean" />
+        <input name="q" fx-search="/autocomplete" />
+      </form>
+    `;
+    const form = document.getElementById('search-form')!;
+    const titleInput = form.querySelector('[name="title"]') as HTMLInputElement;
+    const searchInput = form.querySelector('[name="q"]') as HTMLInputElement;
+
+    document.dispatchEvent(
+      new CustomEvent('htmx:after:settle', { detail: { ctx: { target: form } } }),
+    );
+
+    // User types into form -> becomes dirty
+    titleInput.value = 'edited';
+    titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(form.getAttribute('data-dirty')).toBe('true');
+
+    // An in-form GET request completes successfully (e.g. autocomplete lookup)
+    form.dispatchEvent(
+      new CustomEvent('htmx:after:request', {
+        bubbles: true,
+        detail: {
+          ctx: {
+            sourceElement: searchInput,
+            successful: true,
+            request: { method: 'GET', action: '/autocomplete' },
+          },
+        },
+      }),
+    );
+
+    // Form MUST REMAIN dirty — read-only in-form requests do not save user edits!
+    expect(form.getAttribute('data-dirty')).toBe('true');
+    expect(titleInput.getAttribute('data-dirty')).toBe('true');
+  });
+
+  it('dirty tracking: 204 No Content resets dirty state, while 422 preserves it', () => {
+    Flux.configure();
+    document.body.innerHTML = `
+      <form id="status-form" fx-dirty>
+        <input name="name" value="clean" />
+      </form>
+    `;
+    const form = document.getElementById('status-form')!;
+    const input = form.querySelector('input')!;
+    document.dispatchEvent(
+      new CustomEvent('htmx:after:settle', { detail: { ctx: { target: form } } }),
+    );
+
+    // Type to make dirty
+    input.value = 'new-name';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(form.getAttribute('data-dirty')).toBe('true');
+
+    // 422 Unprocessable Entity -> failed submit must NOT reset dirty state
+    form.dispatchEvent(
+      new CustomEvent('htmx:after:request', {
+        bubbles: true,
+        detail: {
+          ctx: {
+            sourceElement: form,
+            successful: false,
+            status: 422,
+            request: { method: 'POST', action: '/save' },
+          },
+        },
+      }),
+    );
+    expect(form.getAttribute('data-dirty')).toBe('true');
+
+    // 204 No Content -> successful mutation resets dirty state
+    form.dispatchEvent(
+      new CustomEvent('htmx:after:request', {
+        bubbles: true,
+        detail: {
+          ctx: {
+            sourceElement: form,
+            successful: true,
+            status: 204,
+            request: { method: 'POST', action: '/save' },
+          },
+        },
+      }),
+    );
+    expect(form.hasAttribute('data-dirty')).toBe(false);
+    expect(input.hasAttribute('data-dirty')).toBe(false);
   });
 
   it('dirty tracking: successful submit resets dirty state so closing modal does not false-prompt', () => {
@@ -462,6 +552,7 @@ describe('regression battery (past-release bugs)', () => {
             sourceElement: form,
             target: document.getElementById('table-target'),
             successful: true,
+            request: { method: 'POST', action: '/save' },
           },
         },
       }),

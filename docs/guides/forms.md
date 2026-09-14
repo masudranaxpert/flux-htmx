@@ -95,6 +95,18 @@ htmx-boosted navigation away from the dirty form, and when dismissing a modal
 containing the form. Configure the warning message globally or override it on the
 form with `fx-dirty-message="You have unsaved changes in this form."`.
 
+### Dirty State Lifecycle
+
+- **Becomes dirty:** When any input's value differs from its baseline (the initial value recorded on load/settle).
+- **Becomes clean:**
+  1. On a successful mutating request (`POST`, `PUT`, `PATCH`, `DELETE`) originating from the form.
+  2. When a `reset` action or `form.reset()` is invoked.
+  3. When the form element is removed and re-rendered with fresh HTML from the server.
+- **Does NOT become clean:**
+  - On read-only requests (`GET` / `HEAD`, such as in-form `fx-search` autocompletion or `fx-prefetch`).
+  - On unrelated HTMX settles elsewhere on the page (e.g. `fx-poll` ticks, table updates, toasts).
+  - On failed or rejected form submissions (`4xx` or `5xx` responses).
+
 ## Autosave — fx-autosave
 
 ```html

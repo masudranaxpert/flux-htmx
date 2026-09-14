@@ -100,6 +100,8 @@ export function installDirtyTracking(): () => void {
   const onAfterRequest = (e: Event) => {
     const ctx = getRequestContext(e);
     if (!ctx.successful) return;
+    const method = String(ctx.request?.method ?? 'GET').toUpperCase();
+    if (method === 'GET' || method === 'HEAD') return;
     const form = ctx.source?.closest?.('form[fx-dirty]');
     if (form) resetDirtyState(form);
   };
