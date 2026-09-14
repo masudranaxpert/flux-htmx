@@ -66,7 +66,10 @@ function normalizeInterval(value: string): string {
  */
 export function installPollVisibilityPause(): () => void {
   if (typeof document === 'undefined') return () => {};
-  type Loose = { ajax?: (m: string, u: string, ctx?: unknown) => unknown; process?: (el: Element) => void };
+  type Loose = {
+    ajax?: (m: string, u: string, ctx?: unknown) => unknown;
+    process?: (el: Element) => void;
+  };
   const api = (): Loose | undefined =>
     (window as { htmx?: Loose }).htmx ?? (globalThis as { htmx?: Loose }).htmx;
 
@@ -79,15 +82,17 @@ export function installPollVisibilityPause(): () => void {
       if (hidden) {
         if (trigger) {
           el.dataset.fluxPollTrigger = trigger;
-          el.removeAttribute('hx-trigger');
+          // registry-aware: pause = drop polling trigger AND the verb, so the
+          // element is completely inert (no default-click requests either)
+          removeGeneratedAttribute(el, 'hx-get');
+          removeGeneratedAttribute(el, 'hx-trigger');
           htmx.process(el);
         }
       } else if (el.dataset.fluxPollTrigger) {
-        el.setAttribute('hx-trigger', el.dataset.fluxPollTrigger);
+        setGeneratedAttribute(el, 'hx-get', el.getAttribute('data-flux-poll-url') ?? '');
+        setGeneratedAttribute(el, 'hx-trigger', el.dataset.fluxPollTrigger);
         delete el.dataset.fluxPollTrigger;
         htmx.process(el);
-        const url = el.getAttribute('hx-get');
-        if (url && htmx.ajax) void htmx.ajax('GET', url, { source: el });
       }
     }
   };

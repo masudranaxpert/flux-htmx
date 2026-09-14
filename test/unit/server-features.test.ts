@@ -96,7 +96,7 @@ describe('datagrid controllers', () => {
     const params: Record<string, unknown> = {};
     const detail = {
       ctx: {
-        source: btn,
+        sourceElement: btn,
         request: { parameters: params as Record<string, unknown>, method: 'POST', action: '/stop' },
       },
     };
@@ -127,7 +127,14 @@ describe('fx-idempotency-key', () => {
         new CustomEvent('htmx:config:request', {
           bubbles: true,
           detail: {
-            ctx: { source: form, request: { method: 'POST', action: '/deploy', headers: {} } },
+            ctx: {
+              sourceElement: form,
+              request: {
+                method: 'POST',
+                action: '/deploy',
+                headers: i === 0 ? {} : { 'X-Flux-Retry': 'true' },
+              },
+            },
           },
         }),
       );

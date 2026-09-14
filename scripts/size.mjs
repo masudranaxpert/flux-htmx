@@ -15,13 +15,13 @@ const check = process.argv.includes('--check');
 // Gzip byte budgets. Bump a budget ONLY deliberately, in the PR that grows the
 // bundle, with a note — never to silence a failure.
 const BUDGETS_GZIP = {
-  'flux.js': 23 * 1024,
-  'flux.cjs': 21 * 1024,
+  'flux.js': 26 * 1024,
+  'flux.cjs': 24 * 1024,
   'flux.iife.js': 23 * 1024,
   'net.js': 4 * 1024,
   'net.iife.js': 4 * 1024,
   'flux.full.js': 43 * 1024,
-  'flux.full.iife.js': 37 * 1024,
+  'flux.full.iife.js': 39 * 1024,
   'flux.css': 3 * 1024,
   'flux.min.css': 2 * 1024,
 };

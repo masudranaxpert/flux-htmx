@@ -11,7 +11,7 @@ import { resolveToken, shouldAttach } from './core/csrf.js';
 import { installFeedback, resetFeedbackForTests } from './core/feedback.js';
 import { installValidation } from './core/validation.js';
 import { installStatusTargeting, disposeStatusTargeting } from './core/status.js';
-import { setHeader } from './core/headers.js';
+import { readHeader, setHeader } from './core/headers.js';
 import { setRuntimeConfig } from './core/runtime.js';
 import { installActionPipeline } from './core/action-lifecycle.js';
 import { registerAction } from './core/actions.js';
@@ -302,12 +302,14 @@ function installRequestHooks(
       setHeader(request.headers, token.headerName, token.value);
     }
 
-    // Opt-in idempotency: one key per declaring element, reused across retries so a
-    // retried POST cannot create the resource twice server-side.
-    const source = (evt as CustomEvent).detail?.ctx?.source;
+    // Opt-in idempotency: a key lives for ONE retry chain. A retry (its config:request
+    // already carries X-Flux-Retry) reuses the stored key; any request without the
+    // retry marker is a fresh user intent and gets a new key — no ordering traps.
+    const source = (evt as CustomEvent).detail?.ctx?.sourceElement;
     const idemEl = source instanceof Element ? source.closest('[fx-idempotency-key]') : null;
     if (idemEl) {
-      let key = idempotencyKeys.get(idemEl);
+      const isRetry = readHeader(request.headers, 'X-Flux-Retry') === 'true';
+      let key = isRetry ? idempotencyKeys.get(idemEl) : undefined;
       if (!key) {
         key = newIdempotencyKey();
         idempotencyKeys.set(idemEl, key);
@@ -316,23 +318,8 @@ function installRequestHooks(
     }
   };
 
-  // rotate: a key lives for one retry chain; a fresh user-initiated submit gets a
-  // new one (server-side dedupe must not swallow intentional repeat creates).
-  const onTerminal = (evt: Event) => {
-    const ctx = (evt as CustomEvent).detail?.ctx;
-    const el = ctx?.source instanceof Element ? ctx.source : null;
-    const idemEl = el?.closest?.('[fx-idempotency-key]');
-    if (idemEl && !(ctx?.request?.headers?.['X-Flux-Retry'] === 'true')) {
-      idempotencyKeys.delete(idemEl);
-    }
-  };
-
   document.addEventListener('htmx:config:request', handler);
-  document.addEventListener('htmx:after:request', onTerminal);
-  return () => {
-    document.removeEventListener('htmx:config:request', handler);
-    document.removeEventListener('htmx:after:request', onTerminal);
-  };
+  return () => document.removeEventListener('htmx:config:request', handler);
 }
 
 const idempotencyKeys = new WeakMap<Element, string>();

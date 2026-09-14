@@ -1,6 +1,8 @@
 // Admin-panel widgets: fx-log, fx-copy, fx-ago, fx-shortcut, unsaved-changes guard,
 // upload progress surfacing. Pure event delegation + one shared observer/interval.
 
+import { getRequestContext } from './events.js';
+
 const LOG_CAP_DEFAULT = 1000;
 
 function targetOf(el: Element, selector: string | null): HTMLElement | null {
@@ -25,14 +27,15 @@ function capLines(container: HTMLElement, cap: number): void {
   while (excess-- > 0 && children.length > 0) children[0]!.remove();
 }
 
-function handleLogMutation(mutation: MutationRecord): void {
-  const target = mutation.target as HTMLElement | null;
-  const container = target?.closest?.('[fx-log]') as HTMLElement | null;
-  if (!container) return;
-  keepPinned(container, () => {
-    const cap = parseInt(container.getAttribute('fx-log') ?? '', 10);
-    capLines(container, Number.isFinite(cap) && cap > 0 ? cap : LOG_CAP_DEFAULT);
-  });
+function observeLog(container: HTMLElement, seen: WeakSet<Node>): void {
+  if (seen.has(container)) return;
+  seen.add(container);
+  const cap = parseInt(container.getAttribute('fx-log') ?? '', 10);
+  const maxLines = Number.isFinite(cap) && cap > 0 ? cap : LOG_CAP_DEFAULT;
+  new MutationObserver(() => keepPinned(container, () => capLines(container, maxLines))).observe(
+    container,
+    { childList: true },
+  );
 }
 
 // ---- fx-copy ----
@@ -63,17 +66,16 @@ async function onCopyClick(evt: Event): Promise<void> {
   const source = targetOf(trigger, trigger.getAttribute('fx-copy'));
   const text = (source as HTMLInputElement | null)?.value ?? source?.textContent ?? '';
   if (!(await copyText(text.trim()))) return;
-  const label = trigger.textContent;
+  // attribute-only feedback (CSS ::after renders it) — never clobber inner markup
   trigger.setAttribute('data-flux-copied', 'true');
-  trigger.textContent = 'Copied!';
-  setTimeout(() => {
-    trigger.textContent = label;
-    trigger.removeAttribute('data-flux-copied');
-  }, 1500);
+  setTimeout(() => trigger.removeAttribute('data-flux-copied'), 1500);
 }
 
 // ---- fx-ago: relative time ----
-const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+let rtf: Intl.RelativeTimeFormat | undefined;
+function formatter(): Intl.RelativeTimeFormat {
+  return (rtf ??= new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' }));
+}
 
 function relativeTime(iso: string): string {
   const then = new Date(iso).getTime();
@@ -89,14 +91,16 @@ function relativeTime(iso: string): string {
     ['second', 1000],
   ];
   for (const [unit, ms] of units) {
-    if (abs >= ms || unit === 'second') return rtf.format(Math.round(diff / ms), unit);
+    if (abs >= ms || unit === 'second') return formatter().format(Math.round(diff / ms), unit);
   }
   return iso;
 }
 
 function updateAgo(): void {
   for (const el of document.querySelectorAll<HTMLElement>('[fx-ago]')) {
-    const iso = el.getAttribute('datetime') ?? el.getAttribute('title') ?? el.textContent ?? '';
+    const iso =
+      el.getAttribute('datetime') ?? el.getAttribute('title') ?? el.dataset.fluxAgoSrc ?? '';
+    el.dataset.fluxAgoSrc = iso; // preserve the source before overwriting text
     const text = relativeTime(iso);
     if (el.textContent !== text) el.textContent = text;
   }
@@ -120,8 +124,23 @@ function shortcutMatches(e: KeyboardEvent, binding: string): boolean {
   return e.key.toLowerCase() === key;
 }
 
+let shortcutCache: HTMLElement[] = [];
+function refreshShortcuts(): void {
+  shortcutCache = Array.from(document.querySelectorAll<HTMLElement>('[fx-shortcut]'));
+}
+
 function onShortcutKeydown(e: KeyboardEvent): void {
-  for (const el of document.querySelectorAll<HTMLElement>('[fx-shortcut]')) {
+  const t = e.target as HTMLElement | null;
+  const typing =
+    t instanceof HTMLInputElement ||
+    t instanceof HTMLTextAreaElement ||
+    t instanceof HTMLSelectElement ||
+    t.isContentEditable;
+  if (t && typing && !(e.ctrlKey || e.metaKey || e.altKey)) {
+    return; // bare-letter bindings must never hijack typing
+  }
+  if (shortcutCache.length === 0) refreshShortcuts();
+  for (const el of shortcutCache) {
     if (shortcutMatches(e, el.getAttribute('fx-shortcut') ?? '')) {
       e.preventDefault();
       el.click();
@@ -143,13 +162,9 @@ function onBeforeUnload(e: BeforeUnloadEvent): void {
 }
 
 function onGuardedRequest(evt: Event): void {
-  // htmx-boosted navigation away with unsaved forms: confirm via the event gate
+  // htmx-boosted navigation away with unsaved forms (htmx 4 shape via context)
   if (!hasUnsavedForms()) return;
-  const detail = (evt as CustomEvent).detail as {
-    elt?: Element;
-    requestConfig?: { elt?: Element };
-  } | null;
-  const source = detail?.elt ?? detail?.requestConfig?.elt;
+  const source = getRequestContext(evt).source;
   if (source && !source.closest('form[fx-dirty]') && !confirm('Leave without saving changes?')) {
     evt.preventDefault();
   }
@@ -176,12 +191,11 @@ function onUploadProgress(evt: Event): void {
 export function installWidgets(): () => void {
   if (typeof document === 'undefined') return () => {};
 
-  const observer = new MutationObserver((mutations) => {
-    for (const m of mutations) {
-      if (m.type === 'childList' && m.addedNodes.length > 0) handleLogMutation(m);
-    }
-  });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  const seenLogs = new WeakSet<Node>();
+  const attachLogs = () => {
+    for (const log of document.querySelectorAll<HTMLElement>('[fx-log]')) observeLog(log, seenLogs);
+  };
+  attachLogs();
 
   let agoTimer: ReturnType<typeof setInterval> | undefined;
   const startAgo = () => {
@@ -193,23 +207,25 @@ export function installWidgets(): () => void {
   const onVisibility = () => startAgo();
 
   document.addEventListener('click', onCopyClick);
+  refreshShortcuts();
+  document.addEventListener('htmx:after:settle', refreshShortcuts);
   document.addEventListener('keydown', onShortcutKeydown);
   window.addEventListener('beforeunload', onBeforeUnload);
   document.addEventListener('htmx:before:request', onGuardedRequest, true);
-  document.addEventListener('htmx:xhr:progress', onUploadProgress);
   document.addEventListener('visibilitychange', onVisibility);
   document.addEventListener('htmx:after:settle', updateAgo);
+  document.addEventListener('htmx:after:settle', attachLogs);
   startAgo();
 
   return () => {
-    observer.disconnect();
     clearInterval(agoTimer);
+    document.removeEventListener('htmx:after:settle', attachLogs);
     document.removeEventListener('click', onCopyClick);
     document.removeEventListener('keydown', onShortcutKeydown);
     window.removeEventListener('beforeunload', onBeforeUnload);
     document.removeEventListener('htmx:before:request', onGuardedRequest, true);
-    document.removeEventListener('htmx:xhr:progress', onUploadProgress);
     document.removeEventListener('visibilitychange', onVisibility);
     document.removeEventListener('htmx:after:settle', updateAgo);
+    document.removeEventListener('htmx:after:settle', refreshShortcuts);
   };
 }

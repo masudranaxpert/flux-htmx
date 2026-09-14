@@ -10,7 +10,9 @@ import { getRequestContext } from './events.js';
 
 /** CSS.escape is missing in jsdom; attribute values only need quote-safety. */
 const attrEscape = (value: string): string =>
-  (window.CSS && typeof CSS.escape === 'function' ? CSS.escape(value) : value.replace(/['"\\]/g, '\\$&'));
+  window.CSS && typeof CSS.escape === 'function'
+    ? CSS.escape(value)
+    : value.replace(/['"\\]/g, '\\$&');
 
 const FIELD_ERRORS_ATTR = 'fx-field-errors';
 

@@ -2,6 +2,7 @@
 // Pure event delegation — no per-element registry, nothing to leak.
 
 import { queryOne } from './selectors.js';
+import { getRequestContext } from './events.js';
 import { log } from './logger.js';
 
 type AjaxFn = (verb: string, path: string, ctx?: unknown) => unknown;
@@ -29,7 +30,12 @@ function onSortClick(evt: Event): void {
     (th.textContent ?? '').trim().toLowerCase();
   const prevField = table.getAttribute('data-sort-field');
   const prevDir = table.getAttribute('data-sort-dir');
-  const dir = prevField === key && prevDir === 'asc' ? 'desc' : prevField === key && prevDir === 'desc' ? 'none' : 'asc';
+  const dir =
+    prevField === key && prevDir === 'asc'
+      ? 'desc'
+      : prevField === key && prevDir === 'desc'
+        ? 'none'
+        : 'asc';
 
   for (const header of table.querySelectorAll('th[aria-sort]')) header.removeAttribute('aria-sort');
   if (dir === 'none') {
@@ -62,12 +68,11 @@ function onSortClick(evt: Event): void {
 
 /** Keep checked `input[fx-select]` values flowing into bulk-action requests. */
 function onBulkConfigRequest(evt: Event): void {
-  const detail = (evt as CustomEvent).detail as
-    | { ctx?: { source?: Element; request?: { parameters?: Record<string, unknown> } } }
-    | undefined;
-  const source = detail?.ctx?.source;
-  const btn = source?.closest?.('[fx-include-selection]') as HTMLElement | null;
-  if (!btn || !detail?.ctx?.request) return;
+  const ctx = getRequestContext(evt);
+  const request = (ctx.detail as { ctx?: { request?: { parameters?: Record<string, unknown> } } })
+    ?.ctx?.request;
+  const btn = ctx.source?.closest?.('[fx-include-selection]') as HTMLElement | null;
+  if (!btn || !request) return;
   const container = queryOne(btn.getAttribute('fx-include-selection') ?? '');
   if (!container) return;
   const checked = Array.from(
@@ -75,7 +80,7 @@ function onBulkConfigRequest(evt: Event): void {
   );
   if (checked.length === 0) return;
   const name = checked[0]?.name || 'id';
-  const params = detail.ctx.request.parameters ?? (detail.ctx.request.parameters = {});
+  const params = request.parameters ?? (request.parameters = {});
   delete params[name];
   params[name] = checked.map((c) => c.value);
 }
@@ -105,7 +110,7 @@ function onContainerChange(evt: Event): void {
 /** Mirror filter/search/table state into the address bar (shareable, refresh-safe). */
 function onSyncUrlAfterRequest(evt: Event): void {
   const detail = (evt as CustomEvent).detail as { ctx?: { source?: Element } } | undefined;
-  const el = detail?.ctx?.source?.closest?.('[fx-sync-url]');
+  const el = getRequestContext(evt).source?.closest?.('[fx-sync-url]');
   if (!(el instanceof HTMLFormElement)) return; // non-form variants unsupported
   const params = new URLSearchParams(Array.from(new FormData(el).entries()) as string[][]);
   if ([...params.entries()].length === 0) {

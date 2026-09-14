@@ -299,7 +299,9 @@ const hiddenGuardWarned = new WeakSet<Element>();
  */
 export function installHiddenClassGuard(): () => void {
   if (typeof document === 'undefined') return () => {};
-  const dev = (import.meta as { env?: { DEV?: boolean } }).env?.DEV !== false && (import.meta as { env?: { PROD?: boolean } }).env?.PROD !== true;
+  const dev =
+    (import.meta as { env?: { DEV?: boolean } }).env?.DEV !== false &&
+    (import.meta as { env?: { PROD?: boolean } }).env?.PROD !== true;
   if (!dev) return () => {};
   const onAbort = (evt: Event) => {
     const el = evt.target as Element | null;
@@ -313,7 +315,7 @@ export function installHiddenClassGuard(): () => void {
     }
     if (el.classList.contains('hidden') && getComputedStyle(el as HTMLElement).display !== 'none') {
       hiddenGuardWarned.add(el);
-       
+
       console.warn(
         '[flux] fx-hide ran but the element is still visible. Flux uses the `hidden` ' +
           'class; add `.hidden{display:none}` to your CSS or load flux.css.',
