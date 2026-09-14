@@ -1,6 +1,4 @@
 import { setGeneratedAttribute, removeGeneratedAttribute } from '../core/generated-attributes.js';
-import { resolveHtmx } from '../core/startup.js';
-import htmx from 'htmx.org';
 
 export interface PollOptions {
   url: string;
@@ -60,33 +58,36 @@ function normalizeInterval(value: string): string {
 }
 
 /**
- * Pauses `every`-style polling while the tab is hidden (htmx 4 does not do this
- * itself). On return to visibility each polled element fires once immediately and
- * its polling timer restarts.
+ * Pauses `every`-style polling while the tab is hidden (htmx 4 has no built-in
+ * pause and no public API to cancel poll timers). Mechanism: htmx.process tears
+ * down and re-wires an element's trigger specs, so we swap the generated
+ * hx-trigger attribute and reprocess. On return to visibility the element fires
+ * once immediately, then its timer restarts.
  */
 export function installPollVisibilityPause(): () => void {
   if (typeof document === 'undefined') return () => {};
-
-  const polled = () => Array.from(document.querySelectorAll('[data-flux-preset="poll"]'));
-  type Loose = {
-    remove?: (el: Element) => void;
-    ajax?: (m: string, u: string, el: Element) => unknown;
-    process?: (el: Element) => void;
-  };
-  const htmxApi = (): Loose | undefined =>
-    (window as { htmx?: Loose }).htmx ?? (htmx as unknown as Loose);
+  type Loose = { ajax?: (m: string, u: string, ctx?: unknown) => unknown; process?: (el: Element) => void };
+  const api = (): Loose | undefined =>
+    (window as { htmx?: Loose }).htmx ?? (globalThis as { htmx?: Loose }).htmx;
 
   const onVisibility = () => {
-    const api = htmxApi();
-    if (!api) return;
-    const elements = polled();
-    if (document.visibilityState === 'hidden') {
-      for (const el of elements) api.remove?.(el); // cancels the internal poll timer
-    } else if (elements.length > 0) {
-      for (const el of elements) {
+    const htmx = api();
+    if (!htmx?.process) return;
+    const hidden = document.visibilityState === 'hidden';
+    for (const el of document.querySelectorAll<HTMLElement>('[data-flux-preset="poll"]')) {
+      const trigger = el.getAttribute('hx-trigger') ?? '';
+      if (hidden) {
+        if (trigger) {
+          el.dataset.fluxPollTrigger = trigger;
+          el.removeAttribute('hx-trigger');
+          htmx.process(el);
+        }
+      } else if (el.dataset.fluxPollTrigger) {
+        el.setAttribute('hx-trigger', el.dataset.fluxPollTrigger);
+        delete el.dataset.fluxPollTrigger;
+        htmx.process(el);
         const url = el.getAttribute('hx-get');
-        if (url && api.ajax) void api.ajax('GET', url, el);
-        api.process?.(el); // restarts the every-N timer
+        if (url && htmx.ajax) void htmx.ajax('GET', url, { source: el });
       }
     }
   };

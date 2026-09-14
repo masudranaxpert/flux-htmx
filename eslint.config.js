@@ -2,7 +2,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'node_modules/**', 'coverage/**', '.zcode/**'],
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**', '.zcode/**', '.venv/**', 'site/**'],
   },
   ...tseslint.configs.recommended,
   {

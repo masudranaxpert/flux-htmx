@@ -3,6 +3,7 @@
 
 import { queryMany } from './selectors.js';
 import { cache } from '../cache/instance.js';
+import { log } from './logger.js';
 import { showBuiltInToast } from './feedback.js';
 
 export type ActionHandler = (
@@ -139,9 +140,23 @@ export function installServerActions(): () => void {
         ? detail
         : ((detail as { actions?: unknown })?.actions ??
           (detail as { pipeline?: unknown })?.pipeline);
-    if (typeof pipeline === 'string' && pipeline.trim()) {
-      void executePipeline(pipeline, document.body, detail);
-    }
+    if (typeof pipeline !== 'string' || !pipeline.trim()) return;
+    // self-targeting actions are meaningless (and dangerous) with body as source:
+    // "remove" would delete the whole document. Require an explicit target arg.
+    const SELF_TARGETING = ['close', 'reset', 'refresh', 'remove'];
+    const steps = pipeline
+      .split(';')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .filter((step) => {
+        const name = step.split(':')[0]?.trim() ?? '';
+        if (SELF_TARGETING.includes(name) && !step.includes(':')) {
+          log.warn(`[flux] server action "${name}" needs an explicit target — skipping`);
+          return false;
+        }
+        return true;
+      });
+    if (steps.length > 0) void executePipeline(steps.join(';'), document.body, detail);
   };
   document.addEventListener('flux:action', onServerAction);
   return () => document.removeEventListener('flux:action', onServerAction);

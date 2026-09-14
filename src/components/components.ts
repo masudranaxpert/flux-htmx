@@ -41,18 +41,13 @@ export function installOpenController(): () => void {
     const targetEl = evt.target as HTMLElement | null;
     if (!targetEl) return;
 
-    // Canonical modal: <dialog fx-modal> closes on backdrop click. htmx/keyboard-
-    // activated clicks (e.detail === 0) carry (0,0) coordinates — never treat those
-    // as "outside" the content box.
-    if (evt instanceof MouseEvent && evt.detail === 0) {
-      // fall through: synthetic click on the dialog itself is a real interaction
-    }
     if (
       targetEl.tagName === 'DIALOG' &&
       (targetEl.hasAttribute('fx-modal') || targetEl.hasAttribute('fx-drawer'))
     ) {
       const dialog = targetEl as HTMLDialogElement;
       const me = evt as MouseEvent;
+      if (me.detail === 0) return; // keyboard/synthetic activation: (0,0) is not "outside"
       const rect = dialog.getBoundingClientRect();
       const inside =
         rect.top <= me.clientY &&

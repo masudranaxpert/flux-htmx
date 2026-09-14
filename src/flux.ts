@@ -316,8 +316,23 @@ function installRequestHooks(
     }
   };
 
+  // rotate: a key lives for one retry chain; a fresh user-initiated submit gets a
+  // new one (server-side dedupe must not swallow intentional repeat creates).
+  const onTerminal = (evt: Event) => {
+    const ctx = (evt as CustomEvent).detail?.ctx;
+    const el = ctx?.source instanceof Element ? ctx.source : null;
+    const idemEl = el?.closest?.('[fx-idempotency-key]');
+    if (idemEl && !(ctx?.request?.headers?.['X-Flux-Retry'] === 'true')) {
+      idempotencyKeys.delete(idemEl);
+    }
+  };
+
   document.addEventListener('htmx:config:request', handler);
-  return () => document.removeEventListener('htmx:config:request', handler);
+  document.addEventListener('htmx:after:request', onTerminal);
+  return () => {
+    document.removeEventListener('htmx:config:request', handler);
+    document.removeEventListener('htmx:after:request', onTerminal);
+  };
 }
 
 const idempotencyKeys = new WeakMap<Element, string>();

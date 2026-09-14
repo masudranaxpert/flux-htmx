@@ -6,6 +6,12 @@
 // aria-invalid="true" + data-invalid, focuses the first invalid field, and clears
 // everything as soon as the user edits a field again.
 
+import { getRequestContext } from './events.js';
+
+/** CSS.escape is missing in jsdom; attribute values only need quote-safety. */
+const attrEscape = (value: string): string =>
+  (window.CSS && typeof CSS.escape === 'function' ? CSS.escape(value) : value.replace(/['"\\]/g, '\\$&'));
+
 const FIELD_ERRORS_ATTR = 'fx-field-errors';
 
 function clearFieldErrors(form: Element): void {
@@ -19,21 +25,15 @@ function clearFieldErrors(form: Element): void {
 }
 
 function onAfterRequest(evt: Event): void {
-  const detail = (evt as CustomEvent).detail as {
-    ctx?: { source?: Element; successful?: boolean };
-    xhr?: { status?: number; responseText?: string };
-    successful?: boolean;
-  } | null;
-  const source = detail?.ctx?.source;
-  const form = source?.closest?.(`[${FIELD_ERRORS_ATTR}]`) as HTMLFormElement | null;
-  if (!form || detail?.ctx?.successful !== false) return;
-
-  const status = detail?.xhr?.status ?? 0;
-  if (status !== 422 && status !== 400) return;
+  // htmx 4 is fetch-based: use the shared request context, not detail.xhr shapes
+  const ctx = getRequestContext(evt);
+  const form = ctx.source?.closest?.(`[${FIELD_ERRORS_ATTR}]`) as HTMLFormElement | null;
+  if (!form || ctx.successful !== false) return;
+  if (ctx.status !== 422 && ctx.status !== 400) return;
 
   let errors: Record<string, string>;
   try {
-    errors = JSON.parse(detail?.xhr?.responseText ?? '{}') as Record<string, string>;
+    errors = JSON.parse(ctx.text ?? '{}') as Record<string, string>;
   } catch {
     return; // not the field-errors protocol — leave other handlers to it
   }
@@ -41,9 +41,9 @@ function onAfterRequest(evt: Event): void {
   clearFieldErrors(form);
   let firstInvalid: HTMLElement | null = null;
   for (const [name, message] of Object.entries(errors)) {
-    const slot = form.querySelector<HTMLElement>(`[data-field-error="${name}"]`);
+    const slot = form.querySelector<HTMLElement>(`[data-field-error="${attrEscape(name)}"]`);
     if (slot) slot.textContent = message;
-    const input = form.querySelector<HTMLElement>(`[name="${name}"]`);
+    const input = form.querySelector<HTMLElement>(`[name="${attrEscape(name)}"]`);
     if (input) {
       input.setAttribute('aria-invalid', 'true');
       input.setAttribute('data-invalid', 'true');

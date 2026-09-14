@@ -1,7 +1,7 @@
 import './setup.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as Flux from '../../src/flux.js';
-import { executeAction, registerAction, installServerActions } from '../../src/core/actions.js';
+import { registerAction, installServerActions } from '../../src/core/actions.js';
 import { cache } from '../../src/cache/instance.js';
 import { installDatagrid } from '../../src/core/datagrid.js';
 import { installFieldErrors } from '../../src/core/field-errors.js';
@@ -93,7 +93,7 @@ describe('datagrid controllers', () => {
     const btn = document.querySelector('button')!;
     document.body.dispatchEvent(new Event('change', { bubbles: true }));
 
-    let params: Record<string, unknown> = {};
+    const params: Record<string, unknown> = {};
     const detail = {
       ctx: {
         source: btn,
@@ -105,7 +105,7 @@ describe('datagrid controllers', () => {
 
     const cb = document.querySelector('input') as HTMLInputElement;
     cb.checked = false;
-    document.body.dispatchEvent(new Event('change', { bubbles: true }));
+    cb.dispatchEvent(new Event('change', { bubbles: true }));
     expect(btn.disabled).toBe(true);
     teardown();
   });
