@@ -1382,6 +1382,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Dirty tracking — fx-dirty">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dirty-state-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Dirty State Lifecycle
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2333,6 +2350,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Dirty tracking — fx-dirty">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dirty-state-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Dirty State Lifecycle
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2479,6 +2513,18 @@ until the form is dirty (or <code>fx-disable-clean</code> re-disables the clean 
 htmx-boosted navigation away from the dirty form, and when dismissing a modal
 containing the form. Configure the warning message globally or override it on the
 form with <code>fx-dirty-message="You have unsaved changes in this form."</code>.</p>
+<h3 id="dirty-state-lifecycle">Dirty State Lifecycle<a class="headerlink" href="#dirty-state-lifecycle" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Becomes dirty:</strong> When any input's value differs from its baseline (the initial value recorded on load/settle).</li>
+<li><strong>Becomes clean:</strong></li>
+<li>On a successful mutating request (<code>POST</code>, <code>PUT</code>, <code>PATCH</code>, <code>DELETE</code>) originating from the form.</li>
+<li>When a <code>reset</code> action or <code>form.reset()</code> is invoked.</li>
+<li>When the form element is removed and re-rendered with fresh HTML from the server.</li>
+<li><strong>Does NOT become clean:</strong></li>
+<li>On read-only requests (<code>GET</code> / <code>HEAD</code>, such as in-form <code>fx-search</code> autocompletion or <code>fx-prefetch</code>).</li>
+<li>On unrelated HTMX settles elsewhere on the page (e.g. <code>fx-poll</code> ticks, table updates, toasts).</li>
+<li>On failed or rejected form submissions (<code>4xx</code> or <code>5xx</code> responses).</li>
+</ul>
 <h2 id="autosave-fx-autosave">Autosave — fx-autosave<a class="headerlink" href="#autosave-fx-autosave" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">&lt;</span><span class="nt">form</span> <span class="na">fx-autosave</span><span class="o">=</span><span class="s">"/draft"</span> <span class="na">hx-trigger</span><span class="o">=</span><span class="s">"change delay:1s"</span><span class="p">&gt;</span>…<span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
 </code></pre></div>
