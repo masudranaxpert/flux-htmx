@@ -5,19 +5,7 @@ hide:
   - toc
 ---
 
-# flux-htmx
-
-<div class="hero" markdown>
-
-**The request layer for [HTMX 4](https://htmx.org)** — presets, retries, caching,
-prefetch, CSRF and toasts in one thin script. Includes a small eval-free visibility
-layer so a show/hide toggle doesn't cost a second library. Raw `hx-*` attributes stay
-first-class throughout.
-
-[Get started](getting-started.md){ .md-button .md-button--primary }
-[Attributes reference](attributes/verbs.md){ .md-button }
-
-</div>
+# flux-htmx Documentation
 
 ## What Flux adds to htmx
 

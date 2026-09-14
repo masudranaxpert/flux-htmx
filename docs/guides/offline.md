@@ -45,20 +45,6 @@ FluxNet.offline.clear();
     custom headers, target/swap metadata, expiry, or sensitive-field filtering. Do not
     use it for sensitive or file-bearing requests.
 
-## Upload progress — uploadPlugin
-
-```js
-Flux.use(uploadPlugin);
-```
-
-```html
-<form fx-submit="/upload" hx-encoding="multipart/form-data">
-  <input type="file" name="file" />
-  <progress class="htmx-indicator" max="100"></progress>
-</form>
-```
-
-Wires `htmx:xhr:progress` to a `<progress>` indicator for file uploads.
 
 ## Optimistic UI — optimisticPlugin
 

@@ -69,7 +69,7 @@ function onSortClick(evt: Event): void {
 /** Keep checked `input[fx-select]` values flowing into bulk-action requests. */
 function onBulkConfigRequest(evt: Event): void {
   const ctx = getRequestContext(evt);
-  const request = getRequestContext(evt).request as
+  const request = ctx.request as
     | { parameters?: Record<string, unknown> }
     | undefined;
   const btn = ctx.source?.closest?.('[fx-include-selection]') as HTMLElement | null;
@@ -111,7 +111,7 @@ function onContainerChange(evt: Event): void {
 /** Mirror filter/search/table state into the address bar (shareable, refresh-safe). */
 function onSyncUrlAfterRequest(evt: Event): void {
   const el = getRequestContext(evt).source?.closest?.('[fx-sync-url]');
-  if (!(el instanceof HTMLFormElement)) return; // non-form variants unsupported
+  if (!(el instanceof HTMLFormElement)) return;
   const params = new URLSearchParams(Array.from(new FormData(el).entries()) as string[][]);
   const url =
     [...params.entries()].length > 0
@@ -165,5 +165,7 @@ export function installDatagrid(): () => void {
     document.removeEventListener('change', onContainerChange);
     document.removeEventListener('htmx:after:request', onSyncUrlAfterRequest);
     window.removeEventListener('popstate', onPopState);
+    clearTimeout(syncPushTimer);
+    lastSyncForm = null;
   };
 }

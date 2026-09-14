@@ -55,18 +55,6 @@ unavailable.
 Modifiers: `ctrl` (or `cmd`/`mod`), `shift`, `alt`. Matching key **clicks** the
 element — composing with everything a click can do.
 
-## Upload progress
-
-```html
-<form fx-submit="/upload" hx-encoding="multipart/form-data">
-  <input type="file" name="file" />
-  <progress max="100"></progress>
-</form>
-```
-
-Uses XHR upload progress (fetch cannot report uploads). The form gets
-`data-flux-progress="42"` during upload (styled however you like) and any `<progress>`
-inside the form fills automatically.
 
 ## Unsaved-changes guard
 

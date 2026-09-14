@@ -193,7 +193,10 @@ export function installWidgets(): () => void {
   const startAgo = () => {
     updateAgo();
     clearInterval(agoTimer);
-    if (document.visibilityState === 'visible') agoTimer = setInterval(updateAgo, 60_000);
+    // presence-gated: no [fx-ago] on the page -> no interval at all
+    if (document.querySelector('[fx-ago]') && document.visibilityState === 'visible') {
+      agoTimer = setInterval(updateAgo, 60_000);
+    }
   };
 
   const onVisibility = () => startAgo();

@@ -1,4 +1,6 @@
 import { setGeneratedAttribute, removeGeneratedAttribute } from '../core/generated-attributes.js';
+import htmx from 'htmx.org';
+import { resolveHtmx, type HtmxGlobal } from '../core/startup.js';
 
 export interface PollOptions {
   url: string;
@@ -70,12 +72,17 @@ export function installPollVisibilityPause(): () => void {
     ajax?: (m: string, u: string, ctx?: unknown) => unknown;
     process?: (el: Element) => void;
   };
-  const api = (): Loose | undefined =>
-    (window as { htmx?: Loose }).htmx ?? (globalThis as { htmx?: Loose }).htmx;
+  interface WindowWithHtmx {
+    htmx?: Loose;
+  }
+  const win = window as unknown as WindowWithHtmx;
+  const api = (): Loose | undefined => {
+    const h = resolveHtmx(htmx as unknown as HtmxGlobal);
+    return (h as unknown as Loose) ?? win.htmx;
+  };
 
   const onVisibility = () => {
-    const htmx = api();
-    if (!htmx?.process) return;
+    const htmxInstance = api();
     const hidden = document.visibilityState === 'hidden';
     for (const el of document.querySelectorAll<HTMLElement>('[data-flux-preset="poll"]')) {
       const trigger = el.getAttribute('hx-trigger') ?? '';
@@ -85,18 +92,18 @@ export function installPollVisibilityPause(): () => void {
           // registry-aware; hx-get is untouched — the URL can never be lost.
           // 'none' fires never, and hx-get stays so nothing else changes meaning.
           setGeneratedAttribute(el, 'hx-trigger', 'none');
-          htmx.process(el);
+          htmxInstance?.process?.(el);
         }
       } else if (el.dataset.fluxPollTrigger) {
         setGeneratedAttribute(el, 'hx-trigger', el.dataset.fluxPollTrigger);
         delete el.dataset.fluxPollTrigger;
-        htmx.process(el);
+        htmxInstance?.process?.(el);
         const url = el.getAttribute('hx-get');
-        if (url && htmx.ajax) void htmx.ajax('GET', url, { source: el });
+        if (url && htmxInstance?.ajax) void htmxInstance.ajax('GET', url, { source: el });
       }
     }
   };
 
-  document.addEventListener('visibilitychange', onVisibility);
+    document.addEventListener('visibilitychange', onVisibility);
   return () => document.removeEventListener('visibilitychange', onVisibility);
 }
