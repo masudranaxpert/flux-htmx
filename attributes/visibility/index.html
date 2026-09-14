@@ -2459,6 +2459,10 @@ In older browsers, <code>fx-modal</code> polyfills <code>closedby="any"</code> l
 <h3 id="automatic-unsaved-changes-protection">Automatic Unsaved Changes Protection<a class="headerlink" href="#automatic-unsaved-changes-protection" title="Permanent link">&para;</a></h3>
 <p>If a <code>&lt;dialog fx-modal&gt;</code> contains a dirty form (<code>form[fx-dirty][data-dirty]</code>), Flux intercepts backdrop dismissal (and native <code>cancel</code> events) and prompts before closing.
 The prompt message defaults to <code>"Discard unsaved changes?"</code>, which can be configured globally via <code>Flux.configure({ messages: { unsavedChanges: '...' } })</code> or overridden locally with <code>fx-dirty-message="Custom confirmation prompt"</code>. If the user cancels the confirmation, the modal remains open and form inputs are preserved.</p>
+<div class="admonition warning">
+<p class="admonition-title">Explicit <code>closedby=\"any\"</code> bypasses the unsaved changes guard on backdrop clicks</p>
+<p>If you explicitly declare <code>closedby="any"</code>, the browser's native light-dismiss handles backdrop clicks directly (without firing a <code>cancel</code> event in current browser engines), bypassing the unsaved changes prompt. For modals containing forms, omit <code>closedby</code> and let Flux manage backdrop dismissal with automatic dirty form protection.</p>
+</div>
 <div class="admonition tip">
 <p class="admonition-title">Escape Key Handling</p>
 <p><span class="keys"><kbd class="key-escape">Esc</kbd></span> dismissal is handled natively by the <code>&lt;dialog&gt;</code> element (which fires the native <code>cancel</code> event).
