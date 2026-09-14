@@ -69,8 +69,9 @@ function onSortClick(evt: Event): void {
 /** Keep checked `input[fx-select]` values flowing into bulk-action requests. */
 function onBulkConfigRequest(evt: Event): void {
   const ctx = getRequestContext(evt);
-  const request = (ctx.detail as { ctx?: { request?: { parameters?: Record<string, unknown> } } })
-    ?.ctx?.request;
+  const request = getRequestContext(evt).request as
+    | { parameters?: Record<string, unknown> }
+    | undefined;
   const btn = ctx.source?.closest?.('[fx-include-selection]') as HTMLElement | null;
   if (!btn || !request) return;
   const container = queryOne(btn.getAttribute('fx-include-selection') ?? '');
@@ -109,17 +110,24 @@ function onContainerChange(evt: Event): void {
 
 /** Mirror filter/search/table state into the address bar (shareable, refresh-safe). */
 function onSyncUrlAfterRequest(evt: Event): void {
-  const detail = (evt as CustomEvent).detail as { ctx?: { source?: Element } } | undefined;
   const el = getRequestContext(evt).source?.closest?.('[fx-sync-url]');
   if (!(el instanceof HTMLFormElement)) return; // non-form variants unsupported
   const params = new URLSearchParams(Array.from(new FormData(el).entries()) as string[][]);
-  if ([...params.entries()].length === 0) {
-    history.replaceState(null, '', location.pathname);
-  } else {
-    // pushState: each filter change creates a history entry so Back walks states
-    history.pushState(null, '', `${location.pathname}?${params.toString()}`);
-  }
+  const url =
+    [...params.entries()].length > 0
+      ? `${location.pathname}?${params.toString()}`
+      : location.pathname;
+  // a new form (or 2s idle) starts a history entry; consecutive same-form updates
+  // replace — a debounced search writes ONE entry, not one per keystroke
+  const push = el !== lastSyncForm;
+  history[push ? 'pushState' : 'replaceState'](null, '', url);
+  lastSyncForm = el;
+  clearTimeout(syncPushTimer);
+  syncPushTimer = setTimeout(() => (lastSyncForm = null), 2000);
 }
+
+let lastSyncForm: HTMLFormElement | null = null;
+let syncPushTimer: ReturnType<typeof setTimeout> | undefined;
 
 /** Prefill fx-sync-url forms from the address bar. */
 function prefillSyncUrl(): void {

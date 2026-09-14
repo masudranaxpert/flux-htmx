@@ -27,15 +27,18 @@ function capLines(container: HTMLElement, cap: number): void {
   while (excess-- > 0 && children.length > 0) children[0]!.remove();
 }
 
+const logObservers: MutationObserver[] = [];
+
 function observeLog(container: HTMLElement, seen: WeakSet<Node>): void {
   if (seen.has(container)) return;
   seen.add(container);
-  const cap = parseInt(container.getAttribute('fx-log') ?? '', 10);
-  const maxLines = Number.isFinite(cap) && cap > 0 ? cap : LOG_CAP_DEFAULT;
-  new MutationObserver(() => keepPinned(container, () => capLines(container, maxLines))).observe(
-    container,
-    { childList: true },
-  );
+  const observer = new MutationObserver(() => {
+    const cap = parseInt(container.getAttribute('fx-log') ?? '', 10); // re-read live
+    const maxLines = Number.isFinite(cap) && cap > 0 ? cap : LOG_CAP_DEFAULT;
+    keepPinned(container, () => capLines(container, maxLines));
+  });
+  observer.observe(container, { childList: true });
+  logObservers.push(observer);
 }
 
 // ---- fx-copy ----
@@ -99,8 +102,13 @@ function relativeTime(iso: string): string {
 function updateAgo(): void {
   for (const el of document.querySelectorAll<HTMLElement>('[fx-ago]')) {
     const iso =
-      el.getAttribute('datetime') ?? el.getAttribute('title') ?? el.dataset.fluxAgoSrc ?? '';
-    el.dataset.fluxAgoSrc = iso; // preserve the source before overwriting text
+      el.dataset.fluxAgoSrc ??
+      el.getAttribute('datetime') ??
+      el.getAttribute('title') ??
+      el.textContent?.trim() ??
+      '';
+    if (!el.dataset.fluxAgoSrc && iso) el.dataset.fluxAgoSrc = iso;
+    if (!iso) continue; // nothing parseable — never wipe the element's content
     const text = relativeTime(iso);
     if (el.textContent !== text) el.textContent = text;
   }
@@ -130,6 +138,7 @@ function refreshShortcuts(): void {
 }
 
 function onShortcutKeydown(e: KeyboardEvent): void {
+  shortcutCache = shortcutCache.filter((el) => el.isConnected);
   const t = e.target as HTMLElement | null;
   const typing =
     t instanceof HTMLInputElement ||
@@ -170,23 +179,6 @@ function onGuardedRequest(evt: Event): void {
   }
 }
 
-// ---- upload progress: XHR progress -> form attribute + <progress> fill ----
-function onUploadProgress(evt: Event): void {
-  const detail = (evt as CustomEvent).detail as {
-    lengthComputable?: boolean;
-    loaded?: number;
-    total?: number;
-  } | null;
-  const elt = (evt.target as Element | null)?.closest('form') ?? (evt.target as Element | null);
-  const { lengthComputable, loaded, total } = detail ?? {};
-  if (!elt || !lengthComputable || !total || loaded === undefined) return;
-  const pct = Math.round((loaded / total) * 100);
-  elt.setAttribute('data-flux-progress', String(pct));
-  const bar = elt.querySelector('progress');
-  if (bar) bar.value = pct;
-  if (pct >= 100) setTimeout(() => elt.removeAttribute('data-flux-progress'), 2000);
-}
-
 /** Installs every widget. Returns a teardown. */
 export function installWidgets(): () => void {
   if (typeof document === 'undefined') return () => {};
@@ -218,6 +210,9 @@ export function installWidgets(): () => void {
   startAgo();
 
   return () => {
+    for (const o of logObservers) o.disconnect();
+    logObservers.length = 0;
+    shortcutCache = [];
     clearInterval(agoTimer);
     document.removeEventListener('htmx:after:settle', attachLogs);
     document.removeEventListener('click', onCopyClick);

@@ -362,10 +362,6 @@ inputs `aria-invalid`, focuses the first invalid field, clears on next edit.
 <!-- Eval-free keyboard shortcuts (triggers a click) -->
 <button fx-shortcut="ctrl+k">Command palette</button>
 
-<!-- Upload progress: form gets data-flux-progress="42", <progress> fills -->
-<form fx-submit="/upload" hx-encoding="multipart/form-data">
-  <input type="file" name="f" /><progress max="100"></progress>
-</form>
 ```
 
 Plus an **unsaved-changes guard**: a `form[fx-dirty]` with pending edits warns on

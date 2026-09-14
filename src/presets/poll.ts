@@ -80,19 +80,19 @@ export function installPollVisibilityPause(): () => void {
     for (const el of document.querySelectorAll<HTMLElement>('[data-flux-preset="poll"]')) {
       const trigger = el.getAttribute('hx-trigger') ?? '';
       if (hidden) {
-        if (trigger) {
+        if (trigger && trigger !== 'none') {
           el.dataset.fluxPollTrigger = trigger;
-          // registry-aware: pause = drop polling trigger AND the verb, so the
-          // element is completely inert (no default-click requests either)
-          removeGeneratedAttribute(el, 'hx-get');
-          removeGeneratedAttribute(el, 'hx-trigger');
+          // registry-aware; hx-get is untouched — the URL can never be lost.
+          // 'none' fires never, and hx-get stays so nothing else changes meaning.
+          setGeneratedAttribute(el, 'hx-trigger', 'none');
           htmx.process(el);
         }
       } else if (el.dataset.fluxPollTrigger) {
-        setGeneratedAttribute(el, 'hx-get', el.getAttribute('data-flux-poll-url') ?? '');
         setGeneratedAttribute(el, 'hx-trigger', el.dataset.fluxPollTrigger);
         delete el.dataset.fluxPollTrigger;
         htmx.process(el);
+        const url = el.getAttribute('hx-get');
+        if (url && htmx.ajax) void htmx.ajax('GET', url, { source: el });
       }
     }
   };
