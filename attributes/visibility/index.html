@@ -937,6 +937,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Modals &amp; Drawers — canonical path">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dismissal-control-closedby" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Dismissal Control (<code>closedby</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#automatic-unsaved-changes-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Automatic Unsaved Changes Protection
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2256,6 +2284,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Modals &amp; Drawers — canonical path">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dismissal-control-closedby" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Dismissal Control (<code>closedby</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#automatic-unsaved-changes-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Automatic Unsaved Changes Protection
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2357,13 +2413,68 @@ the core and full bundles — the logic lives in the core dialog controller). <c
 the same backdrop-dismiss behavior and represents slide-over side panels.
 A <code>fx-open</code> target must be a <code>&lt;dialog&gt;</code> or declare the <code>popover</code> attribute; anything
 else logs a warning instead of throwing.</p>
+<h3 id="dismissal-control-closedby">Dismissal Control (<code>closedby</code>)<a class="headerlink" href="#dismissal-control-closedby" title="Permanent link">&para;</a></h3>
+<p>Flux embraces the web standard <code>closedby</code> attribute (Chrome 134+, Firefox 137+, Safari 18.2+):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="cm">&lt;!-- Non-destructive modal / image preview: backdrop + Escape dismisses --&gt;</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="p">&lt;</span><span class="nt">dialog</span> <span class="na">id</span><span class="o">=</span><span class="s">"preview"</span> <span class="na">fx-modal</span> <span class="na">closedby</span><span class="o">=</span><span class="s">"any"</span><span class="p">&gt;</span>...<span class="p">&lt;/</span><span class="nt">dialog</span><span class="p">&gt;</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="cm">&lt;!-- Form with inputs: Escape dismisses, backdrop click does NOT dismiss --&gt;</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">&lt;</span><span class="nt">dialog</span> <span class="na">id</span><span class="o">=</span><span class="s">"edit-form"</span> <span class="na">fx-modal</span> <span class="na">closedby</span><span class="o">=</span><span class="s">"closerequest"</span><span class="p">&gt;</span>...<span class="p">&lt;/</span><span class="nt">dialog</span><span class="p">&gt;</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="cm">&lt;!-- Destructive action / mandatory choice: must click explicit button --&gt;</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">&lt;</span><span class="nt">dialog</span> <span class="na">id</span><span class="o">=</span><span class="s">"delete-confirm"</span> <span class="na">fx-modal</span> <span class="na">closedby</span><span class="o">=</span><span class="s">"none"</span><span class="p">&gt;</span>...<span class="p">&lt;/</span><span class="nt">dialog</span><span class="p">&gt;</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th><code>closedby</code> Value</th>
+<th>Escape Key</th>
+<th>Backdrop Click</th>
+<th>Primary Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>any</code></td>
+<td>Dismisses</td>
+<td>Dismisses</td>
+<td>Image previews, lightweight menus, read-only sheets</td>
+</tr>
+<tr>
+<td><code>closerequest</code></td>
+<td>Dismisses</td>
+<td><strong>Blocked</strong></td>
+<td>Forms with inputs, preventing accidental dismissals on misclicks</td>
+</tr>
+<tr>
+<td><code>none</code></td>
+<td><strong>Blocked</strong></td>
+<td><strong>Blocked</strong></td>
+<td>Critical/destructive confirmations, payments, required choices</td>
+</tr>
+</tbody>
+</table>
+<p>In browsers supporting native <code>closedBy</code>, Flux delegates dismissal to the browser.
+In older browsers, <code>fx-modal</code> polyfills <code>closedby="any"</code> light-dismiss while strictly honoring <code>closedby="none"</code> and <code>closedby="closerequest"</code>.</p>
+<h3 id="automatic-unsaved-changes-protection">Automatic Unsaved Changes Protection<a class="headerlink" href="#automatic-unsaved-changes-protection" title="Permanent link">&para;</a></h3>
+<p>If a <code>&lt;dialog fx-modal&gt;</code> contains a dirty form (<code>form[fx-dirty][data-dirty]</code>), Flux intercepts backdrop dismissal (and native <code>cancel</code> events) and prompts:
+<code>"Discard unsaved changes?"</code>. If the user cancels the confirmation, the modal remains open and form inputs are preserved.</p>
+<div class="admonition tip">
+<p class="admonition-title">Escape Key Handling</p>
+<p><span class="keys"><kbd class="key-escape">Esc</kbd></span> dismissal is handled natively by the <code>&lt;dialog&gt;</code> element (which fires the native <code>cancel</code> event).
+Use <code>closedby="none"</code> if you need to prevent Escape from closing the dialog.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Avoid <code>width: 100%; height: 100%</code> on dialogs</p>
+<p>If a <code>&lt;dialog&gt;</code> is styled to cover 100% of the viewport width and height, backdrop clicks cannot land outside the element's bounding rectangle in fallback environments. Use <code>max-width</code>, <code>max-height</code>, or centered padding instead.</p>
+</div>
 <h2 id="dismissable-overlays-legacy-div-pattern">Dismissable overlays (legacy div pattern)<a class="headerlink" href="#dismissable-overlays-legacy-div-pattern" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">"my-modal"</span> <span class="na">class</span><span class="o">=</span><span class="s">"hidden"</span><span class="p">&gt;</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>  <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">"modal-content"</span> <span class="na">fx-hide-outside</span><span class="o">=</span><span class="s">"#my-modal"</span> <span class="na">fx-hide-escape</span><span class="o">=</span><span class="s">"#my-modal"</span><span class="p">&gt;</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="p">&lt;</span><span class="nt">h2</span><span class="p">&gt;</span>Hello Modal<span class="p">&lt;/</span><span class="nt">h2</span><span class="p">&gt;</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-hide</span><span class="o">=</span><span class="s">"#my-modal"</span><span class="p">&gt;</span>Close<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>  <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">"my-modal"</span> <span class="na">class</span><span class="o">=</span><span class="s">"hidden"</span><span class="p">&gt;</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>  <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">"modal-content"</span> <span class="na">fx-hide-outside</span><span class="o">=</span><span class="s">"#my-modal"</span> <span class="na">fx-hide-escape</span><span class="o">=</span><span class="s">"#my-modal"</span><span class="p">&gt;</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="p">&lt;</span><span class="nt">h2</span><span class="p">&gt;</span>Hello Modal<span class="p">&lt;/</span><span class="nt">h2</span><span class="p">&gt;</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-hide</span><span class="o">=</span><span class="s">"#my-modal"</span><span class="p">&gt;</span>Close<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>  <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
 </code></pre></div>
 <ul>
 <li><code>fx-hide-outside="#id"</code> — hide the target when a click lands outside the content box</li>
