@@ -49,7 +49,7 @@ One handler coordinates everything: the trigger toggles the menu, clicking outsi
 the trigger/menu closes it, ++escape++ closes it, and the trigger's `aria-expanded`
 stays in sync. The click that opens the menu can never immediately close it.
 
-## Modals — canonical path
+## Modals & Drawers — canonical path
 
 ```html
 <button fx-open="#edit">Edit</button>
@@ -58,12 +58,21 @@ stays in sync. The click that opens the menu can never immediately close it.
   <form method="dialog">...</form>
   <button fx-close>Cancel</button>
 </dialog>
+
+<!-- Slide-over drawer panel -->
+<button fx-open="#side-drawer">Settings</button>
+
+<dialog id="side-drawer" fx-drawer>
+  <h2>Settings</h2>
+  <button fx-close>Close</button>
+</dialog>
 ```
 
-`<dialog>` + `fx-open` / `fx-close` is the **canonical modal path**: focus trap and
-restoration are native, and `fx-modal` closes on backdrop click (available in both
-the core and full bundles — the logic lives in the core dialog controller). A
-`fx-open` target must be a `<dialog>` or declare the `popover` attribute; anything
+`<dialog>` + `fx-open` / `fx-close` is the **canonical modal and drawer path**: focus trap and
+restoration are native, and `fx-modal` / `fx-drawer` close on backdrop click (available in both
+the core and full bundles — the logic lives in the core dialog controller). `fx-drawer` shares
+the same backdrop-dismiss behavior and represents slide-over side panels.
+A `fx-open` target must be a `<dialog>` or declare the `popover` attribute; anything
 else logs a warning instead of throwing.
 
 ## Dismissable overlays (legacy div pattern)

@@ -137,7 +137,7 @@ export function expandElement(element: Element): number {
   return written;
 }
 
-/** Syncs `fx-name` shorthand to `hx-name`. Removes generated `hx-name` if `fx-name` shorthand was removed. */
+/** Syncs `fx-<name>` shorthand to `hx-<name>`. Removes generated attribute if shorthand was removed. */
 function syncShorthand(element: Element, name: string): 0 | 1 {
   const fxAttr = `fx-${name}`;
   const hxAttr = `hx-${name}`;

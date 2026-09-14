@@ -34,7 +34,7 @@ function handleStateClick(e: MouseEvent) {
 function setState(container: Element, key: string, value: string) {
   container.setAttribute(`data-state-${key}`, value);
 
-  // Optionally update classes based on state: fx-class-[key]="value:class"
+  // Optionally update classes based on state: fx-bind-[key]="value:class"
   const boundElements = queryAllSafely(`[fx-bind-${key}]`, container);
   for (const el of boundElements) {
     const bindExpr = el.getAttribute(`fx-bind-${key}`);

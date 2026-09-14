@@ -31,6 +31,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Attribute documentation coverage
+        run: npm run docs:coverage
+
       - name: Build
         run: npm run build
 

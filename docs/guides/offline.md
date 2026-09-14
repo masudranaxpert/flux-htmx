@@ -45,6 +45,25 @@ FluxNet.offline.clear();
     custom headers, target/swap metadata, expiry, or sensitive-field filtering. Do not
     use it for sensitive or file-bearing requests.
 
+## File Uploads — uploadPlugin
+
+```js
+Flux.use(uploadPlugin);
+```
+
+```html
+<form fx-upload="/api/avatar" fx-max-size="5MB" fx-allowed-types="image/png,image/jpeg">
+  <input type="file" name="avatar" />
+  <button type="submit">Upload Avatar</button>
+</form>
+```
+
+`fx-upload` configures multipart form upload, automatically sets `hx-encoding="multipart/form-data"`,
+and performs client-side validation before the request is issued:
+
+- `fx-max-size`: Maximum file size (e.g. `5MB`, `500KB`, `1048576`).
+- `fx-allowed-types`: Comma-separated list of MIME types or extensions (e.g. `image/*`, `.pdf,image/png`).
+
 ## Optimistic UI — optimisticPlugin
 
 ```js
@@ -54,7 +73,7 @@ Flux.use(optimisticPlugin);
 ```html
 <button
   fx-post="/like"
-  fx-optimistic-add-class="liked"
+  fx-optimistic-class="liked"
   hx-target="closest button"
   fx-optimistic-remove="closest tr"
 >
