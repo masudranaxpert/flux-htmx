@@ -135,7 +135,7 @@ function onShortcutKeydown(e: KeyboardEvent): void {
     t instanceof HTMLInputElement ||
     t instanceof HTMLTextAreaElement ||
     t instanceof HTMLSelectElement ||
-    t.isContentEditable;
+    (t !== null && t.isContentEditable);
   if (t && typing && !(e.ctrlKey || e.metaKey || e.altKey)) {
     return; // bare-letter bindings must never hijack typing
   }
