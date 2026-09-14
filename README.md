@@ -1,9 +1,12 @@
 # flux-htmx
 
+📖 **Documentation:** [https://masudranaxpert.github.io/flux-htmx/](https://masudranaxpert.github.io/flux-htmx/)
+
 > The request layer for **HTMX 4** — presets, retries, caching, prefetch, CSRF and toasts
 > in one thin script. Includes a small eval-free visibility layer so a show/hide toggle
 > doesn't cost a second library. Raw `hx-*` attributes stay first-class throughout.
 
+[![Documentation](https://img.shields.io/badge/docs-online-blue.svg)](https://masudranaxpert.github.io/flux-htmx/)
 [![npm version](https://img.shields.io/npm/v/flux-htmx.svg)](https://www.npmjs.com/package/flux-htmx)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
