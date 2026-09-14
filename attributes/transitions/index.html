@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://masudranaxpert.github.io/flux-htmx/reference/architecture/">
+        <link rel="canonical" href="https://masudranaxpert.github.io/flux-htmx/attributes/transitions/">
       
       
-        <link rel="prev" href="../events/">
+        <link rel="prev" href="../ui/">
       
       
-        <link rel="next" href="../performance/">
+        <link rel="next" href="../reliability/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Architecture - flux-htmx</title>
+        <title>Transitions - flux-htmx</title>
       
     
     
@@ -85,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#architecture" class="md-skip">
+        <a href="#transitions" class="md-skip">
           Skip to content
         </a>
       
@@ -118,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Architecture
+              Transitions
             
           </span>
         </div>
@@ -244,6 +244,8 @@
   
   
   
+    
+  
   
     
       
@@ -270,8 +272,8 @@
     
     
     
-      <li class="md-tabs__item">
-        <a href="../../attributes/verbs/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../verbs/" class="md-tabs__link">
           
   
   Attributes
@@ -390,8 +392,6 @@
   
   
   
-    
-  
   
     
       
@@ -412,8 +412,8 @@
     
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../configuration/" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../reference/configuration/" class="md-tabs__link">
           
   
   Reference
@@ -689,8 +689,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -716,19 +718,22 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -745,7 +750,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -762,7 +767,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../attributes/verbs/" class="md-nav__link">
+      <a href="../verbs/" class="md-nav__link">
         
   
   
@@ -789,7 +794,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../attributes/presets/" class="md-nav__link">
+      <a href="../presets/" class="md-nav__link">
         
   
   
@@ -816,7 +821,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../attributes/options/" class="md-nav__link">
+      <a href="../options/" class="md-nav__link">
         
   
   
@@ -843,7 +848,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../attributes/visibility/" class="md-nav__link">
+      <a href="../visibility/" class="md-nav__link">
         
   
   
@@ -870,7 +875,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../attributes/status/" class="md-nav__link">
+      <a href="../status/" class="md-nav__link">
         
   
   
@@ -897,7 +902,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../attributes/widgets/" class="md-nav__link">
+      <a href="../widgets/" class="md-nav__link">
         
   
   
@@ -924,7 +929,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../attributes/ui/" class="md-nav__link">
+      <a href="../ui/" class="md-nav__link">
         
   
   
@@ -948,10 +953,36 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../attributes/transitions/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Transitions
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
         
   
   
@@ -966,6 +997,60 @@
   
 
       </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage-fx-transition" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Basic Usage (<code>fx-transition</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-transition-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Custom Transition Classes
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#short-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Short Aliases
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -978,7 +1063,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../attributes/reliability/" class="md-nav__link">
+      <a href="../reliability/" class="md-nav__link">
         
   
   
@@ -1605,10 +1690,8 @@
       
   
   
-    
   
   
-  
     
     
       
@@ -1628,22 +1711,19 @@
     
     
       
-        
-        
-      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -1660,7 +1740,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1677,7 +1757,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../configuration/" class="md-nav__link">
+      <a href="../../reference/configuration/" class="md-nav__link">
         
   
   
@@ -1704,7 +1784,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../bundles/" class="md-nav__link">
+      <a href="../../reference/bundles/" class="md-nav__link">
         
   
   
@@ -1731,7 +1811,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../events/" class="md-nav__link">
+      <a href="../../reference/events/" class="md-nav__link">
         
   
   
@@ -1755,36 +1835,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Architecture
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="././" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../reference/architecture/" class="md-nav__link">
         
   
   
@@ -1799,71 +1853,6 @@
   
 
       </a>
-      
-        
-
-
-<nav class="md-nav md-nav--secondary" aria-label="On this page">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      On this page
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#expansion-not-replacement" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Expansion, not replacement
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pipeline-integration" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Pipeline integration
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ownership-registry" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Ownership registry
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#bootstrap-contract" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Bootstrap contract
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1876,7 +1865,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../performance/" class="md-nav__link">
+      <a href="../../reference/performance/" class="md-nav__link">
         
   
   
@@ -1903,7 +1892,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../security/" class="md-nav__link">
+      <a href="../../reference/security/" class="md-nav__link">
         
   
   
@@ -2215,10 +2204,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#expansion-not-replacement" class="md-nav__link">
+  <a href="#basic-usage-fx-transition" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Expansion, not replacement
+        Basic Usage (<code>fx-transition</code>)
       </span>
     </span>
   </a>
@@ -2226,10 +2215,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pipeline-integration" class="md-nav__link">
+  <a href="#custom-transition-classes" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Pipeline integration
+        Custom Transition Classes
       </span>
     </span>
   </a>
@@ -2237,21 +2226,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ownership-registry" class="md-nav__link">
+  <a href="#short-aliases" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Ownership registry
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#bootstrap-contract" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Bootstrap contract
+        Short Aliases
       </span>
     </span>
   </a>
@@ -2276,43 +2254,79 @@
   
 
 
-<h1 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h1>
-<p>How Flux fits around htmx without fighting it.</p>
-<h2 id="expansion-not-replacement">Expansion, not replacement<a class="headerlink" href="#expansion-not-replacement" title="Permanent link">&para;</a></h2>
-<p>Flux's <code>fx-*</code> attributes are <strong>expanded into htmx's native <code>hx-*</code> attributes at
-processing time</strong>. htmx's own attribute prefix stays at its default, so raw <code>hx-*</code>
-remains an unconditional escape hatch: <code>&lt;a fx-get="/x" hx-target="#main"&gt;</code> mixes
-freely. Since 2.0 there is no alias layer — presets read their own option attributes
-only, everything else is raw <code>hx-*</code>.</p>
-<h2 id="pipeline-integration">Pipeline integration<a class="headerlink" href="#pipeline-integration" title="Permanent link">&para;</a></h2>
-<p>Flux installs listeners on htmx's event pipeline — never a second network layer:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>DOM event
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  └─ htmx:config:request   → CSRF attach, timeout, credentials
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  └─ htmx:before:request   → dedupe leader election, cache lookup
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  └─ (network)
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  └─ htmx:after:request    → retry decision, feedback state, action pipelines
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  └─ htmx:after:settle     → persist restore, form dirty re-init
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  └─ htmx:before:cleanup   → preset disconnects, generated-attribute release
+<h1 id="transitions">Transitions<a class="headerlink" href="#transitions" title="Permanent link">&para;</a></h1>
+<p>CSS animations and transitions triggered automatically when elements are added to the DOM via HTMX swaps.</p>
+<p>The transitions plugin monitors element insertions and drives two-frame enter transitions, removing temporary transition classes once <code>transitionend</code> or <code>animationend</code> fires.</p>
+<h2 id="basic-usage-fx-transition">Basic Usage (<code>fx-transition</code>)<a class="headerlink" href="#basic-usage-fx-transition" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">&lt;</span><span class="nt">div</span> <span class="na">fx-transition</span><span class="p">&gt;</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Fresh content swapped in by HTMX!<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
 </code></pre></div>
-<p>Presets expand → htmx processes → Flux's registered controllers (<code>connect</code>) manage
-their elements and return disconnects on cleanup.</p>
-<h2 id="ownership-registry">Ownership registry<a class="headerlink" href="#ownership-registry" title="Permanent link">&para;</a></h2>
-<p>Every <code>hx-*</code> attribute Flux writes is recorded per element (<code>WeakMap</code>) and every
-touched element tracked by <code>WeakRef</code> (deduplicated, O(1)). Consequences:</p>
-<ul>
-<li><strong>User-written <code>hx-*</code> is never overwritten</strong> — user takeovers are detected and
-  respected.</li>
-<li>Removing the source <code>fx-*</code> removes Flux's generated attributes on the next pass.</li>
-<li>Manual DOM removal (<code>el.remove()</code>, <code>fx-remove</code>) leaves no strong references — no
-  leaks on long-lived dashboards.</li>
-</ul>
-<h2 id="bootstrap-contract">Bootstrap contract<a class="headerlink" href="#bootstrap-contract" title="Permanent link">&para;</a></h2>
-<p>Importing any Flux entry has <strong>no global side effects</strong>. Entry points call
-<code>bootstrapFlux()</code>, which owns the <code>window.Flux</code> slot, applies the duplicate policy and
-honours <code>&lt;meta name="flux-config"&gt; autoStart</code>. Modular and full builds can never race
-for the global.</p>
-<p>See <a href="https://github.com/masudranaxpert/flux-htmx/blob/master/docs/decisions/0004-prefix-vs-expansion.md">decisions/0004</a>
-for the prefix-vs-expansion rationale.</p>
+<p>By default, applying <code>fx-transition</code> will add:</p>
+<ol>
+<li><strong>Initial frame</strong>: <code>fx-enter fx-enter-start</code></li>
+<li><strong>Next animation frame</strong>: <code>fx-enter-start</code> is removed and <code>fx-enter-end</code> is added.</li>
+<li><strong>On transition end</strong>: <code>fx-enter</code> and <code>fx-enter-end</code> are cleaned up.</li>
+</ol>
+<p>In CSS (or <code>flux.css</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">.</span><span class="nc">fx-enter</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="k">transition</span><span class="p">:</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="k">opacity</span><span class="w"> </span><span class="mi">300</span><span class="kt">ms</span><span class="w"> </span><span class="kc">ease-out</span><span class="p">,</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="k">transform</span><span class="w"> </span><span class="mi">300</span><span class="kt">ms</span><span class="w"> </span><span class="kc">ease-out</span><span class="p">;</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">}</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">.</span><span class="nc">fx-enter-start</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="k">opacity</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="k">transform</span><span class="p">:</span><span class="w"> </span><span class="nb">translateY</span><span class="p">(</span><span class="mi">10</span><span class="kt">px</span><span class="p">);</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="p">}</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="p">.</span><span class="nc">fx-enter-end</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="k">opacity</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">  </span><span class="k">transform</span><span class="p">:</span><span class="w"> </span><span class="nb">translateY</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="p">}</span>
+</code></pre></div>
+<h2 id="custom-transition-classes">Custom Transition Classes<a class="headerlink" href="#custom-transition-classes" title="Permanent link">&para;</a></h2>
+<p>You can customize the CSS classes used during the transition lifecycle:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">&lt;</span><span class="nt">div</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>  <span class="na">fx-transition</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>  <span class="na">fx-transition-enter</span><span class="o">=</span><span class="s">"transition duration-300 ease-out"</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>  <span class="na">fx-transition-enter-start</span><span class="o">=</span><span class="s">"opacity-0 scale-95"</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  <span class="na">fx-transition-enter-end</span><span class="o">=</span><span class="s">"opacity-100 scale-100"</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">&gt;</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>  Tailwind-compatible transition
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Default Class</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fx-transition</code></td>
+<td>—</td>
+<td>Activates enter animation when element (or descendants) are inserted</td>
+</tr>
+<tr>
+<td><code>fx-transition-enter</code></td>
+<td><code>fx-enter</code></td>
+<td>Transition properties (e.g. <code>transition duration-300 ease-out</code>)</td>
+</tr>
+<tr>
+<td><code>fx-transition-enter-start</code></td>
+<td><code>fx-enter-start</code></td>
+<td>Starting state before animation begins (e.g. <code>opacity-0</code>)</td>
+</tr>
+<tr>
+<td><code>fx-transition-enter-end</code></td>
+<td><code>fx-enter-end</code></td>
+<td>Target state applied on the next frame (e.g. <code>opacity-100</code>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="short-aliases">Short Aliases<a class="headerlink" href="#short-aliases" title="Permanent link">&para;</a></h2>
+<p>The short class name aliases <code>fx-enter</code>, <code>fx-enter-start</code>, and <code>fx-enter-end</code> can be styled directly in your stylesheet without needing custom attribute values.</p>
 
 
 

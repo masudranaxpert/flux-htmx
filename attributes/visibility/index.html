@@ -262,6 +262,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -702,6 +708,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -917,10 +929,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#modals-canonical-path" class="md-nav__link">
+  <a href="#modals-drawers-canonical-path" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Modals — canonical path
+        Modals &amp; Drawers — canonical path
       </span>
     </span>
   </a>
@@ -1000,6 +1012,87 @@
     
   
   Admin widgets
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  UI Components & Plugins
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Transitions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reliability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reliability & Scoping
 
     
   </span>
@@ -2155,10 +2248,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#modals-canonical-path" class="md-nav__link">
+  <a href="#modals-drawers-canonical-path" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Modals — canonical path
+        Modals &amp; Drawers — canonical path
       </span>
     </span>
   </a>
@@ -2242,18 +2335,27 @@ Tailwind-compatible and composable — a panel hidden by <code>fx-hide</code> is
 <p>One handler coordinates everything: the trigger toggles the menu, clicking outside
 the trigger/menu closes it, <span class="keys"><kbd class="key-escape">Esc</kbd></span> closes it, and the trigger's <code>aria-expanded</code>
 stays in sync. The click that opens the menu can never immediately close it.</p>
-<h2 id="modals-canonical-path">Modals — canonical path<a class="headerlink" href="#modals-canonical-path" title="Permanent link">&para;</a></h2>
+<h2 id="modals-drawers-canonical-path">Modals &amp; Drawers — canonical path<a class="headerlink" href="#modals-drawers-canonical-path" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-open</span><span class="o">=</span><span class="s">"#edit"</span><span class="p">&gt;</span>Edit<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="p">&lt;</span><span class="nt">dialog</span> <span class="na">id</span><span class="o">=</span><span class="s">"edit"</span> <span class="na">fx-modal</span><span class="p">&gt;</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>  <span class="p">&lt;</span><span class="nt">form</span> <span class="na">method</span><span class="o">=</span><span class="s">"dialog"</span><span class="p">&gt;</span>...<span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  <span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-close</span><span class="p">&gt;</span>Cancel<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">&lt;/</span><span class="nt">dialog</span><span class="p">&gt;</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="cm">&lt;!-- Slide-over drawer panel --&gt;</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-open</span><span class="o">=</span><span class="s">"#side-drawer"</span><span class="p">&gt;</span>Settings<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="p">&lt;</span><span class="nt">dialog</span> <span class="na">id</span><span class="o">=</span><span class="s">"side-drawer"</span> <span class="na">fx-drawer</span><span class="p">&gt;</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>  <span class="p">&lt;</span><span class="nt">h2</span><span class="p">&gt;</span>Settings<span class="p">&lt;/</span><span class="nt">h2</span><span class="p">&gt;</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>  <span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-close</span><span class="p">&gt;</span>Close<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="p">&lt;/</span><span class="nt">dialog</span><span class="p">&gt;</span>
 </code></pre></div>
-<p><code>&lt;dialog&gt;</code> + <code>fx-open</code> / <code>fx-close</code> is the <strong>canonical modal path</strong>: focus trap and
-restoration are native, and <code>fx-modal</code> closes on backdrop click (available in both
-the core and full bundles — the logic lives in the core dialog controller). A
-<code>fx-open</code> target must be a <code>&lt;dialog&gt;</code> or declare the <code>popover</code> attribute; anything
+<p><code>&lt;dialog&gt;</code> + <code>fx-open</code> / <code>fx-close</code> is the <strong>canonical modal and drawer path</strong>: focus trap and
+restoration are native, and <code>fx-modal</code> / <code>fx-drawer</code> close on backdrop click (available in both
+the core and full bundles — the logic lives in the core dialog controller). <code>fx-drawer</code> shares
+the same backdrop-dismiss behavior and represents slide-over side panels.
+A <code>fx-open</code> target must be a <code>&lt;dialog&gt;</code> or declare the <code>popover</code> attribute; anything
 else logs a warning instead of throwing.</p>
 <h2 id="dismissable-overlays-legacy-div-pattern">Dismissable overlays (legacy div pattern)<a class="headerlink" href="#dismissable-overlays-legacy-div-pattern" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">"my-modal"</span> <span class="na">class</span><span class="o">=</span><span class="s">"hidden"</span><span class="p">&gt;</span>

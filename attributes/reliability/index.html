@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://masudranaxpert.github.io/flux-htmx/reference/architecture/">
+        <link rel="canonical" href="https://masudranaxpert.github.io/flux-htmx/attributes/reliability/">
       
       
-        <link rel="prev" href="../events/">
+        <link rel="prev" href="../transitions/">
       
       
-        <link rel="next" href="../performance/">
+        <link rel="next" href="../../htmx/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Architecture - flux-htmx</title>
+        <title>Reliability & Scoping - flux-htmx</title>
       
     
     
@@ -85,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#architecture" class="md-skip">
+        <a href="#reliability-scoping" class="md-skip">
           Skip to content
         </a>
       
@@ -118,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Architecture
+              Reliability & Scoping
             
           </span>
         </div>
@@ -244,6 +244,8 @@
   
   
   
+    
+  
   
     
       
@@ -270,8 +272,8 @@
     
     
     
-      <li class="md-tabs__item">
-        <a href="../../attributes/verbs/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../verbs/" class="md-tabs__link">
           
   
   Attributes
@@ -390,8 +392,6 @@
   
   
   
-    
-  
   
     
       
@@ -412,8 +412,8 @@
     
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../configuration/" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../reference/configuration/" class="md-tabs__link">
           
   
   Reference
@@ -689,8 +689,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -716,19 +718,22 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -745,7 +750,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -762,7 +767,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../attributes/verbs/" class="md-nav__link">
+      <a href="../verbs/" class="md-nav__link">
         
   
   
@@ -789,7 +794,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../attributes/presets/" class="md-nav__link">
+      <a href="../presets/" class="md-nav__link">
         
   
   
@@ -816,7 +821,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../attributes/options/" class="md-nav__link">
+      <a href="../options/" class="md-nav__link">
         
   
   
@@ -843,7 +848,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../attributes/visibility/" class="md-nav__link">
+      <a href="../visibility/" class="md-nav__link">
         
   
   
@@ -870,7 +875,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../attributes/status/" class="md-nav__link">
+      <a href="../status/" class="md-nav__link">
         
   
   
@@ -897,7 +902,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../attributes/widgets/" class="md-nav__link">
+      <a href="../widgets/" class="md-nav__link">
         
   
   
@@ -924,7 +929,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../attributes/ui/" class="md-nav__link">
+      <a href="../ui/" class="md-nav__link">
         
   
   
@@ -951,7 +956,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../attributes/transitions/" class="md-nav__link">
+      <a href="../transitions/" class="md-nav__link">
         
   
   
@@ -975,10 +980,36 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../attributes/reliability/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reliability & Scoping
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
         
   
   
@@ -993,6 +1024,71 @@
   
 
       </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#per-element-retry-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Per-Element Retry Tuning
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#in-flight-request-deduplication-fx-dedupe" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        In-Flight Request Deduplication (<code>fx-dedupe</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#method-override-fx-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Method Override (<code>fx-method</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scoping-defaults-inheritance-fx-scope-fx-default-" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Scoping &amp; Defaults Inheritance (<code>fx-scope</code>, <code>fx-default-*</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1605,10 +1701,8 @@
       
   
   
-    
   
   
-  
     
     
       
@@ -1628,22 +1722,19 @@
     
     
       
-        
-        
-      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -1660,7 +1751,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1677,7 +1768,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../configuration/" class="md-nav__link">
+      <a href="../../reference/configuration/" class="md-nav__link">
         
   
   
@@ -1704,7 +1795,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../bundles/" class="md-nav__link">
+      <a href="../../reference/bundles/" class="md-nav__link">
         
   
   
@@ -1731,7 +1822,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../events/" class="md-nav__link">
+      <a href="../../reference/events/" class="md-nav__link">
         
   
   
@@ -1755,36 +1846,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Architecture
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="././" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../reference/architecture/" class="md-nav__link">
         
   
   
@@ -1799,71 +1864,6 @@
   
 
       </a>
-      
-        
-
-
-<nav class="md-nav md-nav--secondary" aria-label="On this page">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      On this page
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#expansion-not-replacement" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Expansion, not replacement
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pipeline-integration" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Pipeline integration
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ownership-registry" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Ownership registry
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#bootstrap-contract" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Bootstrap contract
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1876,7 +1876,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../performance/" class="md-nav__link">
+      <a href="../../reference/performance/" class="md-nav__link">
         
   
   
@@ -1903,7 +1903,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../security/" class="md-nav__link">
+      <a href="../../reference/security/" class="md-nav__link">
         
   
   
@@ -2215,10 +2215,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#expansion-not-replacement" class="md-nav__link">
+  <a href="#per-element-retry-tuning" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Expansion, not replacement
+        Per-Element Retry Tuning
       </span>
     </span>
   </a>
@@ -2226,10 +2226,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pipeline-integration" class="md-nav__link">
+  <a href="#in-flight-request-deduplication-fx-dedupe" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Pipeline integration
+        In-Flight Request Deduplication (<code>fx-dedupe</code>)
       </span>
     </span>
   </a>
@@ -2237,10 +2237,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ownership-registry" class="md-nav__link">
+  <a href="#method-override-fx-method" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Ownership registry
+        Method Override (<code>fx-method</code>)
       </span>
     </span>
   </a>
@@ -2248,10 +2248,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#bootstrap-contract" class="md-nav__link">
+  <a href="#scoping-defaults-inheritance-fx-scope-fx-default-" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Bootstrap contract
+        Scoping &amp; Defaults Inheritance (<code>fx-scope</code>, <code>fx-default-*</code>)
       </span>
     </span>
   </a>
@@ -2276,43 +2276,125 @@
   
 
 
-<h1 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h1>
-<p>How Flux fits around htmx without fighting it.</p>
-<h2 id="expansion-not-replacement">Expansion, not replacement<a class="headerlink" href="#expansion-not-replacement" title="Permanent link">&para;</a></h2>
-<p>Flux's <code>fx-*</code> attributes are <strong>expanded into htmx's native <code>hx-*</code> attributes at
-processing time</strong>. htmx's own attribute prefix stays at its default, so raw <code>hx-*</code>
-remains an unconditional escape hatch: <code>&lt;a fx-get="/x" hx-target="#main"&gt;</code> mixes
-freely. Since 2.0 there is no alias layer — presets read their own option attributes
-only, everything else is raw <code>hx-*</code>.</p>
-<h2 id="pipeline-integration">Pipeline integration<a class="headerlink" href="#pipeline-integration" title="Permanent link">&para;</a></h2>
-<p>Flux installs listeners on htmx's event pipeline — never a second network layer:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>DOM event
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  └─ htmx:config:request   → CSRF attach, timeout, credentials
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  └─ htmx:before:request   → dedupe leader election, cache lookup
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  └─ (network)
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  └─ htmx:after:request    → retry decision, feedback state, action pipelines
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  └─ htmx:after:settle     → persist restore, form dirty re-init
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  └─ htmx:before:cleanup   → preset disconnects, generated-attribute release
+<h1 id="reliability-scoping">Reliability &amp; Scoping<a class="headerlink" href="#reliability-scoping" title="Permanent link">&para;</a></h1>
+<p>Fine-grained controls for request retries, in-flight request deduplication, HTTP method configuration, and hierarchical default options inheritance.</p>
+<h2 id="per-element-retry-tuning">Per-Element Retry Tuning<a class="headerlink" href="#per-element-retry-tuning" title="Permanent link">&para;</a></h2>
+<p>While global retry settings can be configured via <code>&lt;meta name="flux-config"&gt;</code>, individual elements can declare custom retry strategies:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="cm">&lt;!-- Retry up to 3 times with 1s base delay and exponential backoff --&gt;</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="p">&lt;</span><span class="nt">button</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  <span class="na">fx-post</span><span class="o">=</span><span class="s">"/critical-sync"</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  <span class="na">fx-retry</span><span class="o">=</span><span class="s">"3"</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  <span class="na">fx-retry-delay</span><span class="o">=</span><span class="s">"1000ms"</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  <span class="na">fx-retry-backoff</span><span class="o">=</span><span class="s">"2"</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  <span class="na">fx-retry-safe</span><span class="o">=</span><span class="s">"true"</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">&gt;</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  Sync Data
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
 </code></pre></div>
-<p>Presets expand → htmx processes → Flux's registered controllers (<code>connect</code>) manage
-their elements and return disconnects on cleanup.</p>
-<h2 id="ownership-registry">Ownership registry<a class="headerlink" href="#ownership-registry" title="Permanent link">&para;</a></h2>
-<p>Every <code>hx-*</code> attribute Flux writes is recorded per element (<code>WeakMap</code>) and every
-touched element tracked by <code>WeakRef</code> (deduplicated, O(1)). Consequences:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fx-retry</code></td>
+<td><code>2</code></td>
+<td>Maximum retry attempts for this element (e.g. <code>3</code>, or <code>false</code> to disable)</td>
+</tr>
+<tr>
+<td><code>fx-retry-delay</code></td>
+<td><code>500ms</code></td>
+<td>Initial backoff delay before the first retry attempt</td>
+</tr>
+<tr>
+<td><code>fx-retry-backoff</code></td>
+<td><code>2</code></td>
+<td>Exponential backoff multiplier</td>
+</tr>
+<tr>
+<td><code>fx-retry-safe</code></td>
+<td><code>false</code></td>
+<td>When <code>true</code>, allows retrying non-idempotent methods (POST/DELETE)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="in-flight-request-deduplication-fx-dedupe">In-Flight Request Deduplication (<code>fx-dedupe</code>)<a class="headerlink" href="#in-flight-request-deduplication-fx-dedupe" title="Permanent link">&para;</a></h2>
+<p>Prevents concurrent identical requests from causing redundant network traffic:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="cm">&lt;!-- Deduplicate concurrent clicks/triggers to this search query --&gt;</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="p">&lt;</span><span class="nt">input</span> <span class="na">fx-search</span><span class="o">=</span><span class="s">"/api/lookup"</span> <span class="na">fx-dedupe</span><span class="o">=</span><span class="s">"true"</span> <span class="na">fx-dedupe-vary</span><span class="o">=</span><span class="s">"X-Account-Id,Accept-Language"</span> <span class="p">/&gt;</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fx-dedupe</code></td>
+<td><code>false</code></td>
+<td>Explicitly enables request deduplication on this element</td>
+</tr>
+<tr>
+<td><code>fx-dedupe-vary</code></td>
+<td>—</td>
+<td>Comma-separated list of request headers that must be factored into the deduplication key</td>
+</tr>
+</tbody>
+</table>
+<h2 id="method-override-fx-method">Method Override (<code>fx-method</code>)<a class="headerlink" href="#method-override-fx-method" title="Permanent link">&para;</a></h2>
+<p>For presets like <code>fx-submit</code> and <code>fx-autosave</code> that default to <code>POST</code>, <code>fx-method</code> allows overriding the HTTP verb:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="cm">&lt;!-- Submit via PUT instead of POST --&gt;</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="p">&lt;</span><span class="nt">form</span> <span class="na">fx-submit</span><span class="o">=</span><span class="s">"/users/42"</span> <span class="na">fx-method</span><span class="o">=</span><span class="s">"put"</span><span class="p">&gt;</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>  <span class="p">&lt;</span><span class="nt">input</span> <span class="na">name</span><span class="o">=</span><span class="s">"email"</span> <span class="na">value</span><span class="o">=</span><span class="s">"alex@example.com"</span> <span class="p">/&gt;</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>  <span class="p">&lt;</span><span class="nt">button</span> <span class="na">type</span><span class="o">=</span><span class="s">"submit"</span><span class="p">&gt;</span>Update<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="cm">&lt;!-- Autosave via PATCH --&gt;</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">&lt;</span><span class="nt">form</span> <span class="na">fx-autosave</span><span class="o">=</span><span class="s">"/drafts/12"</span> <span class="na">fx-method</span><span class="o">=</span><span class="s">"patch"</span><span class="p">&gt;</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>  <span class="p">&lt;</span><span class="nt">textarea</span> <span class="na">name</span><span class="o">=</span><span class="s">"content"</span><span class="p">&gt;</span>Live editing...<span class="p">&lt;/</span><span class="nt">textarea</span><span class="p">&gt;</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Allowed Values</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fx-method</code></td>
+<td><code>post</code>, <code>put</code>, <code>patch</code>, <code>delete</code></td>
+<td>Overrides the HTTP verb used by form submission or autosave</td>
+</tr>
+</tbody>
+</table>
+<h2 id="scoping-defaults-inheritance-fx-scope-fx-default-">Scoping &amp; Defaults Inheritance (<code>fx-scope</code>, <code>fx-default-*</code>)<a class="headerlink" href="#scoping-defaults-inheritance-fx-scope-fx-default-" title="Permanent link">&para;</a></h2>
+<p><code>fx-scope</code> creates a hierarchical boundary where child elements inherit default configuration options without repeating them on every element:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">&lt;</span><span class="nt">section</span> <span class="na">fx-scope</span> <span class="na">fx-default-target</span><span class="o">=</span><span class="s">"#results"</span> <span class="na">fx-default-indicator</span><span class="o">=</span><span class="s">"#spinner"</span><span class="p">&gt;</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>  <span class="cm">&lt;!-- Inherits hx-target="#results" and hx-indicator="#spinner" automatically --&gt;</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  <span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-get</span><span class="o">=</span><span class="s">"/items"</span><span class="p">&gt;</span>Load Items<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>  <span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-get</span><span class="o">=</span><span class="s">"/users"</span><span class="p">&gt;</span>Load Users<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>  <span class="cm">&lt;!-- Explicit attributes on elements always override scope defaults --&gt;</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>  <span class="p">&lt;</span><span class="nt">button</span> <span class="na">fx-get</span><span class="o">=</span><span class="s">"/special"</span> <span class="na">hx-target</span><span class="o">=</span><span class="s">"#sidebar"</span><span class="p">&gt;</span>Special<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">&lt;/</span><span class="nt">section</span><span class="p">&gt;</span>
+</code></pre></div>
 <ul>
-<li><strong>User-written <code>hx-*</code> is never overwritten</strong> — user takeovers are detected and
-  respected.</li>
-<li>Removing the source <code>fx-*</code> removes Flux's generated attributes on the next pass.</li>
-<li>Manual DOM removal (<code>el.remove()</code>, <code>fx-remove</code>) leaves no strong references — no
-  leaks on long-lived dashboards.</li>
+<li><strong><code>fx-scope</code></strong>: Declares a container element as an option scope.</li>
+<li><strong><code>fx-default-[key]="value"</code></strong>: Sets a default option for descendants.</li>
+<li>Htmx options (<code>fx-default-target</code>, <code>fx-default-swap</code>, <code>fx-default-indicator</code>, etc.) automatically map to their respective <code>hx-*</code> attributes on descendants.</li>
+<li>Preset options (<code>fx-default-confirm</code>, <code>fx-default-delay</code>, etc.) map to <code>fx-*</code> attributes.</li>
+<li>Explicit attributes directly on descendant elements always take precedence over inherited scope defaults.</li>
 </ul>
-<h2 id="bootstrap-contract">Bootstrap contract<a class="headerlink" href="#bootstrap-contract" title="Permanent link">&para;</a></h2>
-<p>Importing any Flux entry has <strong>no global side effects</strong>. Entry points call
-<code>bootstrapFlux()</code>, which owns the <code>window.Flux</code> slot, applies the duplicate policy and
-honours <code>&lt;meta name="flux-config"&gt; autoStart</code>. Modular and full builds can never race
-for the global.</p>
-<p>See <a href="https://github.com/masudranaxpert/flux-htmx/blob/master/docs/decisions/0004-prefix-vs-expansion.md">decisions/0004</a>
-for the prefix-vs-expansion rationale.</p>
 
 
 
